@@ -1,0 +1,26 @@
+{
+  "name": "omniqa-framework",
+  "version": "0.1.0",
+  "description": "Framework base para automacao de testes Web, API, Mobile e Performance.",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:api",
+    "test:api": "playwright test --project=api",
+    "test:api:headed": "playwright test --project=api --headed",
+    "report": "playwright show-report reports/playwright-report"
+  },
+  "keywords": [
+    "qa",
+    "automation",
+    "playwright",
+    "appium",
+    "k6",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "typescript": "^5.8.0"
+  }
+}

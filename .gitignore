@@ -1,0 +1,11 @@
+node_modules/
+reports/playwright-report/
+reports/test-results/
+reports/junit/
+playwright/.cache/
+.DS_Store
+*.log
+
+# Local case artifacts
+case pt*.jpeg
+Case QA Senior - Transcricao.md
