@@ -22,8 +22,10 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 ├── tests-mobile/
 ├── tests-performance/
 ├── tests-web/
-├── reports/
-└── Case QA Senior - Transcricao.md
+│   ├── pages/
+│   ├── specs/
+│   └── support/
+└── reports/
 ```
 
 ## Stack proposta
@@ -65,11 +67,7 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 
 ## Proximo passo
 
-Executar a base de testes de API com Playwright e TypeScript, cobrindo os endpoints:
-
-- `/users`
-- `/posts`
-- `/comments`
+Evoluir a automacao Mobile Android com Appium e WebdriverIO. A base atual ja cobre API e Web com Playwright.
 
 ## Comandos
 
@@ -83,6 +81,12 @@ Executar testes de API:
 
 ```bash
 npm run test:api
+```
+
+Executar testes Web:
+
+```bash
+npm run test:web
 ```
 
 Abrir relatorio HTML:

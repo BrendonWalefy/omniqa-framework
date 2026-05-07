@@ -32,3 +32,15 @@ Validar as jornadas criticas de compra, desde autenticacao ate checkout, prioriz
 | WEB-004 | Remover produto do carrinho | Produto deixa de aparecer no carrinho | E2E | Media |
 | WEB-005 | Checkout completo | Pedido finalizado com sucesso | E2E | Alta |
 
+
+
+## Automacao
+
+Status: automatizado em `tests-web/specs`.
+
+Padroes implementados:
+
+- Page Object Model para Login, Inventario, Carrinho e Checkout.
+- Massa de dados separada em `tests-web/support`.
+- Evidencias automaticas em falha: screenshot e trace.
+- Execucao dedicada por `npm run test:web`.

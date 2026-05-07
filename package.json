@@ -4,9 +4,10 @@
   "description": "Framework base para automacao de testes Web, API, Mobile e Performance.",
   "private": true,
   "scripts": {
-    "test": "npm run test:api",
+    "test": "playwright test",
     "test:api": "playwright test --project=api",
-    "test:api:headed": "playwright test --project=api --headed",
+    "test:web": "playwright test --project=web-chromium",
+    "test:web:headed": "playwright test --project=web-chromium --headed",
     "report": "playwright show-report reports/playwright-report"
   },
   "keywords": [

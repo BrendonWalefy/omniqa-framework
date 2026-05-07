@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
@@ -13,16 +13,27 @@ export default defineConfig({
     ['junit', { outputFile: 'reports/junit/results.xml' }]
   ],
   use: {
-    baseURL: 'https://jsonplaceholder.typicode.com',
-    extraHTTPHeaders: {
-      Accept: 'application/json'
-    },
-    trace: 'retain-on-failure'
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure'
   },
   projects: [
     {
       name: 'api',
-      testMatch: /tests-api\/.*\.spec\.ts/
+      testMatch: /tests-api\/.*\.spec\.ts/,
+      use: {
+        baseURL: 'https://jsonplaceholder.typicode.com',
+        extraHTTPHeaders: {
+          Accept: 'application/json'
+        }
+      }
+    },
+    {
+      name: 'web-chromium',
+      testMatch: /tests-web\/specs\/.*\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'https://www.saucedemo.com'
+      }
     }
   ],
   outputDir: 'reports/test-results'
