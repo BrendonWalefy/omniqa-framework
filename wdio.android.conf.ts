@@ -1,3 +1,17 @@
+import path from 'node:path';
+import { homedir } from 'node:os';
+
+const defaultAndroidSdk = path.join(homedir(), 'Library/Android/sdk');
+const androidSdkRoot = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT ?? defaultAndroidSdk;
+
+process.env.ANDROID_HOME = androidSdkRoot;
+process.env.ANDROID_SDK_ROOT = androidSdkRoot;
+process.env.PATH = [
+  path.join(androidSdkRoot, 'platform-tools'),
+  path.join(androidSdkRoot, 'emulator'),
+  process.env.PATH
+].filter(Boolean).join(path.delimiter);
+
 const calculatorPackage = process.env.ANDROID_CALCULATOR_PACKAGE ?? 'com.google.android.calculator';
 const calculatorActivity = process.env.ANDROID_CALCULATOR_ACTIVITY ?? 'com.android.calculator2.Calculator';
 const deviceName = process.env.ANDROID_DEVICE_NAME ?? 'Android Emulator';
