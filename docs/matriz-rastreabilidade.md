@@ -12,8 +12,8 @@
 | API-003 | API | Posts | Listar posts | API | Alta | Sim | Automatizado |
 | API-004 | API | Posts | Criar post | API | Media | Sim | Automatizado |
 | API-005 | API | Comments | Listar comentarios | API | Media | Sim | Automatizado |
-| MOB-001 | Mobile | Calculadora | Validar soma | E2E Mobile | Alta | Sim | Planejado |
-| MOB-002 | Mobile | Calculadora | Validar subtracao | E2E Mobile | Alta | Sim | Planejado |
-| MOB-003 | Mobile | Calculadora | Validar multiplicacao | E2E Mobile | Media | Sim | Planejado |
-| MOB-004 | Mobile | Calculadora | Validar divisao | E2E Mobile | Media | Sim | Planejado |
+| MOB-001 | Mobile | Calculadora | Validar soma | E2E Mobile | Alta | Sim | Automatizado |
+| MOB-002 | Mobile | Calculadora | Validar subtracao | E2E Mobile | Alta | Sim | Automatizado |
+| MOB-003 | Mobile | Calculadora | Validar multiplicacao | E2E Mobile | Media | Sim | Automatizado |
+| MOB-004 | Mobile | Calculadora | Validar divisao | E2E Mobile | Media | Sim | Automatizado |
 | PERF-001 | Performance | API | Carga controlada em endpoint de leitura | Performance | Baixa | Sim | Planejado |

@@ -20,6 +20,10 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 │   ├── support/
 │   └── jsonplaceholder.spec.ts
 ├── tests-mobile/
+│   └── android/
+│       ├── screens/
+│       ├── specs/
+│       └── support/
 ├── tests-performance/
 ├── tests-web/
 │   ├── pages/
@@ -67,7 +71,7 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 
 ## Proximo passo
 
-Evoluir a automacao Mobile Android com Appium e WebdriverIO. A base atual ja cobre API e Web com Playwright.
+Consolidar relatorios e preparar os diferenciais: performance com k6, iOS documentado e CI.
 
 ## Comandos
 
@@ -87,6 +91,24 @@ Executar testes Web:
 
 ```bash
 npm run test:web
+```
+
+Validar tipagem TypeScript:
+
+```bash
+npm run typecheck
+```
+
+Validar pre-requisitos Android/Appium:
+
+```bash
+npm run appium:doctor:android
+```
+
+Executar testes Mobile Android:
+
+```bash
+npm run test:mobile:android
 ```
 
 Abrir relatorio HTML:

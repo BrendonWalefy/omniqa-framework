@@ -9,13 +9,16 @@
     "skipLibCheck": true,
     "types": [
       "node",
-      "@playwright/test"
+      "@playwright/test",
+      "@wdio/globals/types",
+      "@wdio/mocha-framework"
     ]
   },
   "include": [
     "tests-api/**/*.ts",
     "tests-web/**/*.ts",
     "tests-mobile/**/*.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "wdio*.conf.ts"
   ]
 }
