@@ -38,7 +38,7 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 |---|---|---|---|
 | Web | Playwright | TypeScript | Automatizar jornadas criticas do SauceDemo |
 | API | Playwright API | TypeScript | Validar contrato, status code e payload |
-| Mobile | Appium + WebdriverIO | TypeScript | Automatizar criacao e remocao no app Contatos Android |
+| Mobile | Appium + WebdriverIO | TypeScript | Automatizar criacao e remocao no app Contatos Android e iOS |
 | Performance | k6 | JavaScript | Executar carga controlada em APIs |
 | Relatorio | Allure/HTML Reports | - | Consolidar evidencias |
 
@@ -47,9 +47,9 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 1. Documentacao e estrategia de QA.
 2. Automacao de API.
 3. Automacao Web.
-4. Automacao Mobile Android.
+4. Automacao Mobile Android e iOS.
 5. Relatorios e evidencias.
-6. Diferenciais: iOS, performance com k6 e CI.
+6. Diferenciais: performance com k6 e CI.
 
 ## Materiais principais
 
@@ -71,7 +71,7 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 
 ## Proximo passo
 
-Consolidar relatorios e preparar os diferenciais: performance com k6, iOS documentado e CI.
+Consolidar relatorios e preparar os diferenciais: performance com k6 e CI.
 
 ## Comandos
 
@@ -109,6 +109,18 @@ Executar testes Mobile Android:
 
 ```bash
 npm run test:mobile:android
+```
+
+Validar pre-requisitos iOS/Appium:
+
+```bash
+npm run appium:doctor:ios
+```
+
+Executar testes Mobile iOS:
+
+```bash
+npm run test:mobile:ios
 ```
 
 Abrir relatorio HTML:

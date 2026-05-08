@@ -10,7 +10,9 @@
     "test:web:headed": "playwright test --project=web-chromium --headed",
     "report": "playwright show-report reports/playwright-report",
     "test:mobile:android": "wdio run wdio.android.conf.ts",
+    "test:mobile:ios": "wdio run wdio.ios.conf.ts",
     "appium:doctor:android": "appium driver doctor uiautomator2",
+    "appium:doctor:ios": "appium driver doctor xcuitest",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -33,6 +35,7 @@
     "@wdio/spec-reporter": "^9.27.1",
     "appium": "^3.4.0",
     "appium-uiautomator2-driver": "^7.2.1",
+    "appium-xcuitest-driver": "^11.2.3",
     "tsx": "^4.21.0",
     "typescript": "^5.8.0"
   }

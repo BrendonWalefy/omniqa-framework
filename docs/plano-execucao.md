@@ -24,11 +24,11 @@
 - Adicionar traces e screenshots em falha.
 - Consolidar evidencias.
 
-## Dia 4 - Mobile Android
+## Dia 4 - Mobile Android e iOS
 
 - Configurar Appium e WebdriverIO.
-- Mapear seletores do app Contatos Android.
-- Automatizar criacao e remocao de contato.
+- Mapear seletores do app Contatos Android e iOS.
+- Automatizar criacao e remocao de contato nas duas plataformas.
 - Validar persistencia e limpeza de estado entre cenarios.
 
 ## Dia 5 - Relatorios e refinamento
@@ -41,6 +41,5 @@
 ## Dia 6 - Diferenciais
 
 - Adicionar teste de performance com k6.
-- Documentar abordagem iOS.
 - Adicionar workflow de CI para Web e API.
 - Preparar demonstracao ao vivo.

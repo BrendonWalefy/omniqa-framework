@@ -55,7 +55,7 @@ As APIs do JSONPlaceholder foram priorizadas por serem mais estaveis para demons
 
 ### Mobile
 
-Aplicacao alvo: Contatos nativo no Android.
+Aplicacao alvo: Contatos nativo no Android e iOS.
 
 Ferramenta sugerida: Appium com WebdriverIO e TypeScript.
 
@@ -67,8 +67,8 @@ Motivos da escolha:
 
 Padrao de projeto:
 
-- Screen Object para a tela de contatos.
-- Seletores separados para Android.
+- Screen Object para a tela de contatos por plataforma.
+- Seletores separados para Android e iOS.
 - Fluxo simples para demonstrar criacao e remocao no dispositivo.
 
 ### Performance
@@ -93,8 +93,7 @@ Escopo inicial:
 ## Criterios de aceite da entrega
 
 - Planos de teste documentados para Web, API e Mobile.
-- Automacoes executaveis para pelo menos Web, API e Android.
-- iOS documentado ou implementado como diferencial, conforme disponibilidade de ambiente.
+- Automacoes executaveis para pelo menos Web, API, Android e iOS.
 - Relatorio consolidado com resultado manual e automatizado.
 - README com instrucoes claras de execucao.
 - Evidencias salvas em `reports/`.
