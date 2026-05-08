@@ -1,0 +1,45 @@
+name: Testes de Performance — OmniQA
+
+on:
+  schedule:
+    # Executa todo dia as 02:00 UTC (23:00 BRT)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  performance:
+    name: Performance (k6)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+          sudo mv k6 /usr/local/bin/
+
+      - name: Executar testes de performance
+        run: npm run test:performance
+
+      - name: Gerar relatorio HTML
+        if: always()
+        run: npm run report:performance
+
+      - name: Upload relatorio de performance
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-performance-${{ github.run_id }}
+          path: reports/performance/
+          retention-days: 30

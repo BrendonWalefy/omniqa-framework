@@ -9,11 +9,12 @@ on:
 
 jobs:
   # ─────────────────────────────────────────
-  #  API + Web + Performance
+  #  API + Web
+  #  Performance: workflow agendado (performance.yml)
   #  Mobile: executado localmente (requer dispositivo/emulador)
   # ─────────────────────────────────────────
-  api-web-performance:
-    name: API / Web / Performance
+  api-web:
+    name: API / Web
     runs-on: ubuntu-latest
 
     steps:
@@ -32,23 +33,15 @@ jobs:
       - name: Instalar browsers Playwright
         run: npx playwright install chromium --with-deps
 
-      - name: Instalar k6
-        run: |
-          curl https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
-          sudo mv k6 /usr/local/bin/
-
       - name: Testes de API
         run: npm run test:api
 
       - name: Testes Web
         run: npm run test:web
 
-      - name: Testes de Performance
-        run: npm run test:performance
-
       - name: Gerar relatorios
         if: always()
-        run: npm run report:all
+        run: npm run report:junit
 
       - name: Upload relatorio JUnit
         uses: actions/upload-artifact@v4
@@ -56,14 +49,6 @@ jobs:
         with:
           name: relatorio-junit
           path: reports/junit/
-          retention-days: 30
-
-      - name: Upload relatorio Performance
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: relatorio-performance
-          path: reports/performance/
           retention-days: 30
 
       - name: Upload relatorio Playwright
