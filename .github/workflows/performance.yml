@@ -1,9 +1,6 @@
 name: Testes de Performance — OmniQA
 
 on:
-  schedule:
-    # Executa todo dia as 02:00 UTC (23:00 BRT)
-    - cron: '0 2 * * *'
   workflow_dispatch:
 
 jobs:
