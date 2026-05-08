@@ -1,6 +1,9 @@
 # OmniQA Framework
 
 ![CI](https://github.com/BrendonWalefy/omniqa-framework/actions/workflows/regression.yml/badge.svg)
+[![GitHub Pages](https://img.shields.io/badge/site-GitHub%20Pages-blue?logo=github)](https://brendonwalefy.github.io/omniqa-framework)
+
+> 🌐 **[brendonwalefy.github.io/omniqa-framework](https://brendonwalefy.github.io/omniqa-framework)**
 
 Framework de automacao de testes multi-plataforma com TypeScript — cobrindo Web, API, Mobile e Performance em um unico monorepo modular.
 
