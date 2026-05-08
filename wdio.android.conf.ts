@@ -13,8 +13,8 @@ process.env.PATH = [
   process.env.PATH
 ].filter(Boolean).join(path.delimiter);
 
-const calculatorPackage = process.env.ANDROID_CALCULATOR_PACKAGE ?? 'com.google.android.calculator';
-const calculatorActivity = process.env.ANDROID_CALCULATOR_ACTIVITY ?? 'com.android.calculator2.Calculator';
+const contactsPackage = process.env.ANDROID_CONTACTS_PACKAGE ?? 'com.android.contacts';
+const contactsActivity = process.env.ANDROID_CONTACTS_ACTIVITY ?? '.activities.PeopleActivity';
 const deviceName = process.env.ANDROID_DEVICE_NAME ?? 'Android Emulator';
 
 type TestMetadata = {
@@ -65,9 +65,10 @@ export const config = {
       platformName: 'Android',
       'appium:automationName': 'UiAutomator2',
       'appium:deviceName': deviceName,
-      'appium:appPackage': calculatorPackage,
-      'appium:appActivity': calculatorActivity,
+      'appium:appPackage': contactsPackage,
+      'appium:appActivity': contactsActivity,
       'appium:noReset': true,
+      'appium:autoGrantPermissions': true,
       'appium:newCommandTimeout': 120
     }
   ]

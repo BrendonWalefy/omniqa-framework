@@ -55,7 +55,7 @@ As APIs do JSONPlaceholder foram priorizadas por serem mais estaveis para demons
 
 ### Mobile
 
-Aplicacao alvo: Calculadora nativa em Android e iOS.
+Aplicacao alvo: Contatos nativo no Android.
 
 Ferramenta sugerida: Appium com WebdriverIO e TypeScript.
 
@@ -67,9 +67,9 @@ Motivos da escolha:
 
 Padrao de projeto:
 
-- Screen Object para a tela da calculadora.
-- Seletores separados para Android e iOS.
-- Mesmos cenarios de negocio executados em plataformas diferentes quando possivel.
+- Screen Object para a tela de contatos.
+- Seletores separados para Android.
+- Fluxo simples para demonstrar criacao e remocao no dispositivo.
 
 ### Performance
 
@@ -87,7 +87,7 @@ Escopo inicial:
 | API/Contrato | GET users, GET posts, POST posts | Validar comportamento e estrutura de dados com baixo custo |
 | Integracao | Fluxos entre endpoints relacionados | Validar consistencia entre recursos |
 | E2E Web | Login, carrinho e checkout | Validar jornadas criticas do usuario |
-| E2E Mobile | Operacoes basicas da calculadora | Validar comportamento no dispositivo |
+| E2E Mobile | Criar e remover contato | Validar comportamento no dispositivo |
 | Performance | Carga em endpoints publicos | Observar estabilidade sob volume controlado |
 
 ## Criterios de aceite da entrega
@@ -98,4 +98,3 @@ Escopo inicial:
 - Relatorio consolidado com resultado manual e automatizado.
 - README com instrucoes claras de execucao.
 - Evidencias salvas em `reports/`.
-

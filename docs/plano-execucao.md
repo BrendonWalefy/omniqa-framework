@@ -27,9 +27,9 @@
 ## Dia 4 - Mobile Android
 
 - Configurar Appium e WebdriverIO.
-- Mapear seletores da calculadora Android.
-- Automatizar soma, subtracao, multiplicacao e divisao.
-- Validar limpeza de estado entre cenarios.
+- Mapear seletores do app Contatos Android.
+- Automatizar criacao e remocao de contato.
+- Validar persistencia e limpeza de estado entre cenarios.
 
 ## Dia 5 - Relatorios e refinamento
 
@@ -44,4 +44,3 @@
 - Documentar abordagem iOS.
 - Adicionar workflow de CI para Web e API.
 - Preparar demonstracao ao vivo.
-

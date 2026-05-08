@@ -38,7 +38,7 @@ O objetivo e demonstrar uma abordagem moderna para testes em diferentes platafor
 |---|---|---|---|
 | Web | Playwright | TypeScript | Automatizar jornadas criticas do SauceDemo |
 | API | Playwright API | TypeScript | Validar contrato, status code e payload |
-| Mobile | Appium + WebdriverIO | TypeScript | Automatizar calculadora Android e iOS |
+| Mobile | Appium + WebdriverIO | TypeScript | Automatizar criacao e remocao no app Contatos Android |
 | Performance | k6 | JavaScript | Executar carga controlada em APIs |
 | Relatorio | Allure/HTML Reports | - | Consolidar evidencias |
 
