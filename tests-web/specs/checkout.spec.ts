@@ -4,6 +4,7 @@ import { CheckoutPage } from '../pages/CheckoutPage';
 import { InventoryPage } from '../pages/InventoryPage';
 import { LoginPage } from '../pages/LoginPage';
 import { checkoutData } from '../support/checkoutData';
+import { attachSuccessEvidence } from '../support/evidence';
 import { users } from '../support/users';
 
 const productName = 'Sauce Labs Backpack';
@@ -18,7 +19,7 @@ test.describe('SauceDemo - Carrinho e checkout', () => {
     await inventoryPage.expectLoaded();
   });
 
-  test('WEB-003 - deve adicionar produto ao carrinho', async ({ page }) => {
+  test('WEB-003 - deve adicionar produto ao carrinho', async ({ page }, testInfo) => {
     const inventoryPage = new InventoryPage(page);
     const cartPage = new CartPage(page);
 
@@ -27,9 +28,10 @@ test.describe('SauceDemo - Carrinho e checkout', () => {
     await inventoryPage.openCart();
 
     await cartPage.expectProductVisible(productName);
+    await attachSuccessEvidence(page, testInfo, 'WEB-003 - produto no carrinho');
   });
 
-  test('WEB-004 - deve remover produto do carrinho', async ({ page }) => {
+  test('WEB-004 - deve remover produto do carrinho', async ({ page }, testInfo) => {
     const inventoryPage = new InventoryPage(page);
 
     await inventoryPage.addProductToCart(productName);
@@ -37,9 +39,10 @@ test.describe('SauceDemo - Carrinho e checkout', () => {
     await inventoryPage.removeProductFromCart(productName);
 
     await inventoryPage.expectCartEmpty();
+    await attachSuccessEvidence(page, testInfo, 'WEB-004 - carrinho vazio');
   });
 
-  test('WEB-005 - deve finalizar checkout com sucesso', async ({ page }) => {
+  test('WEB-005 - deve finalizar checkout com sucesso', async ({ page }, testInfo) => {
     const inventoryPage = new InventoryPage(page);
     const cartPage = new CartPage(page);
     const checkoutPage = new CheckoutPage(page);
@@ -51,5 +54,6 @@ test.describe('SauceDemo - Carrinho e checkout', () => {
     await checkoutPage.finishOrder();
 
     await checkoutPage.expectOrderCompleted();
+    await attachSuccessEvidence(page, testInfo, 'WEB-005 - pedido finalizado');
   });
 });

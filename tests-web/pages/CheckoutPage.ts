@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 type CheckoutData = {
   firstName: string;
@@ -7,20 +7,34 @@ type CheckoutData = {
 };
 
 export class CheckoutPage {
-  constructor(private readonly page: Page) {}
+  private readonly firstNameInput: Locator;
+  private readonly lastNameInput: Locator;
+  private readonly postalCodeInput: Locator;
+  private readonly continueButton: Locator;
+  private readonly finishButton: Locator;
+  private readonly completeHeader: Locator;
+
+  constructor(private readonly page: Page) {
+    this.firstNameInput = this.page.locator('#first-name');
+    this.lastNameInput = this.page.locator('#last-name');
+    this.postalCodeInput = this.page.locator('#postal-code');
+    this.continueButton = this.page.locator('#continue');
+    this.finishButton = this.page.locator('#finish');
+    this.completeHeader = this.page.locator('#checkout_complete_container .complete-header');
+  }
 
   async fillInformation(data: CheckoutData) {
-    await this.page.getByPlaceholder('First Name').fill(data.firstName);
-    await this.page.getByPlaceholder('Last Name').fill(data.lastName);
-    await this.page.getByPlaceholder('Zip/Postal Code').fill(data.postalCode);
-    await this.page.getByRole('button', { name: 'Continue' }).click();
+    await this.firstNameInput.fill(data.firstName);
+    await this.lastNameInput.fill(data.lastName);
+    await this.postalCodeInput.fill(data.postalCode);
+    await this.continueButton.click();
   }
 
   async finishOrder() {
-    await this.page.getByRole('button', { name: 'Finish' }).click();
+    await this.finishButton.click();
   }
 
   async expectOrderCompleted() {
-    await expect(this.page.locator('.complete-header')).toHaveText('Thank you for your order!');
+    await expect(this.completeHeader).toHaveText('Thank you for your order!');
   }
 }

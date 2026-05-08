@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 type Credentials = {
   username: string;
@@ -6,19 +6,29 @@ type Credentials = {
 };
 
 export class LoginPage {
-  constructor(private readonly page: Page) {}
+  private readonly usernameInput: Locator;
+  private readonly passwordInput: Locator;
+  private readonly loginButton: Locator;
+  private readonly errorMessage: Locator;
+
+  constructor(private readonly page: Page) {
+    this.usernameInput = this.page.locator('#user-name');
+    this.passwordInput = this.page.locator('#password');
+    this.loginButton = this.page.locator('#login-button');
+    this.errorMessage = this.page.locator('[data-test="error"]');
+  }
 
   async goto() {
     await this.page.goto('/');
   }
 
   async login(credentials: Credentials) {
-    await this.page.getByPlaceholder('Username').fill(credentials.username);
-    await this.page.getByPlaceholder('Password').fill(credentials.password);
-    await this.page.getByRole('button', { name: 'Login' }).click();
+    await this.usernameInput.fill(credentials.username);
+    await this.passwordInput.fill(credentials.password);
+    await this.loginButton.click();
   }
 
   async expectLoginError(message: string) {
-    await expect(this.page.locator('.error-message-container')).toContainText(message);
+    await expect(this.errorMessage).toContainText(message);
   }
 }

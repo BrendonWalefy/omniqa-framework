@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { homedir } from 'node:os';
+import { saveMobileScreenshot } from './tests-mobile/android/support/mobileEvidence';
 
 const defaultAndroidSdk = path.join(homedir(), 'Library/Android/sdk');
 const androidSdkRoot = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT ?? defaultAndroidSdk;
@@ -16,6 +17,14 @@ const calculatorPackage = process.env.ANDROID_CALCULATOR_PACKAGE ?? 'com.google.
 const calculatorActivity = process.env.ANDROID_CALCULATOR_ACTIVITY ?? 'com.android.calculator2.Calculator';
 const deviceName = process.env.ANDROID_DEVICE_NAME ?? 'Android Emulator';
 
+type TestMetadata = {
+  title?: string;
+};
+
+type TestResult = {
+  passed: boolean;
+};
+
 export const config = {
   runner: 'local',
   specs: ['./tests-mobile/android/specs/**/*.spec.ts'],
@@ -30,6 +39,12 @@ export const config = {
   mochaOpts: {
     ui: 'bdd',
     timeout: 60_000
+  },
+  async afterTest(test: TestMetadata, _context: unknown, result: TestResult) {
+    if (!result.passed) {
+      const testName = test.title ?? 'mobile-test';
+      await saveMobileScreenshot(`${testName} - falha`);
+    }
   },
   hostname: '127.0.0.1',
   port: 4723,

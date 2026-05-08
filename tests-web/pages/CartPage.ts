@@ -1,13 +1,19 @@
-import { expect, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 export class CartPage {
-  constructor(private readonly page: Page) {}
+  private readonly checkoutButton: Locator;
+  private readonly cartItems: Locator;
+
+  constructor(private readonly page: Page) {
+    this.checkoutButton = this.page.locator('#checkout');
+    this.cartItems = this.page.locator('#cart_contents_container .inventory_item_name');
+  }
 
   async expectProductVisible(productName: string) {
-    await expect(this.page.locator('.inventory_item_name')).toContainText(productName);
+    await expect(this.cartItems).toContainText(productName);
   }
 
   async checkout() {
-    await this.page.getByRole('button', { name: 'Checkout' }).click();
+    await this.checkoutButton.click();
   }
 }
