@@ -9,7 +9,8 @@ on:
 
 jobs:
   # ─────────────────────────────────────────
-  #  JOB 1: API + Web + Performance
+  #  API + Web + Performance
+  #  Mobile: executado localmente (requer dispositivo/emulador)
   # ─────────────────────────────────────────
   api-web-performance:
     name: API / Web / Performance
@@ -79,76 +80,3 @@ jobs:
         with:
           report_paths: reports/junit/*.xml
           check_name: Resultados dos Testes
-
-  # ─────────────────────────────────────────
-  #  JOB 2: Mobile Android (emulador gratuito)
-  # ─────────────────────────────────────────
-  mobile-android:
-    name: Mobile Android
-    runs-on: ubuntu-latest
-    # Nao bloqueia o pipeline se falhar
-    continue-on-error: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: temurin
-
-      - name: Habilitar KVM (aceleracao do emulador)
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Instalar system image do emulador
-        run: |
-          echo "y" | sdkmanager "system-images;android-30;google_apis;x86_64"
-          echo "y" | sdkmanager "platforms;android-30"
-          echo "y" | sdkmanager "emulator"
-          echo "y" | sdkmanager "platform-tools"
-
-      - name: Criar e iniciar emulador Android
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          profile: pixel_4
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -memory 2048
-          disable-animations: true
-          emulator-boot-timeout: 900
-          script: |
-            echo "Emulador pronto, iniciando testes..."
-            npm run test:mobile:android
-
-      - name: Gerar relatorio JUnit mobile
-        if: always()
-        run: npm run report:junit
-
-      - name: Upload relatorio Mobile Android
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: relatorio-mobile-android
-          path: |
-            reports/junit/results-mobile-android.xml
-            reports/junit/report.html
-            reports/mobile/android/
-          retention-days: 30
