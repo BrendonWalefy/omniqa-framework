@@ -1,12 +1,12 @@
 # Plano de Testes Web
 
-## Aplicacao
+## Aplicação
 
 SauceDemo: https://www.saucedemo.com/inventory.html
 
 ## Objetivo
 
-Validar as jornadas criticas de compra, desde autenticacao ate checkout, priorizando fluxos de maior impacto para o usuario.
+Validar as jornadas críticas de compra, desde autenticacao ate checkout, priorizando fluxos de maior impacto para o usuário.
 
 ## Escopo
 
@@ -22,11 +22,11 @@ Validar as jornadas criticas de compra, desde autenticacao ate checkout, prioriz
 - Cross-browser completo.
 - Acessibilidade automatizada profunda.
 
-## Cenarios iniciais
+## Cenários iniciais
 
-| ID | Cenario | Resultado esperado | Tipo | Prioridade |
+| ID | Cenário | Resultado esperado | Tipo | Prioridade |
 |---|---|---|---|---|
-| WEB-001 | Login com usuario valido | Usuario acessa inventario | E2E | Alta |
+| WEB-001 | Login com usuário valido | Usuário acessa inventario | E2E | Alta |
 | WEB-002 | Login com senha invalida | Mensagem de erro exibida | E2E | Alta |
 | WEB-003 | Adicionar produto ao carrinho | Produto aparece no carrinho | E2E | Alta |
 | WEB-004 | Remover produto do carrinho | Produto deixa de aparecer no carrinho | E2E | Media |
@@ -34,13 +34,13 @@ Validar as jornadas criticas de compra, desde autenticacao ate checkout, prioriz
 
 
 
-## Automacao
+## Automação
 
 Status: automatizado em `tests-web/specs`.
 
-Padroes implementados:
+Padrões implementados:
 
 - Page Object Model para Login, Inventario, Carrinho e Checkout.
 - Massa de dados separada em `tests-web/support`.
-- Evidencias automaticas em falha: screenshot e trace.
-- Execucao dedicada por `npm run test:web`.
+- Evidências automáticas em falha: screenshot e trace.
+- Execução dedicada por `npm run test:web`.

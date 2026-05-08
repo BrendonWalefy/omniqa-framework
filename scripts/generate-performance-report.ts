@@ -38,7 +38,7 @@ const summaryPath = path.resolve('reports/performance/summary.json');
 const outputPath = path.resolve('reports/performance/report.html');
 
 if (!fs.existsSync(summaryPath)) {
-  console.error(`Arquivo nao encontrado: ${summaryPath}`);
+  console.error(`Arquivo não encontrado: ${summaryPath}`);
   console.error('Execute primeiro: npm run test:performance');
   process.exit(1);
 }
@@ -117,7 +117,7 @@ const thresholdRows = thresholds.map(t => `
 
 const body = `
   <section>
-    <div class="section-title">Resumo da Execucao</div>
+    <div class="section-title">Resumo da Execução</div>
     <div class="cards">
       <div class="card card--accent">
         <div class="card__label">Requisicoes</div>
@@ -158,7 +158,7 @@ const body = `
       <table>
         <thead>
           <tr>
-            <th>Metrica</th>
+            <th>Métrica</th>
             <th>Condicao</th>
             <th class="center">Status</th>
           </tr>
@@ -175,12 +175,12 @@ const body = `
 `;
 
 const html = renderPage({
-  title: 'Relatorio de Performance — OmniQA',
-  reportTitle: 'Relatorio de Performance — OmniQA Framework',
+  title: 'Relatório de Performance — OmniQA',
+  reportTitle: 'Relatório de Performance — OmniQA Framework',
   reportSubtitle: `k6 · Gerado em ${new Date().toLocaleString('pt-BR')}`,
   passed: allThresholdsPassed,
   body,
 });
 
 fs.writeFileSync(outputPath, html, 'utf-8');
-console.log(`Relatorio de performance gerado: ${outputPath}`);
+console.log(`Relatório de performance gerado: ${outputPath}`);

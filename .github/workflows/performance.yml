@@ -29,14 +29,14 @@ jobs:
       - name: Executar testes de performance
         run: npm run test:performance
 
-      - name: Gerar relatorio HTML
+      - name: Gerar relatório HTML
         if: always()
         run: npm run report:performance
 
-      - name: Upload relatorio de performance
+      - name: Upload relatório de performance
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: relatorio-performance-${{ github.run_id }}
+          name: relatório-performance-${{ github.run_id }}
           path: reports/performance/
           retention-days: 30

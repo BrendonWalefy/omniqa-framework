@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ─────────────────────────────────────────────
-#  OmniQA — Plano de Regressao Completo
+#  OmniQA — Plano de Regressão Completo
 #  Plataformas: API, Web, Android, iOS, Performance
 # ─────────────────────────────────────────────
 
@@ -35,9 +35,9 @@ done
 header() {
   echo ""
   echo -e "${BOLD}╔══════════════════════════════════════════════╗${NC}"
-  echo -e "${BOLD}║        OmniQA — Regressao Completa           ║${NC}"
+  echo -e "${BOLD}║        OmniQA — Regressão Completa           ║${NC}"
   echo -e "${BOLD}╚══════════════════════════════════════════════╝${NC}"
-  echo -e "${DIM}  Inicio: $(date '+%d/%m/%Y %H:%M:%S')${NC}"
+  echo -e "${DIM}  Início: $(date '+%d/%m/%Y %H:%M:%S')${NC}"
   if [ "$SKIP_MOBILE" = "true" ]; then
     echo -e "${YELLOW}  Modo: --skip-mobile (Android e iOS ignorados)${NC}"
   fi
@@ -86,7 +86,7 @@ run_suite() {
 
   if [ "$CRITICAL_FAILED" = "true" ]; then
     echo ""
-    echo -e "${RED}${BOLD}  Suite critica falhou. Encerrando regressao.${NC}"
+    echo -e "${RED}${BOLD}  Suite crítica falhou. Encerrando regressão.${NC}"
     summary
     exit 1
   fi
@@ -112,7 +112,7 @@ summary() {
 
   echo ""
   echo -e "${BOLD}╔══════════════════════════════════════════════╗${NC}"
-  echo -e "${BOLD}║             SUMARIO DA REGRESSAO             ║${NC}"
+  echo -e "${BOLD}║             SUMÁRIO DA REGRESSÃO             ║${NC}"
   echo -e "${BOLD}╠══════════════════════════════════════════════╣${NC}"
 
   for i in "${!SUITES[@]}"; do
@@ -136,30 +136,30 @@ summary() {
   echo ""
 
   if [ "$FAIL_COUNT" -eq 0 ]; then
-    echo -e "${GREEN}${BOLD}  Regressao concluida com sucesso.${NC}"
+    echo -e "${GREEN}${BOLD}  Regressão concluída com sucesso.${NC}"
   else
-    echo -e "${RED}${BOLD}  Regressao concluida com falhas. Verifique os relatorios.${NC}"
+    echo -e "${RED}${BOLD}  Regressão concluída com falhas. Verifique os relatórios.${NC}"
   fi
   echo ""
 }
 
 # ─────────────────────────────────────────────
-#  EXECUCAO
+#  EXECUÇÃO
 # ─────────────────────────────────────────────
 
 header
 
-# 1. API — critico
+# 1. API — crítico
 run_suite 1 "Testes de API" "Playwright" \
   "npm run test:api --silent" \
   "true"
 
-# 2. Web — critico
+# 2. Web — crítico
 run_suite 2 "Testes Web" "Playwright / Chromium" \
   "npm run test:web --silent" \
   "true"
 
-# 3. Mobile Android — nao critico (sequencial)
+# 3. Mobile Android — não crítico (sequencial)
 if [ "$SKIP_MOBILE" = "true" ]; then
   skip_suite 3 "Testes Mobile Android" "WebdriverIO / UIAutomator2"
 else
@@ -168,7 +168,7 @@ else
     "false"
 fi
 
-# 4. Mobile iOS — nao critico (sequencial, apos Android)
+# 4. Mobile iOS — não crítico (sequencial, após Android)
 if [ "$SKIP_MOBILE" = "true" ] || [ "$SKIP_IOS" = "true" ]; then
   skip_suite 4 "Testes Mobile iOS" "WebdriverIO / XCUITest"
 else
@@ -177,24 +177,24 @@ else
     "false"
 fi
 
-# 5. Performance — nao critico (informativo)
+# 5. Performance — não crítico (informativo)
 run_suite 5 "Testes de Performance" "k6" \
   "npm run test:performance --silent" \
   "false"
 
-# 6. Geracao e abertura de relatorios
+# 6. Geração e abertura de relatórios
 echo ""
-echo -e "${BOLD}┌─ [6] Gerando relatorios visuais${NC}"
+echo -e "${BOLD}┌─ [6] Gerando relatórios visuais${NC}"
 if npm run report:all --silent; then
   echo -e "${BOLD}│${NC}"
-  echo -e "${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatorios gerados — abrindo no navegador...${NC}"
+  echo -e "${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatórios gerados — abrindo no navegador...${NC}"
   open reports/junit/report.html
   open reports/performance/report.html
 else
-  echo -e "${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatorios${NC}"
+  echo -e "${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatórios${NC}"
 fi
 
 summary
 
-# Codigo de saida baseado em falhas
+# Código de saida baseado em falhas
 [ "$FAIL_COUNT" -eq 0 ] && exit 0 || exit 1

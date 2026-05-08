@@ -567,7 +567,7 @@
       </h1>
 
       <p class="hero-desc">
-        OmniQA e um framework de automacao multi-plataforma que cobre Web, API, Mobile e Performance em um unico monorepo — com TypeScript, CI/CD e relatorios visuais.
+        OmniQA e um framework de automação multi-plataforma que cobre Web, API, Mobile e Performance em um único monorepo — com TypeScript, CI/CD e relatórios visuais.
       </p>
 
       <div class="hero-actions">
@@ -594,7 +594,7 @@
         </div>
         <div class="stat">
           <div class="stat-value gradient-text">HTML</div>
-          <div class="stat-label">Relatorios visuais</div>
+          <div class="stat-label">Relatórios visuais</div>
         </div>
       </div>
     </div>
@@ -603,31 +603,31 @@
     <section id="plataformas">
       <div class="section-label">Cobertura</div>
       <h2>Uma base, <span class="gradient-text">quatro frentes</span></h2>
-      <p class="section-desc">Cada plataforma vive em seu proprio modulo, com ferramentas especializadas e sem acoplamento entre camadas.</p>
+      <p class="section-desc">Cada plataforma vive em seu próprio módulo, com ferramentas especializadas e sem acoplamento entre camadas.</p>
 
       <div class="platforms-grid">
         <div class="platform-card">
           <div class="platform-icon icon-api">🔌</div>
           <h3>API Testing</h3>
-          <p>Validacao de contrato, status code, schema e tempo de resposta. Cobertura rapida e barata na base da piramide.</p>
+          <p>Validação de contrato, status code, schema e tempo de resposta. Cobertura rápida e barata na base da pirâmide.</p>
           <span class="platform-tag">Playwright</span>
         </div>
         <div class="platform-card">
           <div class="platform-icon icon-web">🌐</div>
           <h3>Web E2E</h3>
-          <p>Jornadas criticas com Page Object Model — login, carrinho e checkout com evidencias automaticas em falhas.</p>
+          <p>Jornadas críticas com Page Object Model — login, carrinho e checkout com evidências automáticas em falhas.</p>
           <span class="platform-tag">Playwright + Chromium</span>
         </div>
         <div class="platform-card">
           <div class="platform-icon icon-mobile">📱</div>
           <h3>Mobile</h3>
-          <p>Automacao cross-platform com Screen Objects. Seletores separados por SO, logica de teste reutilizada entre Android e iOS.</p>
+          <p>Automação cross-platform com Screen Objects. Seletores separados por SO, lógica de teste reutilizada entre Android e iOS.</p>
           <span class="platform-tag">Appium + WebdriverIO</span>
         </div>
         <div class="platform-card">
           <div class="platform-icon icon-perf">⚡</div>
           <h3>Performance</h3>
-          <p>Testes de carga com VUs configuráveis, thresholds de p95 e relatorio HTML com metricas de throughput e latência.</p>
+          <p>Testes de carga com VUs configuráveis, thresholds de p95 e relatório HTML com métricas de throughput e latência.</p>
           <span class="platform-tag">k6</span>
         </div>
       </div>
@@ -645,7 +645,7 @@
 ├── <span class="highlight">tests-api/</span>              <span style="color:#475569">← Testes de contrato e payload</span>
 │   ├── support/
 │   │   ├── <span class="accent">contracts.ts</span>    <span style="color:#475569">← Schema esperado de cada endpoint</span>
-│   │   └── <span class="accent">apiAssertions.ts</span> <span style="color:#475569">← Helpers de validacao reutilizaveis</span>
+│   │   └── <span class="accent">apiAssertions.ts</span> <span style="color:#475569">← Helpers de validação reutilizáveis</span>
 │   └── jsonplaceholder.spec.ts
 │
 ├── <span class="highlight">tests-web/</span>              <span style="color:#475569">← E2E com Page Object Model</span>
@@ -654,7 +654,7 @@
 │   │   ├── <span class="accent">InventoryPage.ts</span>
 │   │   ├── <span class="accent">CartPage.ts</span>
 │   │   └── <span class="accent">CheckoutPage.ts</span>
-│   ├── specs/               <span style="color:#475569">← Um spec por jornada critica</span>
+│   ├── specs/               <span style="color:#475569">← Um spec por jornada crítica</span>
 │   └── support/
 │       ├── <span class="green">evidence.ts</span>    <span style="color:#475569">← Screenshot automatico em falhas</span>
 │       └── <span class="green">users.ts</span>       <span style="color:#475569">← Test data centralizado</span>
@@ -670,7 +670,7 @@
 │
 ├── <span class="highlight">tests-performance/</span>      <span style="color:#475569">← Scripts k6 com thresholds</span>
 │
-└── <span class="highlight">scripts/</span>                <span style="color:#475569">← Geradores HTML e regressao local</span>
+└── <span class="highlight">scripts/</span>                <span style="color:#475569">← Geradores HTML e regressão local</span>
     ├── <span class="orange">report-styles.ts</span>    <span style="color:#475569">← Design system compartilhado</span>
     ├── <span class="orange">generate-junit-report.ts</span>
     ├── <span class="orange">generate-performance-report.ts</span>
@@ -682,39 +682,39 @@
     <!-- Patterns -->
     <section id="patterns">
       <div class="section-label">Engenharia</div>
-      <h2>Padroes <span class="gradient-text">aplicados</span></h2>
-      <p class="section-desc">Cada decisao de design tem um motivo — reuso, manutencao e clareza.</p>
+      <h2>Padrões <span class="gradient-text">aplicados</span></h2>
+      <p class="section-desc">Cada decisão de design tem um motivo — reuso, manutenção e clareza.</p>
 
       <div class="patterns-grid">
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 01</div>
           <h3>Page Object Model</h3>
-          <p>Cada pagina da aplicacao web tem uma classe dedicada. Os testes nao tocam no DOM diretamente — toda interacao passa pela classe de pagina. Se um seletor muda, a correcao e feita em um unico lugar.</p>
+          <p>Cada página da aplicação web tem uma classe dedicada. Os testes não tocam no DOM diretamente — toda interacao passa pela classe de página. Se um seletor muda, a correcao e feita em um único lugar.</p>
         </div>
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 02</div>
           <h3>Screen Object — Mobile</h3>
-          <p>Equivalente ao POM para mobile. A logica de interacao fica na Screen; os seletores ficam em um arquivo separado por plataforma. Android e iOS reusam o mesmo fluxo com seletores diferentes.</p>
+          <p>Equivalente ao POM para mobile. A lógica de interacao fica na Screen; os seletores ficam em um arquivo separado por plataforma. Android e iOS reusam o mesmo fluxo com seletores diferentes.</p>
         </div>
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 03</div>
           <h3>Support Layer</h3>
-          <p>Cada modulo tem uma pasta support/ com responsabilidades distintas: dados de teste (*Data.ts), seletores (*Selectors.ts) e evidencias (evidence.ts). Separacao clara, sem vazamento entre camadas.</p>
+          <p>Cada módulo tem uma pasta support/ com responsabilidades distintas: dados de teste (*Data.ts), seletores (*Selectors.ts) e evidências (evidence.ts). Separação clara, sem vazamento entre camadas.</p>
         </div>
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 04</div>
           <h3>Contract Testing</h3>
-          <p>Os testes de API validam nao apenas o status code, mas o schema do payload via contratos tipados em TypeScript. Qualquer mudanca inesperada no contrato quebra o teste antes de chegar ao E2E.</p>
+          <p>Os testes de API validam não apenas o status code, mas o schema do payload via contratos tipados em TypeScript. Qualquer mudanca inesperada no contrato quebra o teste antes de chegar ao E2E.</p>
         </div>
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 05</div>
-          <h3>Piramide de Testes</h3>
-          <p>Mais testes baratos e rapidos na base (API/contrato), menos E2E no topo (Web/Mobile). Performance como camada transversal. Cada camada valida o que nao foi coberto pela camada abaixo.</p>
+          <h3>Pirâmide de Testes</h3>
+          <p>Mais testes baratos e rápidos na base (API/contrato), menos E2E no topo (Web/Mobile). Performance como camada transversal. Cada camada valida o que não foi coberto pela camada abaixo.</p>
         </div>
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 06</div>
           <h3>Monorepo Modular</h3>
-          <p>Uma unica base de codigo, configuracao e linguagem para todas as plataformas. Sem duplicidade de setup, sem troca de contexto entre repositorios. CI unico para todas as camadas.</p>
+          <p>Uma única base de código, configuração e linguagem para todas as plataformas. Sem duplicidade de setup, sem troca de contexto entre repositorios. CI único para todas as camadas.</p>
         </div>
       </div>
     </section>
@@ -722,7 +722,7 @@
     <!-- CI/CD -->
     <section id="ci" style="background: var(--bg2); max-width: 100%; padding: 100px 0;">
       <div style="max-width: 1100px; margin: 0 auto; padding: 0 40px;">
-        <div class="section-label">Automacao</div>
+        <div class="section-label">Automação</div>
         <h2>Pipeline <span class="gradient-text">CI/CD</span></h2>
         <p class="section-desc">GitHub Actions com runner Ubuntu gratuito. Dispara em todo push e pull request para main.</p>
 
@@ -741,28 +741,28 @@
           <div class="pipeline-arrow">→</div>
           <div class="pipeline-step" style="border-color: rgba(249,115,22,0.4);">test:perf<small>k6</small></div>
           <div class="pipeline-arrow">→</div>
-          <div class="pipeline-step" style="border-color: rgba(34,197,94,0.4);">Relatorios<small>HTML + JUnit</small></div>
+          <div class="pipeline-step" style="border-color: rgba(34,197,94,0.4);">Relatórios<small>HTML + JUnit</small></div>
         </div>
 
         <p style="color: var(--muted); font-size: 0.85rem; text-align: center;">
-          Artefatos disponiveis na aba Actions por 30 dias · Mobile executado localmente
+          Artefatos disponíveis na aba Actions por 30 dias · Mobile executado localmente
         </p>
       </div>
     </section>
 
     <!-- Comandos -->
     <section id="comandos">
-      <div class="section-label">Execucao</div>
+      <div class="section-label">Execução</div>
       <h2>Comandos <span class="gradient-text">principais</span></h2>
       <p class="section-desc">Tudo via npm scripts — sem ferramentas globais adicionais (exceto k6 e Appium para mobile).</p>
 
       <div class="commands-grid">
         <div class="command-card">
-          <div class="command-header">Regressao sem mobile</div>
+          <div class="command-header">Regressão sem mobile</div>
           <div class="command-body">npm run test:regression:skip-mobile</div>
         </div>
         <div class="command-card">
-          <div class="command-header">Regressao sem iOS</div>
+          <div class="command-header">Regressão sem iOS</div>
           <div class="command-body">npm run test:regression:skip-ios</div>
         </div>
         <div class="command-card">
@@ -778,7 +778,7 @@
           <div class="command-body">npm run test:performance</div>
         </div>
         <div class="command-card">
-          <div class="command-header">Gerar todos os relatorios</div>
+          <div class="command-header">Gerar todos os relatórios</div>
           <div class="command-body">npm run report:all</div>
         </div>
       </div>
@@ -788,7 +788,7 @@
 
   <footer>
     <strong>OmniQA Framework</strong> &nbsp;·&nbsp;
-    Automacao multi-plataforma com TypeScript &nbsp;·&nbsp;
+    Automação multi-plataforma com TypeScript &nbsp;·&nbsp;
     <a href="https://github.com/BrendonWalefy/omniqa-framework" target="_blank">GitHub</a>
   </footer>
 

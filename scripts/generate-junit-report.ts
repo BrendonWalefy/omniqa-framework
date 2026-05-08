@@ -97,7 +97,7 @@ if (xmlFiles.length === 0) {
   process.exit(1);
 }
 
-// Merge todos os XMLs em um unico resultado
+// Merge todos os XMLs em um único resultado
 const data: JUnitSummary = { tests: 0, failures: 0, skipped: 0, time: 0, suites: [] };
 for (const xmlPath of xmlFiles) {
   const parsed = parseJUnit(fs.readFileSync(xmlPath, 'utf-8'));
@@ -146,7 +146,7 @@ function renderSuite(suite: TestSuite, index: number): string {
           <tr>
             <th>Caso de Teste</th>
             <th class="center">Status</th>
-            <th class="right">Duracao</th>
+            <th class="right">Duração</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -171,7 +171,7 @@ const body = `
       <div class="card ${data.failures > 0 ? 'card--danger' : ''}">
         <div class="card__label">Falharam</div>
         <div class="card__value" style="color:${data.failures > 0 ? COLORS.danger : COLORS.muted}">${data.failures}</div>
-        <div class="card__sub">${data.failures > 0 ? 'requer atencao' : 'nenhuma falha'}</div>
+        <div class="card__sub">${data.failures > 0 ? 'requer atenção' : 'nenhuma falha'}</div>
       </div>
       <div class="card ${data.skipped > 0 ? 'card--warning' : ''}">
         <div class="card__label">Pulados</div>
@@ -179,7 +179,7 @@ const body = `
         <div class="card__sub">ignorados</div>
       </div>
       <div class="card">
-        <div class="card__label">Duracao</div>
+        <div class="card__label">Duração</div>
         <div class="card__value" style="font-size:1.5rem">${formatSec(data.time)}</div>
         <div class="card__sub">tempo total</div>
       </div>
@@ -193,12 +193,12 @@ const body = `
 `;
 
 const html = renderPage({
-  title: 'Relatorio de Testes — OmniQA',
-  reportTitle: 'Relatorio de Testes — OmniQA Framework',
+  title: 'Relatório de Testes — OmniQA',
+  reportTitle: 'Relatório de Testes — OmniQA Framework',
   reportSubtitle: `JUnit · Gerado em ${new Date().toLocaleString('pt-BR')}`,
   passed: allPassed,
   body,
 });
 
 fs.writeFileSync(outputPath, html, 'utf-8');
-console.log(`Relatorio JUnit gerado: ${outputPath}`);
+console.log(`Relatório JUnit gerado: ${outputPath}`);

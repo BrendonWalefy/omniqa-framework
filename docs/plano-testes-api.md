@@ -8,7 +8,7 @@
 
 ## Objetivo
 
-Validar disponibilidade, contrato basico e comportamento dos endpoints selecionados.
+Validar disponibilidade, contrato básico e comportamento dos endpoints selecionados.
 
 ## Escopo
 
@@ -16,19 +16,19 @@ Validar disponibilidade, contrato basico e comportamento dos endpoints seleciona
 - Estrutura minima de resposta.
 - Conteudo esperado em campos obrigatorios.
 - Tempo de resposta.
-- Cenarios positivos e negativos basicos.
+- Cenários positivos e negativos basicos.
 
-## Cenarios iniciais
+## Cenários iniciais
 
-| ID | Endpoint | Cenario | Resultado esperado | Prioridade |
+| ID | Endpoint | Cenário | Resultado esperado | Prioridade |
 |---|---|---|---|---|
-| API-001 | `/users` | Listar usuarios | Retorna 200 e lista nao vazia | Alta |
-| API-002 | `/users/1` | Buscar usuario especifico | Retorna usuario com id 1 | Alta |
-| API-003 | `/posts` | Listar posts | Retorna 200 e lista nao vazia | Alta |
+| API-001 | `/users` | Listar usuários | Retorna 200 e lista não vazia | Alta |
+| API-002 | `/users/1` | Buscar usuário específico | Retorna usuário com id 1 | Alta |
+| API-003 | `/posts` | Listar posts | Retorna 200 e lista não vazia | Alta |
 | API-004 | `/posts` | Criar post | Retorna 201 e payload coerente | Media |
-| API-005 | `/comments` | Listar comentarios | Retorna 200 e lista nao vazia | Media |
+| API-005 | `/comments` | Listar comentarios | Retorna 200 e lista não vazia | Media |
 
-## Automacao
+## Automação
 
 Status: automatizado em `tests-api/jsonplaceholder.spec.ts`.
 
@@ -36,7 +36,7 @@ Validacoes implementadas:
 
 - Status code.
 - Content-Type JSON.
-- Contrato basico de usuario, post e comentario.
-- Lista nao vazia para endpoints de consulta.
-- Payload coerente na criacao de post.
-- Tempo de resposta maximo para listagem de usuarios.
+- Contrato básico de usuário, post e comentario.
+- Lista não vazia para endpoints de consulta.
+- Payload coerente na criação de post.
+- Tempo de resposta máximo para listagem de usuários.

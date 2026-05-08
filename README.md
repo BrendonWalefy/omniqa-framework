@@ -5,20 +5,20 @@
 
 > 🌐 **[brendonwalefy.github.io/omniqa-framework](https://brendonwalefy.github.io/omniqa-framework)**
 
-Framework de automacao de testes multi-plataforma com TypeScript — cobrindo Web, API, Mobile e Performance em um unico monorepo modular.
+Framework de automação de testes multi-plataforma com TypeScript — cobrindo Web, API, Mobile e Performance em um único monorepo modular.
 
 ---
 
-## Sumario
+## Sumário
 
 - [Visao Geral](#visao-geral)
 - [Arquitetura](#arquitetura)
-- [Padroes Aplicados](#padroes-aplicados)
+- [Padrões Aplicados](#padrões-aplicados)
 - [Stack](#stack)
 - [Pre-requisitos](#pre-requisitos)
-- [Instalacao](#instalacao)
+- [Instalação](#instalação)
 - [Como Executar](#como-executar)
-- [Relatorios](#relatorios)
+- [Relatórios](#relatórios)
 - [CI/CD](#cicd)
 - [Estrutura de Pastas](#estrutura-de-pastas)
 
@@ -26,7 +26,7 @@ Framework de automacao de testes multi-plataforma com TypeScript — cobrindo We
 
 ## Visao Geral
 
-O OmniQA foi construido para validar multiplas plataformas de forma independente, mantendo uma base de codigo coesa e sem acoplamento entre as camadas. Cada frente de testes vive em seu proprio modulo, compartilha convencoes de linguagem e gera evidencias automaticas.
+O OmniQA foi construido para validar múltiplas plataformas de forma independente, mantendo uma base de código coesa e sem acoplamento entre as camadas. Cada frente de testes vive em seu próprio módulo, compartilha convencoes de linguagem e gera evidências automáticas.
 
 **Plataformas cobertas:**
 
@@ -47,35 +47,35 @@ O projeto segue uma arquitetura de **monorepo modular por plataforma**. Cada cam
 ```
 omniqa-framework/
 ├── tests-api/              # Testes de contrato e comportamento de API
-│   ├── support/            # Helpers de assertion e definicao de contratos
+│   ├── support/            # Helpers de assertion e definição de contratos
 │   └── *.spec.ts
 │
 ├── tests-web/              # Testes E2E de interface Web
-│   ├── pages/              # Page Objects (uma classe por pagina)
-│   ├── specs/              # Cenarios organizados por jornada
-│   └── support/            # Dados de teste, evidencias, utilitarios
+│   ├── pages/              # Page Objects (uma classe por página)
+│   ├── specs/              # Cenários organizados por jornada
+│   └── support/            # Dados de teste, evidências, utilitarios
 │
 ├── tests-mobile/
 │   ├── android/            # Testes mobile para Android
 │   │   ├── screens/        # Screen Objects (equivalente ao POM para mobile)
-│   │   ├── specs/          # Cenarios de teste
-│   │   └── support/        # Seletores, dados e evidencias
+│   │   ├── specs/          # Cenários de teste
+│   │   └── support/        # Seletores, dados e evidências
 │   └── ios/                # Espelho para iOS com seletores proprios
 │
 ├── tests-performance/      # Scripts de carga com k6
 │
-├── scripts/                # Geradores de relatorio e orquestrador de regressao
-│   ├── report-styles.ts    # Design system compartilhado para os relatorios
+├── scripts/                # Geradores de relatório e orquestrador de regressão
+│   ├── report-styles.ts    # Design system compartilhado para os relatórios
 │   ├── generate-junit-report.ts
 │   ├── generate-performance-report.ts
-│   └── regression.sh       # Script local de regressao completa
+│   └── regression.sh       # Script local de regressão completa
 │
-├── docs/                   # Documentacao de estrategia, planos e rastreabilidade
+├── docs/                   # Documentação de estratégia, planos e rastreabilidade
 ├── reports/                # Saida dos testes (ignorada pelo git)
 │
-├── playwright.config.ts    # Configuracao de projetos Web e API
-├── wdio.android.conf.ts    # Configuracao WebdriverIO para Android
-└── wdio.ios.conf.ts        # Configuracao WebdriverIO para iOS
+├── playwright.config.ts    # Configuração de projetos Web e API
+├── wdio.android.conf.ts    # Configuração WebdriverIO para Android
+└── wdio.ios.conf.ts        # Configuração WebdriverIO para iOS
 ```
 
 ### Camadas e responsabilidades
@@ -86,20 +86,20 @@ omniqa-framework/
 ├─────────────────────────────────────────────┤
 │         Page / Screen Objects               │  Define COMO interagir com a UI
 ├─────────────────────────────────────────────┤
-│              Support Layer                  │  Dados, seletores, evidencias
+│              Support Layer                  │  Dados, seletores, evidências
 ├─────────────────────────────────────────────┤
-│         Ferramentas (Playwright/WDIO)        │  Execucao e browser control
+│         Ferramentas (Playwright/WDIO)        │  Execução e browser control
 └─────────────────────────────────────────────┘
 ```
 
 ---
 
-## Padroes Aplicados
+## Padrões Aplicados
 
 ### Page Object Model (POM) — Web
-Cada pagina da aplicacao web tem uma classe dedicada em `tests-web/pages/`. Os testes nao interagem diretamente com o DOM — toda navegacao e interacao passa pela classe de pagina correspondente.
+Cada página da aplicação web tem uma classe dedicada em `tests-web/pages/`. Os testes não interagem diretamente com o DOM — toda navegacao e interacao passa pela classe de página correspondente.
 
-**Por que usar:** Centraliza a definicao de como interagir com cada tela. Se um seletor muda, a correcao e feita em um unico lugar, sem tocar nos testes.
+**Por que usar:** Centraliza a definição de como interagir com cada tela. Se um seletor muda, a correcao e feita em um único lugar, sem tocar nos testes.
 
 ```
 tests-web/pages/
@@ -110,28 +110,28 @@ tests-web/pages/
 ```
 
 ### Screen Object — Mobile
-Equivalente ao POM para mobile. Cada tela do app tem uma classe em `screens/` que encapsula a logica de interacao com os elementos nativos.
+Equivalente ao POM para mobile. Cada tela do app tem uma classe em `screens/` que encapsula a lógica de interacao com os elementos nativos.
 
-**Diferencial:** Os seletores ficam em `support/contactsSelectors.ts` separados da logica de interacao, permitindo que Android e iOS reusem o mesmo fluxo com seletores diferentes.
+**Diferencial:** Os seletores ficam em `support/contactsSelectors.ts` separados da lógica de interacao, permitindo que Android e iOS reusem o mesmo fluxo com seletores diferentes.
 
 ### Support Layer
-Cada modulo tem uma pasta `support/` com tres responsabilidades distintas:
+Cada módulo tem uma pasta `support/` com três responsabilidades distintas:
 
 | Arquivo | Responsabilidade |
 |---|---|
 | `*Data.ts` | Dados de teste (nomes, emails, senhas) |
 | `*Selectors.ts` | Seletores de elementos (apenas mobile) |
-| `evidence.ts` | Captura de screenshots e anexos nos relatorios |
+| `evidence.ts` | Captura de screenshots e anexos nos relatórios |
 
 ### Contract Testing — API
-Os testes de API validam nao apenas o status code, mas a estrutura do payload via contratos definidos em `tests-api/support/contracts.ts`. Qualquer mudanca inesperada no schema da API quebra o contrato antes de chegar ao E2E.
+Os testes de API validam não apenas o status code, mas a estrutura do payload via contratos definidos em `tests-api/support/contracts.ts`. Qualquer mudanca inesperada no schema da API quebra o contrato antes de chegar ao E2E.
 
-### Piramide de Testes
-A distribuicao dos testes segue a piramide classica — mais testes baratos e rapidos na base, menos E2E no topo:
+### Pirâmide de Testes
+A distribuição dos testes segue a pirâmide classica — mais testes baratos e rápidos na base, menos E2E no topo:
 
 ```
          /\
-        /E2E\         Web + Mobile (jornadas criticas)
+        /E2E\         Web + Mobile (jornadas críticas)
        /──────\
       /  API   \      Contrato, schema, status code
      /──────────\
@@ -143,14 +143,14 @@ A distribuicao dos testes segue a piramide classica — mais testes baratos e ra
 
 ## Stack
 
-| Ferramenta | Versao | Finalidade |
+| Ferramenta | Versão | Finalidade |
 |---|---|---|
 | TypeScript | 5.x | Linguagem principal |
 | Playwright | 1.52+ | Web E2E + API testing |
-| Appium | 3.x | Automacao mobile |
+| Appium | 3.x | Automação mobile |
 | WebdriverIO | 9.x | Runner para testes mobile |
 | k6 | 1.x | Testes de performance |
-| tsx | 4.x | Execucao de scripts TypeScript |
+| tsx | 4.x | Execução de scripts TypeScript |
 
 ---
 
@@ -181,7 +181,7 @@ brew install k6
 
 ---
 
-## Instalacao
+## Instalação
 
 ```bash
 npm install
@@ -192,17 +192,17 @@ npx playwright install chromium
 
 ## Como Executar
 
-### Regressao completa (sem mobile)
+### Regressão completa (sem mobile)
 ```bash
 npm run test:regression:skip-mobile
 ```
 
-### Regressao completa (sem iOS)
+### Regressão completa (sem iOS)
 ```bash
 npm run test:regression:skip-ios
 ```
 
-### Regressao completa (todas as plataformas)
+### Regressão completa (todas as plataformas)
 ```bash
 npm run test:regression
 ```
@@ -228,25 +228,25 @@ npm run test:performance
 
 ---
 
-## Relatorios
+## Relatórios
 
-Todos os relatorios sao gerados em `reports/` (ignorado pelo git).
+Todos os relatórios sao gerados em `reports/` (ignorado pelo git).
 
 ```bash
-# Gera relatorio JUnit (HTML) a partir dos XMLs
+# Gera relatório JUnit (HTML) a partir dos XMLs
 npm run report:junit
 
-# Gera relatorio de performance (HTML) a partir do JSON do k6
+# Gera relatório de performance (HTML) a partir do JSON do k6
 npm run report:performance
 
-# Gera todos os relatorios de uma vez
+# Gera todos os relatórios de uma vez
 npm run report:all
 
-# Abre o relatorio interativo do Playwright
+# Abre o relatório interativo do Playwright
 npm run report
 ```
 
-Os relatorios JUnit e de performance sao abertos automaticamente no navegador ao final de `npm run test:regression`.
+Os relatórios JUnit e de performance sao abertos automaticamente no navegador ao final de `npm run test:regression`.
 
 ---
 
@@ -254,7 +254,7 @@ Os relatorios JUnit e de performance sao abertos automaticamente no navegador ao
 
 O pipeline roda automaticamente em todo push e pull request para `main`.
 
-**Job unico — API / Web / Performance (ubuntu-latest, gratuito):**
+**Job único — API / Web / Performance (ubuntu-latest, gratuito):**
 
 ```
 Checkout → Node setup → Playwright install → k6 install
@@ -262,20 +262,20 @@ Checkout → Node setup → Playwright install → k6 install
     → report:all → upload artefatos → publicar resultado no GitHub
 ```
 
-**Mobile:** executado localmente. Requer dispositivo ou emulador — nao entra na esteira por custo e instabilidade em runners compartilhados.
+**Mobile:** executado localmente. Requer dispositivo ou emulador — não entra na esteira por custo e instabilidade em runners compartilhados.
 
-Os artefatos (HTML de relatorio, XML JUnit) ficam disponiveis na aba Actions por 30 dias.
+Os artefatos (HTML de relatório, XML JUnit) ficam disponíveis na aba Actions por 30 dias.
 
 ---
 
-## Documentacao
+## Documentação
 
 | Documento | Descricao |
 |---|---|
-| [Estrategia de QA](./docs/estrategia-qa.md) | Principios, escolhas tecnicas e piramide |
-| [Plano de testes Web](./docs/plano-testes-web.md) | Cenarios e cobertura Web |
-| [Plano de testes API](./docs/plano-testes-api.md) | Cenarios e contratos de API |
-| [Plano de testes Mobile](./docs/plano-testes-mobile.md) | Cenarios Android e iOS |
-| [Plano de testes Performance](./docs/plano-testes-performance.md) | Cenarios k6 e thresholds |
-| [Plano de execucao](./docs/plano-execucao.md) | Ordem e criterios de execucao |
+| [Estratégia de QA](./docs/estratégia-qa.md) | Princípios, escolhas técnicas e pirâmide |
+| [Plano de testes Web](./docs/plano-testes-web.md) | Cenários e cobertura Web |
+| [Plano de testes API](./docs/plano-testes-api.md) | Cenários e contratos de API |
+| [Plano de testes Mobile](./docs/plano-testes-mobile.md) | Cenários Android e iOS |
+| [Plano de testes Performance](./docs/plano-testes-performance.md) | Cenários k6 e thresholds |
+| [Plano de execução](./docs/plano-execução.md) | Ordem e critérios de execução |
 | [Matriz de rastreabilidade](./docs/matriz-rastreabilidade.md) | IDs, plataformas e status |

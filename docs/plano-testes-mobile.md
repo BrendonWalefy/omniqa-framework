@@ -1,29 +1,29 @@
 # Plano de Testes Mobile
 
-## Aplicacao
+## Aplicação
 
 Aplicativo nativo de Contatos no Android e iOS.
 
 ## Objetivo
 
-Validar um fluxo simples de criacao e remocao de contatos em dispositivos Android e iOS, com foco em estabilidade do script, seletores reutilizaveis e clareza de evidencias.
+Validar um fluxo simples de criação e remoção de contatos em dispositivos Android e iOS, com foco em estabilidade do script, seletores reutilizáveis e clareza de evidências.
 
 ## Escopo
 
-- Criacao de contato.
-- Remocao de contato.
-- Evidencia final de sucesso por cenario.
+- Criação de contato.
+- Remoção de contato.
+- Evidência final de sucesso por cenário.
 - Screenshot automatico em falha.
 
-## Estrategia
+## Estratégia
 
-O fluxo foi alterado de calculadora para contatos porque algumas imagens Android nao possuem aplicativo de calculadora instalado. O app de contatos oferece um fluxo funcional simples para demonstrar criacao, consulta e remocao de dados em Mobile.
+O fluxo foi alterado de calculadora para contatos porque algumas imagens Android não possuem aplicativo de calculadora instalado. O app de contatos oferece um fluxo funcional simples para demonstrar criação, consulta e remoção de dados em Mobile.
 
-Os seletores usam fallback para Google Contacts, AOSP Contacts e Contatos iOS, pois a implementacao nativa pode mudar conforme a imagem do emulador ou simulador.
+Os seletores usam fallback para Google Contacts, AOSP Contacts e Contatos iOS, pois a implementação nativa pode mudar conforme a imagem do emulador ou simulador.
 
-## Cenarios iniciais
+## Cenários iniciais
 
-| ID | Cenario | Entrada | Resultado esperado | Prioridade |
+| ID | Cenário | Entrada | Resultado esperado | Prioridade |
 |---|---|---|---|---|
 | MOB-001 | Adicionar contato | Nome, sobrenome e telefone ficticio | Contato criado e visivel | Alta |
 | MOB-002 | Remover contato | Contato criado no fluxo | Contato removido da lista | Alta |
@@ -31,11 +31,11 @@ Os seletores usam fallback para Google Contacts, AOSP Contacts e Contatos iOS, p
 | IOS-002 | Remover contato iOS | Contato criado no fluxo | Contato removido da lista | Alta |
 
 
-## Automacao
+## Automação
 
 Status: automatizado para Android em `tests-mobile/android/specs` e iOS em `tests-mobile/ios/specs`.
 
-Padroes implementados:
+Padrões implementados:
 
 - Appium com driver UiAutomator2 para Android e XCUITest para iOS.
 - WebdriverIO como runner Mobile.
@@ -49,10 +49,10 @@ Padroes implementados:
 - Java JDK configurado.
 - Android SDK configurado.
 - Emulador ou dispositivo Android ativo.
-- Driver UiAutomator2 disponivel para o Appium.
+- Driver UiAutomator2 disponível para o Appium.
 - Xcode configurado.
 - Simulador iOS ativo.
-- Driver XCUITest disponivel para o Appium.
+- Driver XCUITest disponível para o Appium.
 
 Comandos principais:
 
@@ -71,7 +71,7 @@ ANDROID_CONTACTS_ACTIVITY=.activities.PeopleActivity \
 npm run test:mobile:android
 ```
 
-Caso o simulador iOS use outro device, versao ou bundle, executar com variaveis de ambiente:
+Caso o simulador iOS use outro device, versão ou bundle, executar com variaveis de ambiente:
 
 ```bash
 IOS_DEVICE_NAME="iPhone Air" \
@@ -82,10 +82,10 @@ npm run test:mobile:ios
 ```
 
 
-## Validacao local
+## Validação local
 
 - Typecheck TypeScript executado com sucesso via `npm run typecheck`.
-- Execucao Mobile Android depende de ambiente com Android SDK, `ANDROID_HOME`, adb e emulador/dispositivo ativo.
-- Execucao Mobile Android validada com sucesso via `npm run test:mobile:android`, cobrindo criacao e remocao de contato.
-- Execucao Mobile iOS depende de Xcode, simulador ativo e driver XCUITest.
-- Execucao Mobile iOS validada com sucesso via `npm run test:mobile:ios`, cobrindo criacao e remocao de contato.
+- Execução Mobile Android depende de ambiente com Android SDK, `ANDROID_HOME`, adb e emulador/dispositivo ativo.
+- Execução Mobile Android validada com sucesso via `npm run test:mobile:android`, cobrindo criação e remoção de contato.
+- Execução Mobile iOS depende de Xcode, simulador ativo e driver XCUITest.
+- Execução Mobile iOS validada com sucesso via `npm run test:mobile:ios`, cobrindo criação e remoção de contato.
