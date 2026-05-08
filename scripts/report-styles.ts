@@ -1,4 +1,4 @@
-// Design system compartilhado — paleta Itaú
+// Design system compartilhado — OmniQA Framework
 
 export const COLORS = {
   primary: '#003087',

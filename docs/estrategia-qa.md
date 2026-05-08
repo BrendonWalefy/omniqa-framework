@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Demonstrar uma abordagem senior de qualidade para tres frentes de validacao: Web, API e Mobile, com automacao reaproveitavel, relatorios executivos e criterios claros de risco.
+Definir uma abordagem estruturada de qualidade para tres frentes de validacao: Web, API e Mobile, com automacao reaproveitavel, relatorios executivos e criterios claros de risco.
 
 ## Principios da abordagem
 
@@ -79,6 +79,7 @@ Escopo inicial:
 
 - Teste simples de carga em endpoints de leitura do JSONPlaceholder.
 - Validacao de tempo de resposta, taxa de erro e throughput.
+- Carga controlada e curta para evitar impacto indevido em API publica.
 
 ## Piramide de testes
 

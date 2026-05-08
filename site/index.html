@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniQA Framework</title>
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --primary-dark: #0284c7;
+      --accent: #a855f7;
+      --accent2: #06b6d4;
+      --bg: #020817;
+      --bg2: #0f172a;
+      --bg3: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255,255,255,0.07);
+      --card-bg: rgba(15,23,42,0.8);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Background ── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(14,165,233,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14,165,233,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(168,85,247,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(14,165,233,0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ── Neural network SVG ── */
+    .neural-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(2,8,23,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem !important;
+    }
+
+    /* ── Layout ── */
+    main { position: relative; z-index: 1; }
+    section { padding: 100px 40px; max-width: 1100px; margin: 0 auto; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 40px 80px;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(168,85,247,0.12);
+      border: 1px solid rgba(168,85,247,0.3);
+      color: #c084fc;
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 32px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #a855f7;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.4); }
+    }
+
+    h1 {
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 24px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: 1.2rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      box-shadow: 0 0 30px rgba(14,165,233,0.3);
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(14,165,233,0.4); }
+
+    .btn-secondary {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background: var(--bg2); border-color: rgba(255,255,255,0.15); }
+
+    /* ── Stats ── */
+    .stats {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 80px;
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat { text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+    .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Section titles ── */
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+      margin-bottom: 56px;
+    }
+
+    /* ── Platform cards ── */
+    .platforms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .platform-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .platform-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .platform-card:hover { transform: translateY(-4px); border-color: rgba(14,165,233,0.3); }
+    .platform-card:hover::before { opacity: 1; }
+
+    .platform-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    .icon-api { background: rgba(14,165,233,0.12); }
+    .icon-web { background: rgba(168,85,247,0.12); }
+    .icon-mobile { background: rgba(34,197,94,0.12); }
+    .icon-perf { background: rgba(249,115,22,0.12); }
+
+    .platform-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .platform-card p {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .platform-tag {
+      display: inline-block;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Architecture ── */
+    .arch-section { background: var(--bg2); border-radius: 0; }
+
+    .arch-diagram {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+      overflow-x: auto;
+      line-height: 1.8;
+    }
+
+    .arch-diagram .highlight { color: var(--primary); }
+    .arch-diagram .accent { color: var(--accent); }
+    .arch-diagram .green { color: #4ade80; }
+    .arch-diagram .orange { color: #fb923c; }
+
+    /* ── Patterns ── */
+    .patterns-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .pattern-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .pattern-number {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+
+    .pattern-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+    .pattern-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── CI ── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 40px 0;
+    }
+
+    .pipeline-step {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-align: center;
+      min-width: 110px;
+    }
+
+    .pipeline-step small {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-weight: 400;
+      margin-top: 3px;
+    }
+
+    .pipeline-arrow {
+      color: var(--muted);
+      font-size: 1.2rem;
+      padding: 0 8px;
+    }
+
+    /* ── Commands ── */
+    .commands-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .command-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .command-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .command-header::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .command-body {
+      padding: 14px 18px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: #7dd3fc;
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 48px 40px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer a { color: var(--primary); text-decoration: none; }
+    footer strong { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      section { padding: 64px 20px; }
+      .hero { padding: 100px 20px 60px; }
+      .stats { gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- Neural network background SVG -->
+  <svg class="neural-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="nodeGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#0ea5e9" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <!-- Connections -->
+    <g stroke="#0ea5e9" stroke-width="0.5" stroke-opacity="0.4">
+      <line x1="120" y1="150" x2="380" y2="280"/>
+      <line x1="380" y1="280" x2="620" y2="180"/>
+      <line x1="620" y1="180" x2="900" y2="320"/>
+      <line x1="900" y1="320" x2="1150" y2="200"/>
+      <line x1="1150" y1="200" x2="1380" y2="350"/>
+      <line x1="120" y1="150" x2="200" y2="420"/>
+      <line x1="200" y1="420" x2="500" y2="500"/>
+      <line x1="500" y1="500" x2="380" y2="280"/>
+      <line x1="500" y1="500" x2="720" y2="600"/>
+      <line x1="620" y1="180" x2="500" y2="500"/>
+      <line x1="900" y1="320" x2="720" y2="600"/>
+      <line x1="720" y1="600" x2="1000" y2="700"/>
+      <line x1="1000" y1="700" x2="1150" y2="200"/>
+      <line x1="1000" y1="700" x2="1300" y2="650"/>
+      <line x1="1300" y1="650" x2="1380" y2="350"/>
+      <line x1="200" y1="420" x2="120" y2="650"/>
+      <line x1="120" y1="650" x2="350" y2="750"/>
+      <line x1="350" y1="750" x2="500" y2="500"/>
+      <line x1="350" y1="750" x2="720" y2="600"/>
+      <line x1="900" y1="320" x2="1000" y2="700"/>
+    </g>
+    <!-- Nodes -->
+    <g fill="#0ea5e9" fill-opacity="0.7">
+      <circle cx="120" cy="150" r="4"/>
+      <circle cx="380" cy="280" r="6"/>
+      <circle cx="620" cy="180" r="4"/>
+      <circle cx="900" cy="320" r="7"/>
+      <circle cx="1150" cy="200" r="4"/>
+      <circle cx="1380" cy="350" r="4"/>
+      <circle cx="200" cy="420" r="5"/>
+      <circle cx="500" cy="500" r="8"/>
+      <circle cx="720" cy="600" r="6"/>
+      <circle cx="1000" cy="700" r="5"/>
+      <circle cx="1300" cy="650" r="4"/>
+      <circle cx="120" cy="650" r="4"/>
+      <circle cx="350" cy="750" r="5"/>
+    </g>
+    <!-- Accent nodes -->
+    <g fill="#a855f7" fill-opacity="0.5">
+      <circle cx="500" cy="500" r="4"/>
+      <circle cx="900" cy="320" r="4"/>
+      <circle cx="720" cy="600" r="3"/>
+    </g>
+  </svg>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-logo">
+      <div class="nav-logo-icon">Q</div>
+      OmniQA
+    </div>
+    <ul class="nav-links">
+      <li><a href="#plataformas">Plataformas</a></li>
+      <li><a href="#arquitetura">Arquitetura</a></li>
+      <li><a href="#patterns">Patterns</a></li>
+      <li><a href="#ci">CI/CD</a></li>
+      <li><a href="#comandos">Comandos</a></li>
+      <li><a href="https://github.com/BrendonWalefy/omniqa-framework" target="_blank" class="nav-cta">GitHub →</a></li>
+    </ul>
+  </nav>
+
+  <main>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-badge">Powered by AI-assisted QA Engineering</div>
+
+      <h1>
+        Qualidade em<br>
+        <span class="gradient-text">todas as camadas</span>
+      </h1>
+
+      <p class="hero-desc">
+        OmniQA e um framework de automacao multi-plataforma que cobre Web, API, Mobile e Performance em um unico monorepo — com TypeScript, CI/CD e relatorios visuais.
+      </p>
+
+      <div class="hero-actions">
+        <a href="https://github.com/BrendonWalefy/omniqa-framework" target="_blank" class="btn btn-primary">
+          Ver no GitHub →
+        </a>
+        <a href="#arquitetura" class="btn btn-secondary">
+          Explorar arquitetura
+        </a>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value gradient-text">4</div>
+          <div class="stat-label">Plataformas cobertas</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value gradient-text">100%</div>
+          <div class="stat-label">TypeScript</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value gradient-text">CI</div>
+          <div class="stat-label">GitHub Actions</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value gradient-text">HTML</div>
+          <div class="stat-label">Relatorios visuais</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plataformas -->
+    <section id="plataformas">
+      <div class="section-label">Cobertura</div>
+      <h2>Uma base, <span class="gradient-text">quatro frentes</span></h2>
+      <p class="section-desc">Cada plataforma vive em seu proprio modulo, com ferramentas especializadas e sem acoplamento entre camadas.</p>
+
+      <div class="platforms-grid">
+        <div class="platform-card">
+          <div class="platform-icon icon-api">🔌</div>
+          <h3>API Testing</h3>
+          <p>Validacao de contrato, status code, schema e tempo de resposta. Cobertura rapida e barata na base da piramide.</p>
+          <span class="platform-tag">Playwright</span>
+        </div>
+        <div class="platform-card">
+          <div class="platform-icon icon-web">🌐</div>
+          <h3>Web E2E</h3>
+          <p>Jornadas criticas com Page Object Model — login, carrinho e checkout com evidencias automaticas em falhas.</p>
+          <span class="platform-tag">Playwright + Chromium</span>
+        </div>
+        <div class="platform-card">
+          <div class="platform-icon icon-mobile">📱</div>
+          <h3>Mobile</h3>
+          <p>Automacao cross-platform com Screen Objects. Seletores separados por SO, logica de teste reutilizada entre Android e iOS.</p>
+          <span class="platform-tag">Appium + WebdriverIO</span>
+        </div>
+        <div class="platform-card">
+          <div class="platform-icon icon-perf">⚡</div>
+          <h3>Performance</h3>
+          <p>Testes de carga com VUs configuráveis, thresholds de p95 e relatorio HTML com metricas de throughput e latência.</p>
+          <span class="platform-tag">k6</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Arquitetura -->
+    <section id="arquitetura" style="background: var(--bg2); max-width: 100%; padding: 100px 0;">
+      <div style="max-width: 1100px; margin: 0 auto; padding: 0 40px;">
+        <div class="section-label">Design</div>
+        <h2>Arquitetura <span class="gradient-text">modular</span></h2>
+        <p class="section-desc">Monorepo por plataforma — responsabilidades claras, sem acoplamento entre camadas.</p>
+
+        <div class="arch-diagram">
+<span class="highlight">omniqa-framework/</span>
+├── <span class="highlight">tests-api/</span>              <span style="color:#475569">← Testes de contrato e payload</span>
+│   ├── support/
+│   │   ├── <span class="accent">contracts.ts</span>    <span style="color:#475569">← Schema esperado de cada endpoint</span>
+│   │   └── <span class="accent">apiAssertions.ts</span> <span style="color:#475569">← Helpers de validacao reutilizaveis</span>
+│   └── jsonplaceholder.spec.ts
+│
+├── <span class="highlight">tests-web/</span>              <span style="color:#475569">← E2E com Page Object Model</span>
+│   ├── pages/
+│   │   ├── <span class="accent">LoginPage.ts</span>
+│   │   ├── <span class="accent">InventoryPage.ts</span>
+│   │   ├── <span class="accent">CartPage.ts</span>
+│   │   └── <span class="accent">CheckoutPage.ts</span>
+│   ├── specs/               <span style="color:#475569">← Um spec por jornada critica</span>
+│   └── support/
+│       ├── <span class="green">evidence.ts</span>    <span style="color:#475569">← Screenshot automatico em falhas</span>
+│       └── <span class="green">users.ts</span>       <span style="color:#475569">← Test data centralizado</span>
+│
+├── <span class="highlight">tests-mobile/</span>
+│   ├── android/             <span style="color:#475569">← Screen Object + seletores Android</span>
+│   │   ├── screens/
+│   │   │   └── <span class="accent">ContactsScreen.ts</span>
+│   │   └── support/
+│   │       ├── <span class="green">contactsSelectors.ts</span>
+│   │       └── <span class="green">mobileEvidence.ts</span>
+│   └── ios/                 <span style="color:#475569">← Espelho com seletores iOS</span>
+│
+├── <span class="highlight">tests-performance/</span>      <span style="color:#475569">← Scripts k6 com thresholds</span>
+│
+└── <span class="highlight">scripts/</span>                <span style="color:#475569">← Geradores HTML e regressao local</span>
+    ├── <span class="orange">report-styles.ts</span>    <span style="color:#475569">← Design system compartilhado</span>
+    ├── <span class="orange">generate-junit-report.ts</span>
+    ├── <span class="orange">generate-performance-report.ts</span>
+    └── <span class="orange">regression.sh</span>       <span style="color:#475569">← Orchestrador com flags --skip-*</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Patterns -->
+    <section id="patterns">
+      <div class="section-label">Engenharia</div>
+      <h2>Padroes <span class="gradient-text">aplicados</span></h2>
+      <p class="section-desc">Cada decisao de design tem um motivo — reuso, manutencao e clareza.</p>
+
+      <div class="patterns-grid">
+        <div class="pattern-card">
+          <div class="pattern-number">PATTERN 01</div>
+          <h3>Page Object Model</h3>
+          <p>Cada pagina da aplicacao web tem uma classe dedicada. Os testes nao tocam no DOM diretamente — toda interacao passa pela classe de pagina. Se um seletor muda, a correcao e feita em um unico lugar.</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-number">PATTERN 02</div>
+          <h3>Screen Object — Mobile</h3>
+          <p>Equivalente ao POM para mobile. A logica de interacao fica na Screen; os seletores ficam em um arquivo separado por plataforma. Android e iOS reusam o mesmo fluxo com seletores diferentes.</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-number">PATTERN 03</div>
+          <h3>Support Layer</h3>
+          <p>Cada modulo tem uma pasta support/ com responsabilidades distintas: dados de teste (*Data.ts), seletores (*Selectors.ts) e evidencias (evidence.ts). Separacao clara, sem vazamento entre camadas.</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-number">PATTERN 04</div>
+          <h3>Contract Testing</h3>
+          <p>Os testes de API validam nao apenas o status code, mas o schema do payload via contratos tipados em TypeScript. Qualquer mudanca inesperada no contrato quebra o teste antes de chegar ao E2E.</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-number">PATTERN 05</div>
+          <h3>Piramide de Testes</h3>
+          <p>Mais testes baratos e rapidos na base (API/contrato), menos E2E no topo (Web/Mobile). Performance como camada transversal. Cada camada valida o que nao foi coberto pela camada abaixo.</p>
+        </div>
+        <div class="pattern-card">
+          <div class="pattern-number">PATTERN 06</div>
+          <h3>Monorepo Modular</h3>
+          <p>Uma unica base de codigo, configuracao e linguagem para todas as plataformas. Sem duplicidade de setup, sem troca de contexto entre repositorios. CI unico para todas as camadas.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CI/CD -->
+    <section id="ci" style="background: var(--bg2); max-width: 100%; padding: 100px 0;">
+      <div style="max-width: 1100px; margin: 0 auto; padding: 0 40px;">
+        <div class="section-label">Automacao</div>
+        <h2>Pipeline <span class="gradient-text">CI/CD</span></h2>
+        <p class="section-desc">GitHub Actions com runner Ubuntu gratuito. Dispara em todo push e pull request para main.</p>
+
+        <div class="pipeline">
+          <div class="pipeline-step">Checkout<small>actions/checkout</small></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step">Node + npm ci<small>setup-node</small></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step">Playwright<small>install chromium</small></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step">k6 install<small>curl + mv</small></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step" style="border-color: rgba(14,165,233,0.4);">test:api<small>Playwright</small></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step" style="border-color: rgba(168,85,247,0.4);">test:web<small>Playwright</small></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step" style="border-color: rgba(249,115,22,0.4);">test:perf<small>k6</small></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step" style="border-color: rgba(34,197,94,0.4);">Relatorios<small>HTML + JUnit</small></div>
+        </div>
+
+        <p style="color: var(--muted); font-size: 0.85rem; text-align: center;">
+          Artefatos disponiveis na aba Actions por 30 dias · Mobile executado localmente
+        </p>
+      </div>
+    </section>
+
+    <!-- Comandos -->
+    <section id="comandos">
+      <div class="section-label">Execucao</div>
+      <h2>Comandos <span class="gradient-text">principais</span></h2>
+      <p class="section-desc">Tudo via npm scripts — sem ferramentas globais adicionais (exceto k6 e Appium para mobile).</p>
+
+      <div class="commands-grid">
+        <div class="command-card">
+          <div class="command-header">Regressao sem mobile</div>
+          <div class="command-body">npm run test:regression:skip-mobile</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Regressao sem iOS</div>
+          <div class="command-body">npm run test:regression:skip-ios</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Testes de API</div>
+          <div class="command-body">npm run test:api</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Testes Web</div>
+          <div class="command-body">npm run test:web</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Testes de Performance</div>
+          <div class="command-body">npm run test:performance</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Gerar todos os relatorios</div>
+          <div class="command-body">npm run report:all</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <strong>OmniQA Framework</strong> &nbsp;·&nbsp;
+    Automacao multi-plataforma com TypeScript &nbsp;·&nbsp;
+    <a href="https://github.com/BrendonWalefy/omniqa-framework" target="_blank">GitHub</a>
+  </footer>
+
+</body>
+</html>

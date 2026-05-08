@@ -41,5 +41,6 @@
 ## Dia 6 - Diferenciais
 
 - Adicionar teste de performance com k6.
+- Exportar resumo de performance em `reports/performance`.
 - Adicionar workflow de CI para Web e API.
 - Preparar demonstracao ao vivo.

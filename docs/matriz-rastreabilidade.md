@@ -16,4 +16,5 @@
 | MOB-002 | Mobile | Contatos | Remover contato existente | E2E Mobile | Alta | Sim | Automatizado |
 | IOS-001 | Mobile iOS | Contatos | Adicionar contato com nome, sobrenome e telefone | E2E Mobile | Alta | Sim | Automatizado |
 | IOS-002 | Mobile iOS | Contatos | Remover contato existente | E2E Mobile | Alta | Sim | Automatizado |
-| PERF-001 | Performance | API | Carga controlada em endpoint de leitura | Performance | Baixa | Sim | Planejado |
+| PERF-001 | Performance | Users | Carga controlada em `GET /users` | Performance | Baixa | Sim | Automatizado |
+| PERF-002 | Performance | Posts | Carga controlada em `GET /posts` | Performance | Baixa | Sim | Automatizado |

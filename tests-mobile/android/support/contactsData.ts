@@ -1,6 +1,6 @@
 export const contactData = {
   testContact: {
-    firstName: 'Omni',
+    firstName: 'Brendon',
     lastName: `QA ${Date.now()}`,
     phone: '11999990001'
   }
