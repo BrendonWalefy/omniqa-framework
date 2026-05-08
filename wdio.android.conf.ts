@@ -35,7 +35,14 @@ export const config = {
   connectionRetryTimeout: 120_000,
   connectionRetryCount: 1,
   framework: 'mocha',
-  reporters: ['spec'],
+  reporters: [
+    'spec',
+    ['junit', {
+      outputDir: './reports/junit',
+      outputFileFormat: () => 'results-mobile-android.xml',
+      suiteNameFormat: /[^a-zA-Z0-9]+/,
+    }]
+  ],
   mochaOpts: {
     ui: 'bdd',
     timeout: 60_000

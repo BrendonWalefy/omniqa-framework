@@ -1,0 +1,148 @@
+name: Regressao Completa — OmniQA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────────────────────
+  #  JOB 1: API + Web + Performance
+  # ─────────────────────────────────────────
+  api-web-performance:
+    name: API / Web / Performance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar browsers Playwright
+        run: npx playwright install chromium --with-deps
+
+      - name: Instalar k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+          sudo mv k6 /usr/local/bin/
+
+      - name: Testes de API
+        run: npm run test:api
+
+      - name: Testes Web
+        run: npm run test:web
+
+      - name: Testes de Performance
+        run: npm run test:performance
+
+      - name: Gerar relatorios
+        if: always()
+        run: npm run report:all
+
+      - name: Upload relatorio JUnit
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-junit
+          path: reports/junit/
+          retention-days: 30
+
+      - name: Upload relatorio Performance
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-performance
+          path: reports/performance/
+          retention-days: 30
+
+      - name: Upload relatorio Playwright
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-playwright
+          path: reports/playwright-report/
+          retention-days: 30
+
+      - name: Publicar resultado JUnit no GitHub
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: reports/junit/*.xml
+          check_name: Resultados dos Testes
+
+  # ─────────────────────────────────────────
+  #  JOB 2: Mobile Android (emulador gratuito)
+  # ─────────────────────────────────────────
+  mobile-android:
+    name: Mobile Android
+    runs-on: ubuntu-latest
+    # Nao bloqueia o pipeline se falhar
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar system image do emulador
+        run: |
+          echo "y" | sdkmanager "system-images;android-34;google_apis;x86_64"
+          echo "y" | sdkmanager "platforms;android-34"
+          echo "y" | sdkmanager "build-tools;34.0.0"
+          echo "y" | sdkmanager "emulator"
+          echo "y" | sdkmanager "platform-tools"
+
+      - name: Criar e iniciar emulador Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            echo "Emulador pronto, iniciando testes..."
+            npm run test:mobile:android
+
+      - name: Gerar relatorio JUnit mobile
+        if: always()
+        run: npm run report:junit
+
+      - name: Upload relatorio Mobile Android
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-mobile-android
+          path: |
+            reports/junit/results-mobile-android.xml
+            reports/junit/report.html
+            reports/mobile/android/
+          retention-days: 30
