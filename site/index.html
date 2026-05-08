@@ -338,22 +338,101 @@
     /* ── Architecture ── */
     .arch-section { background: var(--bg2); border-radius: 0; }
 
-    .arch-diagram {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 36px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 0.82rem;
-      color: var(--muted);
-      overflow-x: auto;
-      line-height: 1.8;
+    .arch-map {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 42px;
     }
 
-    .arch-diagram .highlight { color: var(--primary); }
-    .arch-diagram .accent { color: var(--accent); }
-    .arch-diagram .green { color: #4ade80; }
-    .arch-diagram .orange { color: #fb923c; }
+    .arch-root {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      background: var(--bg);
+      border: 1px solid rgba(14,165,233,0.24);
+      border-radius: 14px;
+      padding: 20px 24px;
+      box-shadow: 0 20px 60px rgba(2,8,23,0.28);
+    }
+
+    .arch-root strong,
+    .arch-module h3,
+    .arch-tree {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .arch-root strong {
+      color: var(--primary);
+      font-size: 1rem;
+    }
+
+    .arch-root span {
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .arch-module {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      min-width: 0;
+    }
+
+    .arch-module h3 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--primary);
+      font-size: 0.96rem;
+      margin-bottom: 14px;
+    }
+
+    .arch-module h3 span {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .arch-tree {
+      list-style: none;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.9;
+    }
+
+    .arch-tree li {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .arch-tree code {
+      flex: 0 0 auto;
+      color: var(--text);
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    .arch-tree small {
+      color: #64748b;
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    .arch-tree .branch { color: #475569; }
+    .arch-tree .accent { color: var(--accent); }
+    .arch-tree .green { color: #4ade80; }
+    .arch-tree .orange { color: #fb923c; }
 
     /* ── Patterns ── */
     .patterns-grid {
@@ -476,6 +555,23 @@
       section { padding: 64px 20px; }
       .hero { padding: 100px 20px 60px; }
       .stats { gap: 24px; }
+      .arch-map { grid-template-columns: 1fr; }
+      .arch-root {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .arch-module { padding: 20px; }
+      .arch-module h3 {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .arch-tree li {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+        padding: 5px 0;
+      }
     }
   </style>
 </head>
@@ -640,41 +736,61 @@
         <h2>Arquitetura <span class="gradient-text">modular</span></h2>
         <p class="section-desc">Monorepo por plataforma — responsabilidades claras, sem acoplamento entre camadas.</p>
 
-        <div class="arch-diagram">
-<span class="highlight">omniqa-framework/</span>
-├── <span class="highlight">tests-api/</span>              <span style="color:#475569">← Testes de contrato e payload</span>
-│   ├── support/
-│   │   ├── <span class="accent">contracts.ts</span>    <span style="color:#475569">← Schema esperado de cada endpoint</span>
-│   │   └── <span class="accent">apiAssertions.ts</span> <span style="color:#475569">← Helpers de validação reutilizáveis</span>
-│   └── jsonplaceholder.spec.ts
-│
-├── <span class="highlight">tests-web/</span>              <span style="color:#475569">← E2E com Page Object Model</span>
-│   ├── pages/
-│   │   ├── <span class="accent">LoginPage.ts</span>
-│   │   ├── <span class="accent">InventoryPage.ts</span>
-│   │   ├── <span class="accent">CartPage.ts</span>
-│   │   └── <span class="accent">CheckoutPage.ts</span>
-│   ├── specs/               <span style="color:#475569">← Um spec por jornada crítica</span>
-│   └── support/
-│       ├── <span class="green">evidence.ts</span>    <span style="color:#475569">← Screenshot automatico em falhas</span>
-│       └── <span class="green">users.ts</span>       <span style="color:#475569">← Test data centralizado</span>
-│
-├── <span class="highlight">tests-mobile/</span>
-│   ├── android/             <span style="color:#475569">← Screen Object + seletores Android</span>
-│   │   ├── screens/
-│   │   │   └── <span class="accent">ContactsScreen.ts</span>
-│   │   └── support/
-│   │       ├── <span class="green">contactsSelectors.ts</span>
-│   │       └── <span class="green">mobileEvidence.ts</span>
-│   └── ios/                 <span style="color:#475569">← Espelho com seletores iOS</span>
-│
-├── <span class="highlight">tests-performance/</span>      <span style="color:#475569">← Scripts k6 com thresholds</span>
-│
-└── <span class="highlight">scripts/</span>                <span style="color:#475569">← Geradores HTML e regressão local</span>
-    ├── <span class="orange">report-styles.ts</span>    <span style="color:#475569">← Design system compartilhado</span>
-    ├── <span class="orange">generate-junit-report.ts</span>
-    ├── <span class="orange">generate-performance-report.ts</span>
-    └── <span class="orange">regression.sh</span>       <span style="color:#475569">← Orchestrador com flags --skip-*</span>
+        <div class="arch-map">
+          <div class="arch-root">
+            <strong>omniqa-framework/</strong>
+            <span>Monorepo TypeScript dividido por responsabilidade de teste</span>
+          </div>
+
+          <div class="arch-module">
+            <h3>tests-api/<span>Contrato</span></h3>
+            <ul class="arch-tree">
+              <li><span class="branch">├──</span><code>support/</code><small>Contratos e validadores reutilizáveis</small></li>
+              <li><span class="branch">│ ├──</span><code class="accent">contracts.ts</code><small>Schema esperado de cada endpoint</small></li>
+              <li><span class="branch">│ └──</span><code class="accent">apiAssertions.ts</code><small>Helpers de validação</small></li>
+              <li><span class="branch">└──</span><code>jsonplaceholder.spec.ts</code><small>Specs de contrato e payload</small></li>
+            </ul>
+          </div>
+
+          <div class="arch-module">
+            <h3>tests-web/<span>E2E Web</span></h3>
+            <ul class="arch-tree">
+              <li><span class="branch">├──</span><code>pages/</code><small>Page Object Model</small></li>
+              <li><span class="branch">│ ├──</span><code class="accent">LoginPage.ts</code><small>Autenticação</small></li>
+              <li><span class="branch">│ ├──</span><code class="accent">InventoryPage.ts</code><small>Catálogo</small></li>
+              <li><span class="branch">│ └──</span><code class="accent">CartPage.ts</code><small>Carrinho e checkout</small></li>
+              <li><span class="branch">├──</span><code>specs/</code><small>Um spec por jornada crítica</small></li>
+              <li><span class="branch">└──</span><code>support/</code><small>Evidências e dados de teste</small></li>
+            </ul>
+          </div>
+
+          <div class="arch-module">
+            <h3>tests-mobile/<span>Android + iOS</span></h3>
+            <ul class="arch-tree">
+              <li><span class="branch">├──</span><code>android/</code><small>Screen Object + seletores Android</small></li>
+              <li><span class="branch">│ ├──</span><code>screens/</code><small>Telas automatizadas</small></li>
+              <li><span class="branch">│ └──</span><code class="green">contactsSelectors.ts</code><small>Seletores por plataforma</small></li>
+              <li><span class="branch">└──</span><code>ios/</code><small>Espelho com seletores iOS</small></li>
+              <li><span class="branch">&nbsp;&nbsp;└──</span><code class="green">mobileEvidence.ts</code><small>Screenshot em falhas</small></li>
+            </ul>
+          </div>
+
+          <div class="arch-module">
+            <h3>tests-performance/<span>k6</span></h3>
+            <ul class="arch-tree">
+              <li><span class="branch">└──</span><code>jsonplaceholder-load.js</code><small>Carga com VUs e thresholds</small></li>
+            </ul>
+          </div>
+
+          <div class="arch-module">
+            <h3>scripts/<span>Relatórios</span></h3>
+            <ul class="arch-tree">
+              <li><span class="branch">├──</span><code class="orange">report-styles.ts</code><small>Design system compartilhado</small></li>
+              <li><span class="branch">├──</span><code class="orange">generate-junit-report.ts</code><small>Resumo de execução</small></li>
+              <li><span class="branch">├──</span><code class="orange">generate-performance-report.ts</code><small>Relatório de performance</small></li>
+              <li><span class="branch">└──</span><code class="orange">regression.sh</code><small>Orquestrador com flags --skip-*</small></li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
