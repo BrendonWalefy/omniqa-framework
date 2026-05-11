@@ -159,6 +159,7 @@ A distribuição dos testes segue a pirâmide classica — mais testes baratos e
 ### Todos os ambientes
 - Node.js 20+
 - npm 10+
+- Git
 
 ### Mobile Android
 - Android Studio com emulador configurado, ou dispositivo fisico com USB debugging ativado
@@ -172,6 +173,7 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 ### Mobile iOS
 - Xcode instalado (App Store)
 - Simulador iOS configurado
+- Disponivel apenas em macOS
 
 ### Performance
 - k6 instalado globalmente:
@@ -208,6 +210,42 @@ Para executar performance junto com a regressão padrão, confirme também que o
 ```bash
 k6 version
 ```
+
+### Setup no Windows
+
+Abra o PowerShell ou Windows Terminal e instale os pré-requisitos:
+
+```powershell
+winget install Git.Git
+winget install OpenJS.NodeJS.LTS
+winget install k6
+```
+
+Feche e abra o terminal novamente para atualizar o `PATH`, depois valide:
+
+```powershell
+git --version
+node --version
+npm --version
+k6 version
+```
+
+Clone o projeto e instale as dependências:
+
+```powershell
+git clone https://github.com/BrendonWalefy/omniqa-framework.git
+cd omniqa-framework
+npm ci
+npx playwright install chromium
+```
+
+Execute o fluxo padrão:
+
+```powershell
+npm run test
+```
+
+Esse fluxo roda API, Web e Performance, gera os relatórios em `reports/` e abre os HTMLs automaticamente no navegador padrão do Windows. Os testes iOS não executam no Windows; para mobile Android, instale o Android Studio, configure um emulador/dispositivo e use `npm run test:mobile:android`.
 
 ---
 
