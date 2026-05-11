@@ -871,16 +871,13 @@
     <section id="comandos">
       <div class="section-label">Execução</div>
       <h2>Comandos <span class="gradient-text">principais</span></h2>
-      <p class="section-desc">Clone, instale pelo lockfile, baixe o Chromium do Playwright, instale o k6 e execute o fluxo padrão com abertura automática dos relatórios. No Windows, use PowerShell ou Windows Terminal.</p>
+      <p class="section-desc">Instalação separada por sistema operacional. Depois do setup, os comandos de execução são os mesmos no macOS e no Windows.</p>
 
+      <div class="section-label" style="margin-top: 28px;">Instalação macOS</div>
       <div class="commands-grid">
         <div class="command-card">
-          <div class="command-header">Windows: instalar base</div>
-          <div class="command-body">winget install Git.Git; winget install OpenJS.NodeJS.LTS; winget install k6</div>
-        </div>
-        <div class="command-card">
-          <div class="command-header">Windows: validar ferramentas</div>
-          <div class="command-body">git --version; node --version; npm --version; k6 version</div>
+          <div class="command-header">Instalar base</div>
+          <div class="command-body">brew install git node k6</div>
         </div>
         <div class="command-card">
           <div class="command-header">Clonar repositório</div>
@@ -891,17 +888,33 @@
           <div class="command-body">cd omniqa-framework</div>
         </div>
         <div class="command-card">
-          <div class="command-header">Instalar dependências</div>
-          <div class="command-body">npm ci</div>
+          <div class="command-header">Instalar projeto</div>
+          <div class="command-body">npm ci; npx playwright install chromium</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top: 32px;">Instalação Windows</div>
+      <div class="commands-grid">
+        <div class="command-card">
+          <div class="command-header">Instalar base</div>
+          <div class="command-body">winget install Git.Git; winget install OpenJS.NodeJS.LTS; winget install k6</div>
         </div>
         <div class="command-card">
-          <div class="command-header">Instalar browser</div>
-          <div class="command-body">npx playwright install chromium</div>
+          <div class="command-header">Validar ferramentas</div>
+          <div class="command-body">git --version; node --version; npm --version; k6 version</div>
         </div>
         <div class="command-card">
-          <div class="command-header">Instalar k6 no macOS</div>
-          <div class="command-body">brew install k6</div>
+          <div class="command-header">Clonar repositório</div>
+          <div class="command-body">git clone https://github.com/BrendonWalefy/omniqa-framework.git</div>
         </div>
+        <div class="command-card">
+          <div class="command-header">Instalar projeto</div>
+          <div class="command-body">cd omniqa-framework; npm ci; npx playwright install chromium</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top: 32px;">Execução</div>
+      <div class="commands-grid">
         <div class="command-card">
           <div class="command-header">Fluxo padrão</div>
           <div class="command-body">npm run test</div>

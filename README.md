@@ -156,47 +156,27 @@ A distribuição dos testes segue a pirâmide classica — mais testes baratos e
 
 ## Pre-requisitos
 
-### Todos os ambientes
+### Gerais
 - Node.js 20+
 - npm 10+
 - Git
+- k6 1.x
 
-### Mobile Android
-- Android Studio com emulador configurado, ou dispositivo fisico com USB debugging ativado
-- Variavel de ambiente configurada:
-```bash
-export ANDROID_HOME="$HOME/Library/Android/sdk"
-export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
-```
-- Emulador rodando antes de executar os testes
-
-### Mobile iOS
-- Xcode instalado (App Store)
-- Simulador iOS configurado
-- Disponivel apenas em macOS
-
-### Performance
-- k6 instalado globalmente:
-```bash
-# macOS
-brew install k6
-
-# Windows
-winget install k6
-
-# Linux
-sudo gpg -k
-curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-sudo apt update
-sudo apt install k6
-```
+O fluxo padrão (`npm run test`) roda API, Web e Performance. Mobile é opcional e tem setup próprio.
 
 ---
 
 ## Instalação
 
-Clone o repositório, instale as dependências do Node pelo lockfile e baixe o browser usado pelo Playwright:
+### macOS
+
+Instale Git, Node.js e k6. Se você usa Homebrew:
+
+```bash
+brew install git node k6
+```
+
+Clone o repositório, instale as dependências do projeto e baixe o Chromium usado pelo Playwright:
 
 ```bash
 git clone https://github.com/BrendonWalefy/omniqa-framework.git
@@ -205,13 +185,16 @@ npm ci
 npx playwright install chromium
 ```
 
-Para executar performance junto com a regressão padrão, confirme também que o `k6` está instalado:
+Valide as ferramentas:
 
 ```bash
+git --version
+node --version
+npm --version
 k6 version
 ```
 
-### Setup no Windows
+### Windows
 
 Abra o PowerShell ou Windows Terminal e instale os pré-requisitos:
 
@@ -221,7 +204,7 @@ winget install OpenJS.NodeJS.LTS
 winget install k6
 ```
 
-Feche e abra o terminal novamente para atualizar o `PATH`, depois valide:
+Feche e abra o terminal novamente para atualizar o `PATH`. Depois valide:
 
 ```powershell
 git --version
@@ -230,7 +213,7 @@ npm --version
 k6 version
 ```
 
-Clone o projeto e instale as dependências:
+Clone o repositório, instale as dependências do projeto e baixe o Chromium usado pelo Playwright:
 
 ```powershell
 git clone https://github.com/BrendonWalefy/omniqa-framework.git
@@ -239,17 +222,30 @@ npm ci
 npx playwright install chromium
 ```
 
-Execute o fluxo padrão:
+### Mobile opcional
 
-```powershell
-npm run test
+Mobile não faz parte do fluxo padrão porque depende de dispositivo, emulador ou simulador local.
+
+Android:
+
+```bash
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 ```
 
-Esse fluxo roda API, Web e Performance, gera os relatórios em `reports/` e abre os HTMLs automaticamente no navegador padrão do Windows. Os testes iOS não executam no Windows; para mobile Android, instale o Android Studio, configure um emulador/dispositivo e use `npm run test:mobile:android`.
+- Android Studio com emulador configurado, ou dispositivo físico com USB debugging ativado
+- Emulador/dispositivo rodando antes de executar os testes
+
+iOS:
+- Disponível apenas em macOS
+- Xcode instalado
+- Simulador iOS configurado
 
 ---
 
 ## Como Executar
+
+Os comandos de execução são os mesmos no macOS e no Windows.
 
 ### Fluxo padrão
 
