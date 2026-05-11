@@ -80,19 +80,7 @@
 - Cada plataforma mantém sua própria captura de screenshot, respeitando a ferramenta usada em cada camada.
 - Performance gera relatório próprio a partir do resumo do k6.
 
-## Comandos principais
 
-```bash
-npm run test
-npm run test:regression
-npm run test:api
-npm run test:web
-npm run test:web:headed
-npm run test:mobile:android
-npm run test:mobile:ios
-npm run test:performance
-npm run typecheck
-```
 
 ## Decisões técnicas importantes
 
@@ -124,3 +112,19 @@ Este projeto é um framework de automação em TypeScript que cobre Web, API, Mo
 - Melhorar a galeria de evidências do relatório com filtros por plataforma ou cenário.
 - Adicionar novos thresholds de Performance.
 - Avaliar reaproveitamento real de fluxos Mobile somente se a duplicação crescer.
+
+## Comandos principais
+
+```bash
+npm run test
+npm run test:regression
+npm run test:api
+npm run test:web
+npm run test:web:headed
+npm run test:mobile:android
+npm run test:mobile:ios
+npm run test:performance
+npm run typecheck
+
+BYPASS_SAUCE_COPY_BUGS=true npm run test:regression
+```
