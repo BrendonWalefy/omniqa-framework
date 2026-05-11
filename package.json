@@ -42,6 +42,10 @@
   ],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": "20.x",
+    "npm": ">=10 <11"
+  },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@wdio/appium-service": "^9.27.1",
