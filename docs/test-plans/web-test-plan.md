@@ -31,6 +31,8 @@ Validar as jornadas críticas de compra, desde autenticacao ate checkout, priori
 | WEB-003 | Adicionar produto ao carrinho | Produto aparece no carrinho | E2E | Alta |
 | WEB-004 | Remover produto do carrinho | Produto deixa de aparecer no carrinho | E2E | Media |
 | WEB-005 | Checkout completo | Pedido finalizado com sucesso | E2E | Alta |
+| WEB-006 | Validar descrição sem erro técnico no inventário | Descrição não exibe texto técnico ao usuário | UI Visual/Copy | Media |
+| WEB-007 | Validar título sem erro técnico no inventário | Título não exibe texto técnico ao usuário | UI Visual/Copy | Media |
 
 
 
@@ -42,5 +44,21 @@ Padrões implementados:
 
 - Page Object Model para Login, Inventario, Carrinho e Checkout.
 - Massa de dados separada em `tests-web/support`.
-- Evidências automáticas em falha: screenshot e trace.
+- Evidências por etapa salvas no relatório Playwright e em `reports/evidence/web`.
+- Nomeação de evidências compartilhada via `tests-support/evidence/evidenceName.ts`.
 - Execução dedicada por `npm run test:web`.
+
+### Bugs conhecidos demonstráveis
+
+Os cenários `WEB-006` e `WEB-007` validam problemas visuais/de copy na página de inventário do SauceDemo. Eles mapeiam textos técnicos que não deveriam aparecer para o usuário:
+
+- `carry.allTheThings()`
+- `Test.allTheThings()`
+
+Por padrão, esses testes falham quando os textos aparecem. Para demonstrar uma execução verde sem remover os testes, habilite o bypass:
+
+```bash
+BYPASS_SAUCE_COPY_BUGS=true npm run test:web
+```
+
+No GitHub Actions, esse bypass fica habilitado por padrão para manter a esteira verde.

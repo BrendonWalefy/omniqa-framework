@@ -23,6 +23,12 @@ function removeIfExists(filePath) {
   }
 }
 
+function removeDirIfExists(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    fs.rmSync(dirPath, { recursive: true, force: true });
+  }
+}
+
 function prepareJunitReports() {
   const junitDir = path.resolve('reports/junit');
   fs.mkdirSync(junitDir, { recursive: true });
@@ -34,6 +40,9 @@ function prepareJunitReports() {
   }
 
   removeIfExists(path.join(junitDir, 'report.html'));
+  removeDirIfExists(path.resolve('reports/evidence/web'));
+  removeDirIfExists(path.resolve('reports/mobile/android'));
+  removeDirIfExists(path.resolve('reports/mobile/ios'));
 }
 
 function preparePerformanceReports() {

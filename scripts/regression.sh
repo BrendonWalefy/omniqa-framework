@@ -87,6 +87,7 @@ run_suite() {
   if [ "$CRITICAL_FAILED" = "true" ]; then
     echo ""
     echo -e "${RED}${BOLD}  Suite crítica falhou. Encerrando regressão.${NC}"
+    generate_and_open_reports "junit"
     summary
     exit 1
   fi
@@ -143,6 +144,32 @@ summary() {
   echo ""
 }
 
+generate_and_open_reports() {
+  local mode=$1
+
+  echo ""
+  echo -e "${BOLD}┌─ Gerando relatórios visuais${NC}"
+
+  if [ "$mode" = "all" ]; then
+    if npm run report:all --silent; then
+      echo -e "${BOLD}│${NC}"
+      echo -e "${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatórios gerados — abrindo no navegador...${NC}"
+      node scripts/open-reports.mjs reports/junit/report.html reports/performance/report.html
+    else
+      echo -e "${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatórios${NC}"
+    fi
+    return
+  fi
+
+  if npm run report:junit --silent; then
+    echo -e "${BOLD}│${NC}"
+    echo -e "${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatório JUnit gerado — abrindo no navegador...${NC}"
+    node scripts/open-reports.mjs reports/junit/report.html
+  else
+    echo -e "${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatório JUnit${NC}"
+  fi
+}
+
 # ─────────────────────────────────────────────
 #  EXECUÇÃO
 # ─────────────────────────────────────────────
@@ -182,16 +209,7 @@ run_suite 5 "Testes de Performance" "k6" \
   "npm run test:performance:raw --silent" \
   "false"
 
-# 6. Geração e abertura de relatórios
-echo ""
-echo -e "${BOLD}┌─ [6] Gerando relatórios visuais${NC}"
-if npm run report:all --silent; then
-  echo -e "${BOLD}│${NC}"
-  echo -e "${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatórios gerados — abrindo no navegador...${NC}"
-  npm run report:open --silent
-else
-  echo -e "${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatórios${NC}"
-fi
+generate_and_open_reports "all"
 
 summary
 

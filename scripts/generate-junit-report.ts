@@ -86,6 +86,11 @@ function parseJUnit(xml: string): JUnitSummary {
 
 const junitDir = path.resolve('reports/junit');
 const outputPath = path.resolve('reports/junit/report.html');
+const evidenceRoots = [
+  { label: 'Web', dir: path.resolve('reports/evidence/web') },
+  { label: 'Mobile Android', dir: path.resolve('reports/mobile/android') },
+  { label: 'Mobile iOS', dir: path.resolve('reports/mobile/ios') }
+];
 
 const xmlFiles = fs.existsSync(junitDir)
   ? fs.readdirSync(junitDir).filter(f => f.endsWith('.xml')).map(f => path.join(junitDir, f))
@@ -110,6 +115,108 @@ for (const xmlPath of xmlFiles) {
 
 const passed = data.tests - data.failures - data.skipped;
 const allPassed = data.failures === 0;
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function toRelativePath(filePath: string): string {
+  return path.relative(path.dirname(outputPath), filePath).split(path.sep).join('/');
+}
+
+function listEvidenceFiles() {
+  return evidenceRoots.flatMap(root => {
+    if (!fs.existsSync(root.dir)) {
+      return [];
+    }
+
+    return fs.readdirSync(root.dir)
+      .filter(file => /\.(png|jpe?g)$/i.test(file))
+      .sort()
+      .map(file => {
+        const absolutePath = path.join(root.dir, file);
+        const stats = fs.statSync(absolutePath);
+
+        return {
+          platform: root.label,
+          file,
+          href: toRelativePath(absolutePath),
+          modifiedAt: stats.mtime,
+          scenarioId: extractScenarioId(file)
+        };
+      });
+  });
+}
+
+function extractScenarioId(fileName: string): string {
+  const match = fileName.match(/^(web|mob|ios)-\d+/i);
+  return match ? match[0].toUpperCase() : 'GERAL';
+}
+
+function groupEvidenceByScenario(evidences: ReturnType<typeof listEvidenceFiles>) {
+  const groups = new Map<string, typeof evidences>();
+
+  for (const evidence of evidences) {
+    const current = groups.get(evidence.scenarioId) ?? [];
+    current.push(evidence);
+    groups.set(evidence.scenarioId, current);
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([scenarioId, items]) => ({
+      scenarioId,
+      items: items.sort((a, b) => a.modifiedAt.getTime() - b.modifiedAt.getTime())
+    }));
+}
+
+function renderEvidenceSection(): string {
+  const evidences = listEvidenceFiles();
+
+  if (evidences.length === 0) {
+    return `
+      <section>
+        <div class="section-title">Evidências</div>
+        <div class="card">
+          <div class="card__label">Capturas</div>
+          <div class="card__sub">Nenhuma evidência de imagem encontrada para esta execução.</div>
+        </div>
+      </section>`;
+  }
+
+  const groups = groupEvidenceByScenario(evidences);
+
+  const renderEvidenceCard = (evidence: (typeof evidences)[number]) => `
+    <div class="evidence-card">
+      <a href="${evidence.href}" target="_blank" rel="noreferrer">
+        <img src="${evidence.href}" alt="${escapeHtml(evidence.file)}">
+      </a>
+      <div class="evidence-card__body">
+        <div class="evidence-card__title">${escapeHtml(evidence.file)}</div>
+        <div class="evidence-card__meta">${evidence.platform} · ${evidence.modifiedAt.toLocaleString('pt-BR')}</div>
+        <a class="evidence-card__link" href="${evidence.href}" target="_blank" rel="noreferrer">Abrir imagem</a>
+      </div>
+    </div>`;
+
+  const groupBlocks = groups.map(group => `
+    <div class="evidence-group">
+      <div class="evidence-group__header">
+        <span>${group.scenarioId}</span>
+        <small>${group.items.length} evidência(s)</small>
+      </div>
+      <div class="evidence-grid">${group.items.map(renderEvidenceCard).join('')}</div>
+    </div>`).join('');
+
+  return `
+    <section>
+      <div class="section-title">Evidências (${evidences.length})</div>
+      ${groupBlocks}
+    </section>`;
+}
 
 function renderSuite(suite: TestSuite, index: number): string {
   const suitePassed = suite.failures === 0 && suite.skipped === 0;
@@ -190,6 +297,8 @@ const body = `
     <div class="section-title">Suites de Teste (${data.suites.length})</div>
     ${data.suites.map((s, i) => renderSuite(s, i)).join('')}
   </section>
+
+  ${renderEvidenceSection()}
 `;
 
 const html = renderPage({

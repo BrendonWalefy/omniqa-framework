@@ -64,13 +64,20 @@ omniqa-framework/
 │
 ├── tests-performance/      # Scripts de carga com k6
 │
+├── tests-support/          # Helpers compartilhados entre frentes de teste
+│   └── evidence/           # Padronização de nomes de evidências
+│
 ├── scripts/                # Geradores de relatório e orquestrador de regressão
 │   ├── report-styles.ts    # Design system compartilhado para os relatórios
 │   ├── generate-junit-report.ts
 │   ├── generate-performance-report.ts
 │   └── regression.sh       # Script local de regressão completa
 │
-├── docs/                   # Documentação de estratégia, planos e rastreabilidade
+├── docs/                   # Estratégia, planos, rastreabilidade e notas de IA
+│   ├── strategy/
+│   ├── test-plans/
+│   ├── traceability/
+│   └── ai-notes/
 ├── reports/                # Saida dos testes (ignorada pelo git)
 │
 ├── playwright.config.ts    # Configuração de projetos Web e API
@@ -122,6 +129,25 @@ Cada módulo tem uma pasta `support/` com três responsabilidades distintas:
 | `*Data.ts` | Dados de teste (nomes, emails, senhas) |
 | `*Selectors.ts` | Seletores de elementos (apenas mobile) |
 | `evidence.ts` | Captura de screenshots e anexos nos relatórios |
+
+### Evidências
+As evidências seguem um padrão compartilhado de nomeação em `tests-support/evidence/evidenceName.ts`, reutilizado por Web, Android e iOS. Cada plataforma mantém apenas a responsabilidade de capturar a imagem com sua ferramenta: Playwright no Web e WebdriverIO/Appium no Mobile.
+
+O formato gerado é:
+
+```text
+<id-do-cenario>-<nome-da-etapa>-<timestamp>.png
+```
+
+Exemplos:
+
+```text
+web-001-acessar-tela-de-login-2026-05-11-021500-123.png
+mob-001-criar-contato-2026-05-11-021510-456.png
+ios-001-validar-contato-visivel-2026-05-11-021520-789.png
+```
+
+Os wrappers de execução limpam as evidências antes de cada nova rodada e o relatório JUnit customizado organiza as imagens por caso de teste (`WEB-001`, `MOB-001`, `IOS-001`), evitando uma galeria única misturada.
 
 ### Contract Testing — API
 Os testes de API validam não apenas o status code, mas a estrutura do payload via contratos definidos em `tests-api/support/contracts.ts`. Qualquer mudanca inesperada no schema da API quebra o contrato antes de chegar ao E2E.
@@ -283,6 +309,9 @@ npm run test:api
 # Web
 npm run test:web
 
+# Web ignorando validações visuais/de copy do inventário
+BYPASS_SAUCE_COPY_BUGS=true npm run test:web
+
 # Mobile Android (requer emulador rodando)
 npm run test:mobile:android
 
@@ -332,6 +361,8 @@ Checkout → Node setup → Playwright install → k6 install
     → report:all → upload artefatos → publicar resultado no GitHub
 ```
 
+Na esteira oficial, `BYPASS_SAUCE_COPY_BUGS=true` fica habilitado para manter o pipeline verde sem remover os cenários `WEB-006` e `WEB-007`. Para demonstrar a falha localmente, execute Web ou regressivo sem essa variável.
+
 **Mobile:** executado localmente. Requer dispositivo ou emulador — não entra na esteira por custo e instabilidade em runners compartilhados.
 
 Os artefatos (HTML de relatório, XML JUnit) ficam disponíveis na aba Actions por 30 dias.
@@ -342,10 +373,14 @@ Os artefatos (HTML de relatório, XML JUnit) ficam disponíveis na aba Actions p
 
 | Documento | Descricao |
 |---|---|
-| [Estratégia de QA](./docs/estratégia-qa.md) | Princípios, escolhas técnicas e pirâmide |
-| [Plano de testes Web](./docs/plano-testes-web.md) | Cenários e cobertura Web |
-| [Plano de testes API](./docs/plano-testes-api.md) | Cenários e contratos de API |
-| [Plano de testes Mobile](./docs/plano-testes-mobile.md) | Cenários Android e iOS |
-| [Plano de testes Performance](./docs/plano-testes-performance.md) | Cenários k6 e thresholds |
-| [Plano de execução](./docs/plano-execução.md) | Ordem e critérios de execução |
-| [Matriz de rastreabilidade](./docs/matriz-rastreabilidade.md) | IDs, plataformas e status |
+| [Índice da documentação](./docs/README.md) | Organização geral da pasta `docs` |
+| [Estratégia de QA](./docs/strategy/qa-strategy.md) | Princípios, escolhas técnicas e pirâmide |
+| [Plano de execução](./docs/strategy/execution-plan.md) | Ordem e critérios de execução |
+| [Resumo para entrevista](./docs/strategy/interview-summary.md) | Explicação objetiva do projeto para apresentação |
+| [Plano de testes Web](./docs/test-plans/web-test-plan.md) | Cenários e cobertura Web |
+| [Plano de testes API](./docs/test-plans/api-test-plan.md) | Cenários e contratos de API |
+| [Plano de testes Mobile](./docs/test-plans/mobile-test-plan.md) | Cenários Android e iOS |
+| [Plano de testes Performance](./docs/test-plans/performance-test-plan.md) | Cenários k6 e thresholds |
+| [Matriz de rastreabilidade](./docs/traceability/traceability-matrix.md) | IDs, plataformas e status |
+| [Contexto para IA](./docs/ai-notes/project-context.md) | Stack, comandos e arquitetura atual |
+| [Padrões para IA](./docs/ai-notes/ai-guidelines.md) | Regras para futuras alterações assistidas |

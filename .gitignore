@@ -1,9 +1,5 @@
 node_modules/
-reports/playwright-report/
-reports/test-results/
-reports/junit/
-reports/mobile/
-reports/performance/
+reports/
 playwright/.cache/
 .DS_Store
 *.log

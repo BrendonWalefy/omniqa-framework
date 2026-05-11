@@ -9,7 +9,8 @@ Definir uma abordagem estruturada de qualidade para três frentes de validação
 - Priorizar testes por risco de negócio, estabilidade da plataforma e custo de manutenção.
 - Manter automações pequenas, legíveis e orientadas a comportamento.
 - Separar responsabilidades por camada: Web, API, Mobile e Performance.
-- Usar evidências automáticas em falhas: screenshots, traces, logs e relatórios.
+- Usar evidências automáticas por etapa e em falhas: screenshots, traces, logs e relatórios.
+- Reutilizar a padronização de nome das evidências entre Web, Android e iOS, mantendo a captura de imagem específica por ferramenta.
 - Evitar duplicidade entre testes E2E e testes de API quando a regra puder ser validada em camada mais baixa.
 
 ## Estratégia por plataforma

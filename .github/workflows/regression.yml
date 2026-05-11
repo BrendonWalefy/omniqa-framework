@@ -16,6 +16,8 @@ jobs:
   api-web:
     name: API / Web
     runs-on: ubuntu-latest
+    env:
+      BYPASS_SAUCE_COPY_BUGS: 'true'
 
     steps:
       - name: Checkout

@@ -39,6 +39,26 @@ export class InventoryPage {
     await expect(this.cartBadge).toHaveCount(0);
   }
 
+  async expectTechnicalTextNotPresent(text: string) {
+    const technicalText = this.inventoryContainer.getByText(text);
+
+    if (await technicalText.count() > 0) {
+      await technicalText.first().scrollIntoViewIfNeeded();
+      await technicalText.evaluateAll(elements => {
+        for (const element of elements) {
+          const highlightedElement = element as HTMLElement;
+          highlightedElement.style.outline = '4px solid #dc2626';
+          highlightedElement.style.backgroundColor = '#fee2e2';
+          highlightedElement.style.color = '#7f1d1d';
+          highlightedElement.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.22)';
+          highlightedElement.setAttribute('data-omniqa-highlight', 'technical-copy-error');
+        }
+      });
+    }
+
+    await expect(technicalText).toHaveCount(0);
+  }
+
   private productActionButton(action: 'add-to-cart' | 'remove', productName: string) {
     return this.page.locator(`#${action}-${this.productId(productName)}`);
   }

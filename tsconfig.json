@@ -18,6 +18,7 @@
     "tests-api/**/*.ts",
     "tests-web/**/*.ts",
     "tests-mobile/**/*.ts",
+    "tests-support/**/*.ts",
     "playwright.config.ts",
     "wdio*.conf.ts"
   ]

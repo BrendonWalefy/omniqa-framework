@@ -1,4 +1,6 @@
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const GREEN = '\x1b[0;32m';
 const RED = '\x1b[0;31m';
@@ -31,6 +33,36 @@ for (const arg of process.argv.slice(2)) {
 
 const elapsedSeconds = (start) => Math.round((Date.now() - start) / 1000);
 
+function removeIfExists(filePath) {
+  if (fs.existsSync(filePath)) {
+    fs.rmSync(filePath, { force: true });
+  }
+}
+
+function removeDirIfExists(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    fs.rmSync(dirPath, { recursive: true, force: true });
+  }
+}
+
+function prepareRegressionReports() {
+  const junitDir = path.resolve('reports/junit');
+  fs.mkdirSync(junitDir, { recursive: true });
+
+  for (const file of fs.readdirSync(junitDir)) {
+    if (file.endsWith('.xml')) {
+      removeIfExists(path.join(junitDir, file));
+    }
+  }
+
+  removeIfExists(path.join(junitDir, 'report.html'));
+  removeIfExists(path.resolve('reports/performance/summary.json'));
+  removeIfExists(path.resolve('reports/performance/report.html'));
+  removeDirIfExists(path.resolve('reports/evidence/web'));
+  removeDirIfExists(path.resolve('reports/mobile/android'));
+  removeDirIfExists(path.resolve('reports/mobile/ios'));
+}
+
 function header() {
   console.log('');
   console.log(`${BOLD}╔══════════════════════════════════════════════╗${NC}`);
@@ -53,6 +85,33 @@ function runNpmScript(scriptName, extraArgs = []) {
   return spawnSync(npmCommand, ['run', scriptName, '--silent', ...extraArgs], {
     stdio: 'inherit'
   }).status ?? 1;
+}
+
+function generateAndOpenReports(includePerformance) {
+  console.log('');
+  console.log(`${BOLD}┌─ Gerando relatórios visuais${NC}`);
+
+  const reportStatus = includePerformance
+    ? runNpmScript('report:all')
+    : runNpmScript('report:junit');
+
+  if (reportStatus === 0) {
+    console.log(`${BOLD}│${NC}`);
+    console.log(`${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatórios gerados — abrindo no navegador...${NC}`);
+
+    const reports = includePerformance
+      ? ['reports/junit/report.html', 'reports/performance/report.html']
+      : ['reports/junit/report.html'];
+
+    spawnSync(
+      process.execPath,
+      ['scripts/open-reports.mjs', ...reports],
+      { stdio: 'inherit' }
+    );
+    return;
+  }
+
+  console.log(`${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatórios${NC}`);
 }
 
 function runSuite(number, name, tag, scriptName, blocking) {
@@ -79,6 +138,7 @@ function runSuite(number, name, tag, scriptName, blocking) {
   if (criticalFailed) {
     console.log('');
     console.log(`${RED}${BOLD}  Suite crítica falhou. Encerrando regressão.${NC}`);
+    generateAndOpenReports(false);
     summary();
     process.exit(1);
   }
@@ -126,6 +186,7 @@ function summary() {
   console.log('');
 }
 
+prepareRegressionReports();
 header();
 
 runSuite(1, 'Testes de API', 'Playwright', 'test:api:raw', true);
@@ -145,15 +206,7 @@ if (skipMobile || skipIos) {
 
 runSuite(5, 'Testes de Performance', 'k6', 'test:performance:raw', false);
 
-console.log('');
-console.log(`${BOLD}┌─ [6] Gerando relatórios visuais${NC}`);
-if (runNpmScript('report:all') === 0) {
-  console.log(`${BOLD}│${NC}`);
-  console.log(`${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatórios gerados — abrindo no navegador...${NC}`);
-  runNpmScript('report:open');
-} else {
-  console.log(`${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatórios${NC}`);
-}
+generateAndOpenReports(true);
 
 summary();
 process.exit(failCount === 0 ? 0 : 1);

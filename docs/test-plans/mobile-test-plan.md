@@ -43,6 +43,7 @@ Padrões implementados:
 - Specs, seletores, dados e evidências separados em `tests-mobile/android` e `tests-mobile/ios`.
 - Pacote e activity configuraveis por variaveis de ambiente.
 - Screenshots de etapa, sucesso e falha salvos em `reports/mobile/android` e `reports/mobile/ios`.
+- Nomeação de evidências compartilhada via `tests-support/evidence/evidenceName.ts`, mantendo a captura de screenshot separada por plataforma.
 
 ## Pre-requisitos locais
 

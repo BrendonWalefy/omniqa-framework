@@ -712,7 +712,7 @@
         <div class="platform-card">
           <div class="platform-icon icon-web">🌐</div>
           <h3>Web E2E</h3>
-          <p>Jornadas críticas com Page Object Model — login, carrinho e checkout com evidências automáticas em falhas.</p>
+          <p>Jornadas críticas com Page Object Model — login, carrinho, checkout e validações visuais de copy do inventário com evidências por etapa.</p>
           <span class="platform-tag">Playwright + Chromium</span>
         </div>
         <div class="platform-card">
@@ -760,7 +760,7 @@
               <li><span class="branch">│ ├──</span><code class="accent">LoginPage.ts</code><small>Autenticação</small></li>
               <li><span class="branch">│ ├──</span><code class="accent">InventoryPage.ts</code><small>Catálogo</small></li>
               <li><span class="branch">│ └──</span><code class="accent">CartPage.ts</code><small>Carrinho e checkout</small></li>
-              <li><span class="branch">├──</span><code>specs/</code><small>Um spec por jornada crítica</small></li>
+              <li><span class="branch">├──</span><code>specs/</code><small>Jornadas e validações visuais de copy</small></li>
               <li><span class="branch">└──</span><code>support/</code><small>Evidências e dados de teste</small></li>
             </ul>
           </div>
@@ -772,7 +772,15 @@
               <li><span class="branch">│ ├──</span><code>screens/</code><small>Telas automatizadas</small></li>
               <li><span class="branch">│ └──</span><code class="green">contactsSelectors.ts</code><small>Seletores por plataforma</small></li>
               <li><span class="branch">└──</span><code>ios/</code><small>Espelho com seletores iOS</small></li>
-              <li><span class="branch">&nbsp;&nbsp;└──</span><code class="green">mobileEvidence.ts</code><small>Screenshot em falhas</small></li>
+              <li><span class="branch">&nbsp;&nbsp;└──</span><code class="green">mobileEvidence.ts</code><small>Screenshots por etapa</small></li>
+            </ul>
+          </div>
+
+          <div class="arch-module">
+            <h3>tests-support/<span>Compartilhado</span></h3>
+            <ul class="arch-tree">
+              <li><span class="branch">└──</span><code>evidence/</code><small>Nomeação reutilizável de evidências</small></li>
+              <li><span class="branch">&nbsp;&nbsp;└──</span><code class="green">evidenceName.ts</code><small>ID, etapa e timestamp</small></li>
             </ul>
           </div>
 
@@ -816,7 +824,7 @@
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 03</div>
           <h3>Support Layer</h3>
-          <p>Cada módulo tem uma pasta support/ com responsabilidades distintas: dados de teste (*Data.ts), seletores (*Selectors.ts) e evidências (evidence.ts). Separação clara, sem vazamento entre camadas.</p>
+          <p>Cada módulo tem uma pasta support/ com responsabilidades distintas: dados de teste (*Data.ts), seletores (*Selectors.ts) e captura de evidências. A nomeação das evidências fica centralizada em tests-support/evidence para Web, Android e iOS.</p>
         </div>
         <div class="pattern-card">
           <div class="pattern-number">PATTERN 04</div>
@@ -841,7 +849,7 @@
       <div style="max-width: 1100px; margin: 0 auto; padding: 0 40px;">
         <div class="section-label">Automação</div>
         <h2>Pipeline <span class="gradient-text">CI/CD</span></h2>
-        <p class="section-desc">GitHub Actions com runner Ubuntu gratuito. Dispara em todo push e pull request para main.</p>
+        <p class="section-desc">GitHub Actions com runner Ubuntu gratuito. Dispara em todo push e pull request para main, mantendo o bypass das validações visuais demonstráveis habilitado na esteira.</p>
 
         <div class="pipeline">
           <div class="pipeline-step">Checkout<small>actions/checkout</small></div>
@@ -930,6 +938,10 @@
         <div class="command-card">
           <div class="command-header">Testes Web</div>
           <div class="command-body">npm run test:web</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Web sem validações visuais</div>
+          <div class="command-body">BYPASS_SAUCE_COPY_BUGS=true npm run test:web</div>
         </div>
         <div class="command-card">
           <div class="command-header">Testes de Performance</div>
