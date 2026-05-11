@@ -188,8 +188,7 @@ echo -e "${BOLD}┌─ [6] Gerando relatórios visuais${NC}"
 if npm run report:all --silent; then
   echo -e "${BOLD}│${NC}"
   echo -e "${BOLD}└─${NC} ${GREEN}${BOLD}✔ Relatórios gerados — abrindo no navegador...${NC}"
-  open reports/junit/report.html
-  open reports/performance/report.html
+  npm run report:open --silent
 else
   echo -e "${BOLD}└─${NC} ${YELLOW}${BOLD}⚠ Falha ao gerar relatórios${NC}"
 fi

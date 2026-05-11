@@ -176,23 +176,53 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 ### Performance
 - k6 instalado globalmente:
 ```bash
+# macOS
 brew install k6
+
+# Windows
+winget install k6
+
+# Linux
+sudo gpg -k
+curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt update
+sudo apt install k6
 ```
 
 ---
 
 ## Instalação
 
+Clone o repositório, instale as dependências do Node pelo lockfile e baixe o browser usado pelo Playwright:
+
 ```bash
-npm install
+git clone https://github.com/BrendonWalefy/omniqa-framework.git
+cd omniqa-framework
+npm ci
 npx playwright install chromium
+```
+
+Para executar performance junto com a regressão padrão, confirme também que o `k6` está instalado:
+
+```bash
+k6 version
 ```
 
 ---
 
 ## Como Executar
 
-### Regressão completa (sem mobile)
+### Fluxo padrão
+
+Roda API, Web e Performance, gera os HTMLs em `reports/` e abre os relatórios automaticamente no navegador:
+
+```bash
+npm run test
+```
+
+Esse comando é equivalente a:
+
 ```bash
 npm run test:regression:skip-mobile
 ```
@@ -210,6 +240,9 @@ npm run test:regression
 ### Por plataforma
 
 ```bash
+# Playwright direto (API + Web, sem performance e sem abertura dos relatórios customizados)
+npm run test:playwright
+
 # API
 npm run test:api
 
@@ -242,11 +275,14 @@ npm run report:performance
 # Gera todos os relatórios de uma vez
 npm run report:all
 
+# Abre os relatórios JUnit e Performance no navegador
+npm run report:open
+
 # Abre o relatório interativo do Playwright
 npm run report
 ```
 
-Os relatórios JUnit e de performance sao abertos automaticamente no navegador ao final de `npm run test:regression`.
+Os relatórios JUnit e de performance sao abertos automaticamente no navegador ao final de `npm run test` e dos scripts `test:regression:*`. A abertura usa um script cross-platform com `open` no macOS, `start` no Windows e `xdg-open` no Linux.
 
 ---
 

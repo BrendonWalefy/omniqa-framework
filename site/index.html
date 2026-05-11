@@ -497,14 +497,14 @@
     /* ── Commands ── */
     .commands-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
       gap: 16px;
     }
 
     .command-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
     }
 
@@ -532,6 +532,7 @@
       font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 0.82rem;
       color: #7dd3fc;
+      overflow-wrap: anywhere;
     }
 
     /* ── Footer ── */
@@ -870,12 +871,28 @@
     <section id="comandos">
       <div class="section-label">Execução</div>
       <h2>Comandos <span class="gradient-text">principais</span></h2>
-      <p class="section-desc">Tudo via npm scripts — sem ferramentas globais adicionais (exceto k6 e Appium para mobile).</p>
+      <p class="section-desc">Clone, instale pelo lockfile, baixe o Chromium do Playwright, instale o k6 e execute o fluxo padrão com abertura automática dos relatórios.</p>
 
       <div class="commands-grid">
         <div class="command-card">
-          <div class="command-header">Regressão sem mobile</div>
-          <div class="command-body">npm run test:regression:skip-mobile</div>
+          <div class="command-header">Clonar repositório</div>
+          <div class="command-body">git clone https://github.com/BrendonWalefy/omniqa-framework.git</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Instalar dependências</div>
+          <div class="command-body">npm ci</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Instalar browser</div>
+          <div class="command-body">npx playwright install chromium</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Instalar k6 no macOS</div>
+          <div class="command-body">brew install k6</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Fluxo padrão</div>
+          <div class="command-body">npm run test</div>
         </div>
         <div class="command-card">
           <div class="command-header">Regressão sem iOS</div>
@@ -896,6 +913,10 @@
         <div class="command-card">
           <div class="command-header">Gerar todos os relatórios</div>
           <div class="command-body">npm run report:all</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Abrir relatórios</div>
+          <div class="command-body">npm run report:open</div>
         </div>
       </div>
     </section>
