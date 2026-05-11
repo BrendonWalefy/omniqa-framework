@@ -7,6 +7,8 @@
 
 Framework de automação de testes multi-plataforma com TypeScript — cobrindo Web, API, Mobile e Performance em um único monorepo modular.
 
+Projeto desenvolvido por **Brendon Walefy** como material de portfólio e demonstração técnica em automação de testes.
+
 ---
 
 ## Sumário
@@ -20,6 +22,7 @@ Framework de automação de testes multi-plataforma com TypeScript — cobrindo 
 - [Como Executar](#como-executar)
 - [Relatórios](#relatórios)
 - [CI/CD](#cicd)
+- [Autoria e Licença](#autoria-e-licença)
 - [Estrutura de Pastas](#estrutura-de-pastas)
 
 ---
@@ -366,6 +369,18 @@ Na esteira oficial, `BYPASS_SAUCE_COPY_BUGS=true` fica habilitado para manter o 
 **Mobile:** executado localmente. Requer dispositivo ou emulador — não entra na esteira por custo e instabilidade em runners compartilhados.
 
 Os artefatos (HTML de relatório, XML JUnit) ficam disponíveis na aba Actions por 30 dias.
+
+---
+
+## Autoria e Licença
+
+Desenvolvido por **Brendon Walefy**.
+
+Este projeto é público como material de portfólio, estudo e demonstração técnica de arquitetura de automação de testes.
+
+Licenciado sob a licença **MIT**. O uso, cópia, modificação e distribuição são permitidos conforme os termos da licença, mantendo os devidos créditos ao autor.
+
+Copyright (c) 2026 Brendon Walefy.
 
 ---
 
