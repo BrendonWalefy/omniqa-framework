@@ -6,13 +6,13 @@ Aplicativo nativo de Contatos no Android e iOS.
 
 ## Objetivo
 
-Validar um fluxo simples de criação e remoção de contatos em dispositivos Android e iOS, com foco em estabilidade do script, seletores reutilizáveis e clareza de evidências.
+Validar um fluxo simples de criação e remoção de contatos em dispositivos Android e iOS, com foco em estabilidade do script, separação clara por plataforma e clareza de evidências.
 
 ## Escopo
 
 - Criação de contato.
 - Remoção de contato.
-- Evidência final de sucesso por cenário.
+- Evidência por etapa de cada cenário.
 - Screenshot automatico em falha.
 
 ## Estratégia
@@ -39,10 +39,10 @@ Padrões implementados:
 
 - Appium com driver UiAutomator2 para Android e XCUITest para iOS.
 - WebdriverIO como runner Mobile.
-- Screen Object para contatos.
-- Seletores separados em `tests-mobile/android/support` e `tests-mobile/ios/support`.
+- Screen Object para contatos separado por plataforma.
+- Specs, seletores, dados e evidências separados em `tests-mobile/android` e `tests-mobile/ios`.
 - Pacote e activity configuraveis por variaveis de ambiente.
-- Screenshots de sucesso e falha salvos em `reports/mobile/android` e `reports/mobile/ios`.
+- Screenshots de etapa, sucesso e falha salvos em `reports/mobile/android` e `reports/mobile/ios`.
 
 ## Pre-requisitos locais
 

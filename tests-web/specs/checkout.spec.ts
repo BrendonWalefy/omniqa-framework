@@ -4,42 +4,68 @@ import { CheckoutPage } from '../pages/CheckoutPage';
 import { InventoryPage } from '../pages/InventoryPage';
 import { LoginPage } from '../pages/LoginPage';
 import { checkoutData } from '../support/checkoutData';
-import { attachSuccessEvidence } from '../support/evidence';
+import { evidenceStep } from '../support/evidence';
 import { users } from '../support/users';
 
 const productName = 'Sauce Labs Backpack';
 
 test.describe('SauceDemo - Carrinho e checkout', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
     const loginPage = new LoginPage(page);
     const inventoryPage = new InventoryPage(page);
 
-    await loginPage.goto();
-    await loginPage.login(users.standard);
-    await inventoryPage.expectLoaded();
+    await evidenceStep(page, testInfo, 'Setup - acessar tela de login', async () => {
+      await loginPage.goto();
+    });
+
+    await evidenceStep(page, testInfo, 'Setup - autenticar usuario padrao', async () => {
+      await loginPage.login(users.standard);
+    });
+
+    await evidenceStep(page, testInfo, 'Setup - validar inventario carregado', async () => {
+      await inventoryPage.expectLoaded();
+    });
   });
 
   test('WEB-003 - deve adicionar produto ao carrinho', async ({ page }, testInfo) => {
     const inventoryPage = new InventoryPage(page);
     const cartPage = new CartPage(page);
 
-    await inventoryPage.addProductToCart(productName);
-    await inventoryPage.expectCartBadge('1');
-    await inventoryPage.openCart();
+    await evidenceStep(page, testInfo, 'WEB-003 - adicionar produto ao carrinho', async () => {
+      await inventoryPage.addProductToCart(productName);
+    });
 
-    await cartPage.expectProductVisible(productName);
-    await attachSuccessEvidence(page, testInfo, 'WEB-003 - produto no carrinho');
+    await evidenceStep(page, testInfo, 'WEB-003 - validar contador do carrinho', async () => {
+      await inventoryPage.expectCartBadge('1');
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-003 - abrir carrinho', async () => {
+      await inventoryPage.openCart();
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-003 - validar produto no carrinho', async () => {
+      await cartPage.expectProductVisible(productName);
+    });
   });
 
   test('WEB-004 - deve remover produto do carrinho', async ({ page }, testInfo) => {
     const inventoryPage = new InventoryPage(page);
 
-    await inventoryPage.addProductToCart(productName);
-    await inventoryPage.expectCartBadge('1');
-    await inventoryPage.removeProductFromCart(productName);
+    await evidenceStep(page, testInfo, 'WEB-004 - adicionar produto ao carrinho', async () => {
+      await inventoryPage.addProductToCart(productName);
+    });
 
-    await inventoryPage.expectCartEmpty();
-    await attachSuccessEvidence(page, testInfo, 'WEB-004 - carrinho vazio');
+    await evidenceStep(page, testInfo, 'WEB-004 - validar contador do carrinho', async () => {
+      await inventoryPage.expectCartBadge('1');
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-004 - remover produto do carrinho', async () => {
+      await inventoryPage.removeProductFromCart(productName);
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-004 - validar carrinho vazio', async () => {
+      await inventoryPage.expectCartEmpty();
+    });
   });
 
   test('WEB-005 - deve finalizar checkout com sucesso', async ({ page }, testInfo) => {
@@ -47,13 +73,28 @@ test.describe('SauceDemo - Carrinho e checkout', () => {
     const cartPage = new CartPage(page);
     const checkoutPage = new CheckoutPage(page);
 
-    await inventoryPage.addProductToCart(productName);
-    await inventoryPage.openCart();
-    await cartPage.checkout();
-    await checkoutPage.fillInformation(checkoutData);
-    await checkoutPage.finishOrder();
+    await evidenceStep(page, testInfo, 'WEB-005 - adicionar produto ao carrinho', async () => {
+      await inventoryPage.addProductToCart(productName);
+    });
 
-    await checkoutPage.expectOrderCompleted();
-    await attachSuccessEvidence(page, testInfo, 'WEB-005 - pedido finalizado');
+    await evidenceStep(page, testInfo, 'WEB-005 - abrir carrinho', async () => {
+      await inventoryPage.openCart();
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-005 - iniciar checkout', async () => {
+      await cartPage.checkout();
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-005 - preencher dados do checkout', async () => {
+      await checkoutPage.fillInformation(checkoutData);
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-005 - finalizar pedido', async () => {
+      await checkoutPage.finishOrder();
+    });
+
+    await evidenceStep(page, testInfo, 'WEB-005 - validar pedido finalizado', async () => {
+      await checkoutPage.expectOrderCompleted();
+    });
   });
 });

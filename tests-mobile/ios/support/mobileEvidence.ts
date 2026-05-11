@@ -13,8 +13,16 @@ export async function saveIosScreenshot(name: string) {
   return filePath;
 }
 
+export async function iosEvidenceStep<T>(name: string, action: () => Promise<T>) {
+  try {
+    return await action();
+  } finally {
+    await saveIosScreenshot(name);
+  }
+}
+
 function formatEvidenceName(name: string) {
-  return `${extractScenarioPrefix(name)}-${formatTimestamp()}`;
+  return `${extractScenarioPrefix(name)}-${slugify(name)}-${formatTimestamp()}`;
 }
 
 function extractScenarioPrefix(name: string) {
@@ -29,5 +37,14 @@ function formatTimestamp() {
       hour12: false
     })
     .replace(' ', '-')
-    .replace(/:/g, '');
+    .replace(/:/g, '') + `-${String(new Date().getMilliseconds()).padStart(3, '0')}`;
+}
+
+function slugify(name: string) {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }

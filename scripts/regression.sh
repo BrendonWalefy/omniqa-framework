@@ -151,12 +151,12 @@ header
 
 # 1. API — crítico
 run_suite 1 "Testes de API" "Playwright" \
-  "npm run test:api --silent" \
+  "npm run test:api:raw --silent" \
   "true"
 
 # 2. Web — crítico
 run_suite 2 "Testes Web" "Playwright / Chromium" \
-  "npm run test:web --silent" \
+  "npm run test:web:raw --silent" \
   "true"
 
 # 3. Mobile Android — não crítico (sequencial)
@@ -164,7 +164,7 @@ if [ "$SKIP_MOBILE" = "true" ]; then
   skip_suite 3 "Testes Mobile Android" "WebdriverIO / UIAutomator2"
 else
   run_suite 3 "Testes Mobile Android" "WebdriverIO / UIAutomator2" \
-    "npm run test:mobile:android --silent" \
+    "npm run test:mobile:android:raw --silent" \
     "false"
 fi
 
@@ -173,13 +173,13 @@ if [ "$SKIP_MOBILE" = "true" ] || [ "$SKIP_IOS" = "true" ]; then
   skip_suite 4 "Testes Mobile iOS" "WebdriverIO / XCUITest"
 else
   run_suite 4 "Testes Mobile iOS" "WebdriverIO / XCUITest" \
-    "npm run test:mobile:ios --silent" \
+    "npm run test:mobile:ios:raw --silent" \
     "false"
 fi
 
 # 5. Performance — não crítico (informativo)
 run_suite 5 "Testes de Performance" "k6" \
-  "npm run test:performance --silent" \
+  "npm run test:performance:raw --silent" \
   "false"
 
 # 6. Geração e abertura de relatórios

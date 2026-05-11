@@ -128,22 +128,22 @@ function summary() {
 
 header();
 
-runSuite(1, 'Testes de API', 'Playwright', 'test:api', true);
-runSuite(2, 'Testes Web', 'Playwright / Chromium', 'test:web', true);
+runSuite(1, 'Testes de API', 'Playwright', 'test:api:raw', true);
+runSuite(2, 'Testes Web', 'Playwright / Chromium', 'test:web:raw', true);
 
 if (skipMobile) {
   skipSuite(3, 'Testes Mobile Android', 'WebdriverIO / UIAutomator2');
 } else {
-  runSuite(3, 'Testes Mobile Android', 'WebdriverIO / UIAutomator2', 'test:mobile:android', false);
+  runSuite(3, 'Testes Mobile Android', 'WebdriverIO / UIAutomator2', 'test:mobile:android:raw', false);
 }
 
 if (skipMobile || skipIos) {
   skipSuite(4, 'Testes Mobile iOS', 'WebdriverIO / XCUITest');
 } else {
-  runSuite(4, 'Testes Mobile iOS', 'WebdriverIO / XCUITest', 'test:mobile:ios', false);
+  runSuite(4, 'Testes Mobile iOS', 'WebdriverIO / XCUITest', 'test:mobile:ios:raw', false);
 }
 
-runSuite(5, 'Testes de Performance', 'k6', 'test:performance', false);
+runSuite(5, 'Testes de Performance', 'k6', 'test:performance:raw', false);
 
 console.log('');
 console.log(`${BOLD}┌─ [6] Gerando relatórios visuais${NC}`);
@@ -157,4 +157,3 @@ if (runNpmScript('report:all') === 0) {
 
 summary();
 process.exit(failCount === 0 ? 0 : 1);
-

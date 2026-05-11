@@ -112,7 +112,7 @@ tests-web/pages/
 ### Screen Object — Mobile
 Equivalente ao POM para mobile. Cada tela do app tem uma classe em `screens/` que encapsula a lógica de interacao com os elementos nativos.
 
-**Diferencial:** Os seletores ficam em `support/contactsSelectors.ts` separados da lógica de interacao, permitindo que Android e iOS reusem o mesmo fluxo com seletores diferentes.
+**Diferencial:** Android e iOS seguem o mesmo desenho de automacao e a mesma intenção de fluxo, mas possuem specs, Screen Objects e seletores separados por plataforma. Essa separação deixa explícitas as diferenças reais entre UiAutomator2 e XCUITest sem esconder particularidades dos apps nativos.
 
 ### Support Layer
 Cada módulo tem uma pasta `support/` com três responsabilidades distintas:
