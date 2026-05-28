@@ -1,5 +1,5 @@
 node_modules/
-reports/
+/reports/
 playwright/.cache/
 .DS_Store
 *.log
