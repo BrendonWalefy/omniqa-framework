@@ -40,7 +40,12 @@
     "test:systemops:mobile-web:raw": "playwright test --project=systemops-web-mobile",
     "test:systemops:smoke": "node core/runners/run-with-report.mjs test:systemops:smoke:raw junit",
     "test:systemops:smoke:raw": "playwright test --project=systemops-api --project=systemops-web-chromium",
-    "test:systemops:performance": "k6 run --summary-export=reports/performance/summary.json targets/systemops/performance/webhook-smoke-load.js"
+    "test:systemops:scheduling": "node core/runners/run-with-report.mjs test:systemops:scheduling:raw junit",
+    "test:systemops:scheduling:raw": "playwright test --project=systemops-api targets/systemops/api/specs/scheduling.spec.ts",
+    "test:systemops:conversation": "node core/runners/run-with-report.mjs test:systemops:conversation:raw junit",
+    "test:systemops:conversation:raw": "playwright test --project=systemops-api targets/systemops/api/specs/conversation-experience.spec.ts",
+    "test:systemops:performance": "k6 run --summary-export=reports/performance/summary.json targets/systemops/performance/webhook-smoke-load.js",
+    "test:systemops:performance:scheduling": "k6 run --summary-export=reports/performance/summary.json targets/systemops/performance/scheduling-smoke-load.js"
   },
   "keywords": [
     "qa",
