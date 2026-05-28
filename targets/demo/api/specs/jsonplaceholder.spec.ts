@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { expectCommentContract, expectPostContract, expectUserContract } from './support/contracts';
-import { expectResponseTimeBelow, expectSuccessfulJsonResponse } from './support/apiAssertions';
+import { expectCommentContract, expectPostContract, expectUserContract } from '../support/contracts';
+import { expectResponseTimeBelow, expectSuccessfulJsonResponse } from '../support/apiAssertions';
 
 test.describe('JSONPlaceholder API', () => {
   test('API-001 - deve listar usuarios com contrato valido', async ({ request }) => {

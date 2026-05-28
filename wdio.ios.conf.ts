@@ -1,4 +1,4 @@
-import { saveIosScreenshot } from './tests-mobile/ios/support/mobileEvidence';
+import { saveIosScreenshot } from './targets/demo/mobile/ios/support/mobileEvidence';
 
 process.env.DEVELOPER_DIR = process.env.DEVELOPER_DIR ?? '/Applications/Xcode.app/Contents/Developer';
 
@@ -17,7 +17,7 @@ type TestResult = {
 
 export const config = {
   runner: 'local',
-  specs: ['./tests-mobile/ios/specs/**/*.spec.ts'],
+  specs: ['./targets/demo/mobile/ios/specs/**/*.spec.ts'],
   maxInstances: 1,
   logLevel: 'info',
   bail: 0,

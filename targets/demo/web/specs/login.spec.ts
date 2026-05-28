@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 import { InventoryPage } from '../pages/InventoryPage';
 import { LoginPage } from '../pages/LoginPage';
-import { evidenceStep } from '../support/evidence';
+import { evidenceStep } from '../../../../core/helpers/webEvidence';
 import { users } from '../support/users';
 
 test.describe('SauceDemo - Login', () => {

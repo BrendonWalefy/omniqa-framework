@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { homedir } from 'node:os';
-import { saveMobileScreenshot } from './tests-mobile/android/support/mobileEvidence';
+import { saveMobileScreenshot } from './targets/demo/mobile/android/support/mobileEvidence';
 
 const defaultAndroidSdk = path.join(homedir(), 'Library/Android/sdk');
 const androidSdkRoot = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT ?? defaultAndroidSdk;
@@ -27,7 +27,7 @@ type TestResult = {
 
 export const config = {
   runner: 'local',
-  specs: ['./tests-mobile/android/specs/**/*.spec.ts'],
+  specs: ['./targets/demo/mobile/android/specs/**/*.spec.ts'],
   maxInstances: 1,
   logLevel: 'info',
   bail: 0,

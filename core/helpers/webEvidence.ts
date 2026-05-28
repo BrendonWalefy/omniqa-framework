@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Page, TestInfo, test } from '@playwright/test';
-import { formatEvidenceName } from '../../tests-support/evidence/evidenceName';
+import { formatEvidenceName } from '../evidence/evidenceName';
 
 const webEvidenceDir = path.join(process.cwd(), 'reports', 'evidence', 'web');
 

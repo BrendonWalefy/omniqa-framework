@@ -15,10 +15,8 @@
     ]
   },
   "include": [
-    "tests-api/**/*.ts",
-    "tests-web/**/*.ts",
-    "tests-mobile/**/*.ts",
-    "tests-support/**/*.ts",
+    "core/**/*.ts",
+    "targets/**/*.ts",
     "playwright.config.ts",
     "wdio*.conf.ts"
   ]

@@ -105,7 +105,7 @@ function generateAndOpenReports(includePerformance) {
 
     spawnSync(
       process.execPath,
-      ['scripts/open-reports.mjs', ...reports],
+      ['core/runners/open-reports.mjs', ...reports],
       { stdio: 'inherit' }
     );
     return;

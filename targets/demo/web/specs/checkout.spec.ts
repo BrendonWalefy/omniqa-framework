@@ -4,7 +4,7 @@ import { CheckoutPage } from '../pages/CheckoutPage';
 import { InventoryPage } from '../pages/InventoryPage';
 import { LoginPage } from '../pages/LoginPage';
 import { checkoutData } from '../support/checkoutData';
-import { evidenceStep } from '../support/evidence';
+import { evidenceStep } from '../../../../core/helpers/webEvidence';
 import { users } from '../support/users';
 
 const productName = 'Sauce Labs Backpack';

@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { browser } from '@wdio/globals';
-import { formatEvidenceName } from '../../../tests-support/evidence/evidenceName';
+import { formatEvidenceName } from '../../../../../core/evidence/evidenceName';
 
 const mobileEvidenceDir = path.join(process.cwd(), 'reports', 'mobile', 'android');
 
