@@ -33,13 +33,13 @@ O OmniQA foi construido para validar múltiplas plataformas de forma independent
 
 **Plataformas cobertas:**
 
-| Frente | Ferramenta | Alvo |
-|---|---|---|
-| API | Playwright | JSONPlaceholder API |
-| Web E2E | Playwright + Chromium | SauceDemo |
-| Mobile Android | Appium + WebdriverIO | App Contatos nativo |
-| Mobile iOS | Appium + WebdriverIO | App Contatos nativo |
-| Performance | k6 | JSONPlaceholder API |
+| Frente | Ferramenta | Demo | SystemOps |
+|---|---|---|---|
+| API | Playwright | JSONPlaceholder (contrato + payload) | Auth guards + webhook Z-API |
+| Web E2E | Playwright + Chromium | SauceDemo (login, carrinho, checkout) | Login, auth guards, smoke read-only |
+| Mobile Android | Appium + WebdriverIO | App Contatos nativo | — |
+| Mobile iOS | Appium + WebdriverIO | App Contatos nativo | — |
+| Performance | k6 | JSONPlaceholder (carga controlada) | Webhook smoke |
 
 ---
 
@@ -49,43 +49,43 @@ O projeto segue uma arquitetura de **monorepo modular por plataforma**. Cada cam
 
 ```
 omniqa-framework/
-├── tests-api/              # Testes de contrato e comportamento de API
-│   ├── support/            # Helpers de assertion e definição de contratos
-│   └── *.spec.ts
+├── core/                        # Helpers e runners compartilhados entre targets
+│   ├── evidence/                # Padronização de nomes de evidências
+│   ├── helpers/                 # Utilitários de captura (webEvidence)
+│   ├── reports/                 # Geradores de relatório HTML (junit + performance)
+│   └── runners/                 # Orquestradores de execução e abertura de relatórios
 │
-├── tests-web/              # Testes E2E de interface Web
-│   ├── pages/              # Page Objects (uma classe por página)
-│   ├── specs/              # Cenários organizados por jornada
-│   └── support/            # Dados de teste, evidências, utilitarios
+├── targets/                     # Um namespace por produto testado
+│   ├── demo/                    # Target de demonstração
+│   │   ├── api/                 # Contrato e payload (JSONPlaceholder)
+│   │   │   └── support/         # contracts.ts, apiAssertions.ts
+│   │   ├── web/                 # Page Object Model (SauceDemo)
+│   │   │   ├── pages/           # LoginPage, InventoryPage, CartPage, CheckoutPage
+│   │   │   └── specs/           # Jornadas e validações visuais de copy
+│   │   ├── mobile/              # Screen Objects por plataforma (App Contatos)
+│   │   │   ├── android/         # Seletores UiAutomator2
+│   │   │   └── ios/             # Seletores XCUITest
+│   │   └── performance/         # k6 carga JSONPlaceholder
+│   │
+│   └── systemops/               # Target SystemOps (produto real)
+│       ├── api/                 # Auth guard + webhook Z-API
+│       │   └── specs/           # auth.spec.ts, webhook-zapi.spec.ts
+│       ├── web/                 # Login, navegação, smoke read-only
+│       │   ├── pages/           # LoginPage, DashboardPage, InboxPage, OwnerPage
+│       │   └── specs/           # auth.spec.ts, navigation.spec.ts, read-only.spec.ts
+│       ├── performance/         # k6 smoke webhook
+│       └── systemops.config.ts  # Credenciais e URL via env vars
 │
-├── tests-mobile/
-│   ├── android/            # Testes mobile para Android
-│   │   ├── screens/        # Screen Objects (equivalente ao POM para mobile)
-│   │   ├── specs/          # Cenários de teste
-│   │   └── support/        # Seletores, dados e evidências
-│   └── ios/                # Espelho para iOS com seletores proprios
-│
-├── tests-performance/      # Scripts de carga com k6
-│
-├── tests-support/          # Helpers compartilhados entre frentes de teste
-│   └── evidence/           # Padronização de nomes de evidências
-│
-├── scripts/                # Geradores de relatório e orquestrador de regressão
-│   ├── report-styles.ts    # Design system compartilhado para os relatórios
-│   ├── generate-junit-report.ts
-│   ├── generate-performance-report.ts
-│   └── regression.sh       # Script local de regressão completa
-│
-├── docs/                   # Estratégia, planos, rastreabilidade e notas de IA
+├── docs/                        # Estratégia, planos, rastreabilidade e notas de IA
 │   ├── strategy/
 │   ├── test-plans/
 │   ├── traceability/
 │   └── ai-notes/
-├── reports/                # Saida dos testes (ignorada pelo git)
+├── reports/                     # Saída dos testes (ignorada pelo git)
 │
-├── playwright.config.ts    # Configuração de projetos Web e API
-├── wdio.android.conf.ts    # Configuração WebdriverIO para Android
-└── wdio.ios.conf.ts        # Configuração WebdriverIO para iOS
+├── playwright.config.ts         # Projetos Playwright (demo + systemops)
+├── wdio.android.conf.ts         # Configuração WebdriverIO para Android
+└── wdio.ios.conf.ts             # Configuração WebdriverIO para iOS
 ```
 
 ### Camadas e responsabilidades
@@ -107,16 +107,22 @@ omniqa-framework/
 ## Padrões Aplicados
 
 ### Page Object Model (POM) — Web
-Cada página da aplicação web tem uma classe dedicada em `tests-web/pages/`. Os testes não interagem diretamente com o DOM — toda navegacao e interacao passa pela classe de página correspondente.
+Cada página da aplicação web tem uma classe dedicada em `targets/{target}/web/pages/`. Os testes não interagem diretamente com o DOM — toda navegacao e interacao passa pela classe de página correspondente.
 
 **Por que usar:** Centraliza a definição de como interagir com cada tela. Se um seletor muda, a correcao e feita em um único lugar, sem tocar nos testes.
 
 ```
-tests-web/pages/
-├── LoginPage.ts       # encapsula o formulario de login
+targets/demo/web/pages/
+├── LoginPage.ts       # encapsula o formulário de login
 ├── InventoryPage.ts   # encapsula a listagem de produtos
 ├── CartPage.ts        # encapsula o carrinho
 └── CheckoutPage.ts    # encapsula o fluxo de checkout
+
+targets/systemops/web/pages/
+├── LoginPage.ts       # autenticação (admin + owner)
+├── DashboardPage.ts   # tela principal pós-login
+├── InboxPage.ts       # caixa de mensagens
+└── OwnerPage.ts       # painel owner
 ```
 
 ### Screen Object — Mobile
@@ -134,7 +140,7 @@ Cada módulo tem uma pasta `support/` com três responsabilidades distintas:
 | `evidence.ts` | Captura de screenshots e anexos nos relatórios |
 
 ### Evidências
-As evidências seguem um padrão compartilhado de nomeação em `tests-support/evidence/evidenceName.ts`, reutilizado por Web, Android e iOS. Cada plataforma mantém apenas a responsabilidade de capturar a imagem com sua ferramenta: Playwright no Web e WebdriverIO/Appium no Mobile.
+As evidências seguem um padrão compartilhado de nomeação em `core/evidence/evidenceName.ts`, reutilizado por Web, Android e iOS. Cada plataforma mantém apenas a responsabilidade de capturar a imagem com sua ferramenta: Playwright no Web e WebdriverIO/Appium no Mobile.
 
 O formato gerado é:
 
@@ -153,9 +159,16 @@ ios-001-validar-contato-visivel-2026-05-11-021520-789.png
 Os wrappers de execução limpam as evidências antes de cada nova rodada e o relatório JUnit customizado organiza as imagens por caso de teste (`WEB-001`, `MOB-001`, `IOS-001`), evitando uma galeria única misturada.
 
 ### Contract Testing — API
-Os testes de API validam não apenas o status code, mas a estrutura do payload via contratos definidos em `tests-api/support/contracts.ts`. Qualquer mudanca inesperada no schema da API quebra o contrato antes de chegar ao E2E.
+Os testes de API validam não apenas o status code, mas a estrutura do payload via contratos definidos em `targets/demo/api/support/contracts.ts`. Qualquer mudanca inesperada no schema da API quebra o contrato antes de chegar ao E2E.
 
 ### Pirâmide de Testes
+### Target Namespace
+Cada produto testado vive em `targets/{target}/` com estrutura interna consistente: `web/pages/`, `web/specs/`, `api/specs/`, `performance/`. Scripts npm seguem o padrão `test:{target}`, `test:{target}:web`, `test:{target}:api`. `core/` agrupa apenas o que é genuinamente compartilhado entre targets.
+
+**Por que usar:** Isola completamente as dependências de cada produto. Adicionar um novo target não polui o namespace dos demais e não exige refatoração da estrutura existente.
+
+### Pirâmide de Testes
+
 A distribuição dos testes segue a pirâmide classica — mais testes baratos e rápidos na base, menos E2E no topo:
 
 ```
@@ -323,6 +336,18 @@ npm run test:mobile:ios
 
 # Performance
 npm run test:performance
+
+# SystemOps — Smoke completo (API + Web)
+npm run test:systemops
+
+# SystemOps — Apenas Web
+npm run test:systemops:web
+
+# SystemOps — Apenas API
+npm run test:systemops:api
+
+# SystemOps — Performance (k6 smoke webhook, executado localmente)
+npm run test:systemops:performance
 ```
 
 ---

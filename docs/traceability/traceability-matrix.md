@@ -20,3 +20,16 @@
 | IOS-002 | Mobile iOS | Contatos | Remover contato existente | E2E Mobile | Alta | Sim | Automatizado |
 | PERF-001 | Performance | Users | Carga controlada em `GET /users` | Performance | Baixa | Sim | Automatizado |
 | PERF-002 | Performance | Posts | Carga controlada em `GET /posts` | Performance | Baixa | Sim | Automatizado |
+| SYS-WEB-001 | Web | Login | Login admin válido | E2E | Alta | Sim | Automatizado |
+| SYS-WEB-002 | Web | Login | Login owner válido | E2E | Alta | Sim | Automatizado |
+| SYS-WEB-003 | Web | Login | Login inválido exibe erro | E2E | Alta | Sim | Automatizado |
+| SYS-WEB-004 | Web | Auth Guard | Rota /app/dashboard redireciona sem sessão | Auth Guard | Alta | Sim | Automatizado |
+| SYS-WEB-005 | Web | Auth Guard | Rota /owner redireciona sem sessão | Auth Guard | Alta | Sim | Automatizado |
+| SYS-WEB-006 | Web | Dashboard | Dashboard renderiza sem erro após login admin | Smoke | Alta | Sim | Automatizado |
+| SYS-WEB-007 | Web | Inbox | Inbox renderiza após login admin (lista ou empty state) | Smoke | Alta | Sim | Automatizado |
+| SYS-API-001 | API | Auth Guard | GET /api/conversations sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
+| SYS-API-002 | API | Auth Guard | GET /api/calendar/blocks sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
+| SYS-API-003 | API | Webhook | Payload inválido ou vazio retorna 400 | API | Media | Sim | Automatizado |
+| SYS-API-004 | API | Webhook | Mensagem de grupo (isGroupMsg=true) retorna 200 | API | Media | Sim | Automatizado |
+| SYS-API-005 | API | Webhook | Status reply (isStatusReply=true) retorna 200 | API | Media | Sim | Automatizado |
+| SYS-API-006 | API | Webhook | fromMe sem texto retorna 200 | API | Media | Sim | Automatizado |

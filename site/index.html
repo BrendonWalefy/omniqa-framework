@@ -744,60 +744,39 @@
           </div>
 
           <div class="arch-module">
-            <h3>tests-api/<span>Contrato</span></h3>
+            <h3>core/<span>Compartilhado</span></h3>
             <ul class="arch-tree">
-              <li><span class="branch">├──</span><code>support/</code><small>Contratos e validadores reutilizáveis</small></li>
-              <li><span class="branch">│ ├──</span><code class="accent">contracts.ts</code><small>Schema esperado de cada endpoint</small></li>
-              <li><span class="branch">│ └──</span><code class="accent">apiAssertions.ts</code><small>Helpers de validação</small></li>
-              <li><span class="branch">└──</span><code>jsonplaceholder.spec.ts</code><small>Specs de contrato e payload</small></li>
+              <li><span class="branch">├──</span><code>evidence/</code><small>Nomeação padronizada de evidências</small></li>
+              <li><span class="branch">│ └──</span><code class="green">evidenceName.ts</code><small>ID, etapa e timestamp</small></li>
+              <li><span class="branch">├──</span><code>helpers/</code><small>Captura de screenshots Web</small></li>
+              <li><span class="branch">├──</span><code>reports/</code><small>Geradores HTML (junit + performance)</small></li>
+              <li><span class="branch">└──</span><code>runners/</code><small>Orquestradores e abertura de relatórios</small></li>
             </ul>
           </div>
 
           <div class="arch-module">
-            <h3>tests-web/<span>E2E Web</span></h3>
+            <h3>targets/demo/<span>Demonstração</span></h3>
             <ul class="arch-tree">
-              <li><span class="branch">├──</span><code>pages/</code><small>Page Object Model</small></li>
-              <li><span class="branch">│ ├──</span><code class="accent">LoginPage.ts</code><small>Autenticação</small></li>
-              <li><span class="branch">│ ├──</span><code class="accent">InventoryPage.ts</code><small>Catálogo</small></li>
-              <li><span class="branch">│ └──</span><code class="accent">CartPage.ts</code><small>Carrinho e checkout</small></li>
-              <li><span class="branch">├──</span><code>specs/</code><small>Jornadas e validações visuais de copy</small></li>
-              <li><span class="branch">└──</span><code>support/</code><small>Evidências e dados de teste</small></li>
+              <li><span class="branch">├──</span><code>api/</code><small>Contrato e payload (JSONPlaceholder)</small></li>
+              <li><span class="branch">│ └──</span><code class="accent">contracts.ts</code><small>Schema esperado de cada endpoint</small></li>
+              <li><span class="branch">├──</span><code>web/pages/</code><small>Page Object Model (SauceDemo)</small></li>
+              <li><span class="branch">│ └──</span><code class="accent">LoginPage, InventoryPage…</code></li>
+              <li><span class="branch">├──</span><code>mobile/</code><small>Screen Objects Android + iOS</small></li>
+              <li><span class="branch">└──</span><code>performance/</code><small>k6 carga JSONPlaceholder</small></li>
             </ul>
           </div>
 
-          <div class="arch-module">
-            <h3>tests-mobile/<span>Android + iOS</span></h3>
-            <ul class="arch-tree">
-              <li><span class="branch">├──</span><code>android/</code><small>Screen Object + seletores Android</small></li>
-              <li><span class="branch">│ ├──</span><code>screens/</code><small>Telas automatizadas</small></li>
-              <li><span class="branch">│ └──</span><code class="green">contactsSelectors.ts</code><small>Seletores por plataforma</small></li>
-              <li><span class="branch">└──</span><code>ios/</code><small>Espelho com seletores iOS</small></li>
-              <li><span class="branch">&nbsp;&nbsp;└──</span><code class="green">mobileEvidence.ts</code><small>Screenshots por etapa</small></li>
-            </ul>
-          </div>
-
-          <div class="arch-module">
-            <h3>tests-support/<span>Compartilhado</span></h3>
-            <ul class="arch-tree">
-              <li><span class="branch">└──</span><code>evidence/</code><small>Nomeação reutilizável de evidências</small></li>
-              <li><span class="branch">&nbsp;&nbsp;└──</span><code class="green">evidenceName.ts</code><small>ID, etapa e timestamp</small></li>
-            </ul>
-          </div>
-
-          <div class="arch-module">
-            <h3>tests-performance/<span>k6</span></h3>
-            <ul class="arch-tree">
-              <li><span class="branch">└──</span><code>jsonplaceholder-load.js</code><small>Carga com VUs e thresholds</small></li>
-            </ul>
-          </div>
-
-          <div class="arch-module">
-            <h3>scripts/<span>Relatórios</span></h3>
-            <ul class="arch-tree">
-              <li><span class="branch">├──</span><code class="orange">report-styles.ts</code><small>Design system compartilhado</small></li>
-              <li><span class="branch">├──</span><code class="orange">generate-junit-report.ts</code><small>Resumo de execução</small></li>
-              <li><span class="branch">├──</span><code class="orange">generate-performance-report.ts</code><small>Relatório de performance</small></li>
-              <li><span class="branch">└──</span><code class="orange">regression.sh</code><small>Orquestrador com flags --skip-*</small></li>
+          <div class="arch-module" style="grid-column: 1 / -1;">
+            <h3>targets/systemops/<span>Produto Real</span></h3>
+            <ul class="arch-tree" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 32px;">
+              <li><span class="branch">├──</span><code>web/pages/</code><small>LoginPage, DashboardPage, InboxPage, OwnerPage</small></li>
+              <li><span class="branch">├──</span><code class="accent">auth.spec.ts</code><small>SYS-WEB-001~003 — autenticação</small></li>
+              <li><span class="branch">├──</span><code class="accent">navigation.spec.ts</code><small>SYS-WEB-004~005 — auth guards</small></li>
+              <li><span class="branch">├──</span><code class="accent">read-only.spec.ts</code><small>SYS-WEB-006~007 — smoke</small></li>
+              <li><span class="branch">├──</span><code>api/specs/</code><small>Auth guard + webhook Z-API</small></li>
+              <li><span class="branch">├──</span><code class="orange">auth.spec.ts</code><small>SYS-API-001~002 — proteção de rotas</small></li>
+              <li><span class="branch">├──</span><code class="orange">webhook-zapi.spec.ts</code><small>SYS-API-003~006 — webhook</small></li>
+              <li><span class="branch">└──</span><code>performance/</code><small>k6 smoke webhook</small></li>
             </ul>
           </div>
         </div>
@@ -954,6 +933,26 @@
         <div class="command-card">
           <div class="command-header">Abrir relatórios</div>
           <div class="command-body">npm run report:open</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top: 32px;">SystemOps</div>
+      <div class="commands-grid">
+        <div class="command-card">
+          <div class="command-header">Smoke completo (API + Web)</div>
+          <div class="command-body">npm run test:systemops</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Apenas Web</div>
+          <div class="command-body">npm run test:systemops:web</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Apenas API</div>
+          <div class="command-body">npm run test:systemops:api</div>
+        </div>
+        <div class="command-card">
+          <div class="command-header">Performance (k6 local)</div>
+          <div class="command-body">npm run test:systemops:performance</div>
         </div>
       </div>
     </section>
