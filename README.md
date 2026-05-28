@@ -348,6 +348,15 @@ npm run test:systemops:api
 
 # SystemOps — Performance (k6 smoke webhook, executado localmente)
 npm run test:systemops:performance
+
+# SystemOps — Agenda E2E destrutiva (requer SYSTEMOPS_RUN_DESTRUCTIVE=true e E2E_SECRET configurado)
+SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:scheduling
+
+# SystemOps — Experiência de conversa E2E
+SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:conversation
+
+# SystemOps — Performance smoke de agendamento
+npm run test:systemops:performance:scheduling
 ```
 
 ---

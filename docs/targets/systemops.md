@@ -18,6 +18,8 @@ O OmniQA atua como plataforma de QA independente. O systemops-core **não recebe
 | `SYSTEMOPS_OWNER_EMAIL` | Não* | E-mail do usuário owner |
 | `SYSTEMOPS_OWNER_PASSWORD` | Não* | Senha do usuário owner |
 | `SYSTEMOPS_TEST_PHONE` | Não | Telefone usado em testes de webhook (padrão: 5511999999999) |
+| `SYSTEMOPS_E2E_SECRET` | Sim para agenda E2E | Secret enviada no header `x-e2e-secret` |
+| `SYSTEMOPS_E2E_RUN_PREFIX` | Não | Prefixo dos `runId` gerados (padrão: local) |
 | `SYSTEMOPS_RUN_DESTRUCTIVE` | Não | `true` para habilitar testes destrutivos (padrão: false) |
 | `SYSTEMOPS_RUN_PRODUCTION_SMOKE` | Não | `true` para smoke read-only contra produção (padrão: false) |
 | `PERFORMANCE_BASE_URL` | Não | URL base para testes k6 (padrão: `http://localhost:3000`) |
@@ -46,6 +48,15 @@ npm run test:systemops:smoke
 
 # Performance (requer k6 instalado)
 npm run test:systemops:performance
+
+# Agenda E2E destrutiva contra clínica/agenda QA
+SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:scheduling
+
+# Experiência de conversa E2E contra clínica/agenda QA
+SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:conversation
+
+# Performance smoke de agendamento (read-only /login)
+npm run test:systemops:performance:scheduling
 ```
 
 ---
@@ -83,6 +94,57 @@ Script k6 leve contra `/login` (rota read-only):
 - Ramp down: 5 → 0 em 15s
 - Thresholds: erro < 1%, p95 < 1000ms, checks > 99%
 
+### Agenda E2E
+
+Estes testes exigem que o `systemops-core` esteja rodando com:
+
+```env
+E2E_MODE=true
+E2E_SECRET=<mesmo valor de SYSTEMOPS_E2E_SECRET>
+E2E_CLINIC_ID=<uuid da clínica QA>
+E2E_GOOGLE_CALENDAR_ID=<agenda QA, nunca agenda do cliente>
+DISABLE_REAL_WHATSAPP_SEND=true
+DISABLE_REAL_OPENAI=true
+```
+
+| ID | Cenário |
+|---|---|
+| SYS-AGENDA-001 | Agenda vazia oferta slots dentro do expediente |
+| SYS-AGENDA-002 | Bloqueio 12h-13h remove almoço das ofertas |
+| SYS-AGENDA-003 | Consulta 09h-10h remove conflito e buffer |
+| SYS-AGENDA-004 | Pedido de manhã retorna apenas manhã |
+| SYS-AGENDA-005 | Pedido de tarde retorna apenas tarde |
+| SYS-AGENDA-006 | Pedido de noite não oferta fora do expediente |
+| SYS-AGENDA-007 | Pedido de sexta respeita timezone local |
+| SYS-AGENDA-008 | Procedimento longo não é ofertado quando não cabe |
+| SYS-AGENDA-009 | Confirmação cria exatamente um evento |
+| SYS-AGENDA-010 | Confirmações concorrentes criam só um evento |
+| SYS-AGENDA-011 | Evento manual após oferta bloqueia confirmação |
+| SYS-AGENDA-012 | Cancelamento libera slot |
+| SYS-AGENDA-013 | Remarcação cancela antigo e cria novo |
+| SYS-AGENDA-014 | Cleanup deixa agenda QA sem eventos do runId |
+| SYS-AGENDA-015 | Pedido genérico pergunta procedimento antes de ofertar slot |
+| SYS-AGENDA-016 | 20 Lentes reserva slots de 240 minutos |
+| SYS-AGENDA-017 | Opção inexistente não confirma fallback silencioso |
+| SYS-AGENDA-018 | Pergunta de preço não cria oferta nem evento |
+| SYS-AGENDA-019 | Urgência clínica aciona atenção humana sem agendar |
+| SYS-AGENDA-020 | Sábado da Ximendes termina às 13h |
+| SYS-AGENDA-021 | Remarcação genérica pede procedimento e mantém agenda antiga |
+| SYS-AGENDA-022 | Remarcação de 20 Lentes mantém duração de 240 minutos |
+
+### Experiência De Conversa E2E
+
+| ID | Cenário |
+|---|---|
+| SYS-CONV-001 | Saudação responde de forma acolhedora sem abrir agenda |
+| SYS-CONV-002 | Fora de escopo mantém limite da clínica |
+| SYS-CONV-003 | Pergunta de preço não inventa valor |
+| SYS-CONV-004 | Depois de preço o lead ainda consegue agendar |
+| SYS-CONV-005 | "ok" após oferta não confirma horário sozinho |
+| SYS-CONV-006 | "pode ser" sem oferta pendente não agenda nada |
+| SYS-CONV-007 | Encerramento não tenta reabrir venda |
+| SYS-CONV-008 | Operador assume e IA não responde por cima |
+
 ---
 
 ## O que NÃO deve rodar em produção
@@ -91,6 +153,7 @@ Script k6 leve contra `/login` (rota read-only):
 - Testes de carga (k6)
 - Qualquer cenário com `SYSTEMOPS_RUN_DESTRUCTIVE=true`
 - Testes de reset ou seed de dados
+- Qualquer agenda E2E usando calendário real do cliente
 
 ---
 
@@ -102,14 +165,13 @@ Sem ambiente de staging dedicado, a estratégia é:
 2. **Credenciais via `.env.local`**: nunca commitar credenciais reais
 3. **Testes autenticados opcionais**: skip automático se envs ausentes — CI passa sem credenciais
 4. **Smoke read-only**: cenários que não alteram estado são seguros contra qualquer ambiente
+5. **Agenda QA**: cenários destrutivos de agendamento rodam somente contra calendário exclusivo de QA
 
 ---
 
 ## Próximos passos (não implementar nesta entrega)
 
-- Seed/reset controlado para ambiente local (fixture de leads e conversas)
 - Testes de fluxo de inbox com massa previsível
-- Testes de agenda com calendário fake ou exclusivo de QA
 - Smoke contra preview da Vercel
 - Performance em preview/staging
 - Integração com CI do systemops-core
