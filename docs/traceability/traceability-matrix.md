@@ -63,3 +63,11 @@
 | SYS-CONV-006 | API E2E | Conversa | "pode ser" sem oferta pendente não agenda nada | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-CONV-007 | API E2E | Conversa | Encerramento não tenta reabrir venda | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-CONV-008 | API E2E | Conversa | Operador assume e IA não responde por cima | E2E Destrutivo | Alta | Sim | Automatizado |
+| SYS-PUSH-001 | API | Push Guard | POST /api/push/subscribe sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
+| SYS-PUSH-002 | API | Push Guard | DELETE /api/push/subscribe sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
+| SYS-PUSH-003 | Web | Push | POST com campos ausentes retorna 400 | API | Alta | Sim | Automatizado |
+| SYS-PUSH-004 | Web | Push | POST com payload válido salva subscrição | API | Alta | Sim | Automatizado |
+| SYS-PUSH-005 | Web | Push | POST idempotente — mesmo endpoint não duplica | API | Alta | Sim | Automatizado |
+| SYS-PUSH-006 | Web | Push | DELETE remove subscrição existente | API | Alta | Sim | Automatizado |
+| SYS-PUSH-007 | Web | Push | DELETE endpoint inexistente retorna 200 | API | Media | Sim | Automatizado |
+| SYS-PUSH-008 | Web | Push | Push component renderiza sem erro de JavaScript no dashboard | Smoke | Alta | Sim | Automatizado |
