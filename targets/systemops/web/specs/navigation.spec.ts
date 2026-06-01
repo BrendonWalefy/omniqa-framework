@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { adminSkipReason, loginAdmin } from '../support/auth';
 
 test.describe('SystemOps - Auth guards', () => {
   test('SYS-WEB-004 - Sem sessão, /app/dashboard redireciona para /login', async ({ page }) => {
@@ -9,5 +10,36 @@ test.describe('SystemOps - Auth guards', () => {
   test('SYS-WEB-005 - Sem sessão, /owner redireciona para /login', async ({ page }) => {
     await page.goto('/owner');
     await expect(page).toHaveURL(/\/login/);
+  });
+});
+
+test.describe('SystemOps - Navegação autenticada', () => {
+  test.beforeEach(async ({ page }) => {
+    const skipReason = adminSkipReason();
+    if (skipReason) test.skip(true, skipReason);
+
+    await loginAdmin(page);
+  });
+
+  test('SYS-NAV-001 - menu lateral começa por Dashboard, depois Inbox, e links principais funcionam', async ({ page }) => {
+    await page.goto('/app/dashboard');
+
+    const links = page.locator('nav.side-nav a.side-nav-item');
+    await expect(links.nth(0)).toContainText('Dashboard');
+    await expect(links.nth(1)).toContainText('Inbox');
+
+    const destinations = [
+      { name: 'Dashboard', url: /\/app\/dashboard/, readyText: 'Dashboard' },
+      { name: 'Inbox', url: /\/app\/inbox/, readyText: /Inbox|Nenhuma conversa ainda/i },
+      { name: 'Agenda', url: /\/app\/agenda/, readyText: 'Gerenciar bloqueios' },
+      { name: 'IA', url: /\/app\/settings\/playbook/, readyText: 'Configurações da IA' },
+      { name: 'Procedimentos', url: /\/app\/settings\/tratamentos/, readyText: 'Procedimentos' }
+    ];
+
+    for (const destination of destinations) {
+      await page.getByRole('link', { name: destination.name }).click();
+      await expect(page).toHaveURL(destination.url);
+      await expect(page.getByText(destination.readyText).first()).toBeVisible();
+    }
   });
 });
