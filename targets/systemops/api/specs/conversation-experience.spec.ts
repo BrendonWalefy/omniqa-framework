@@ -409,4 +409,72 @@ test.describe('SystemOps Conversation Experience E2E', () => {
     expect(reply).toMatch(/procedimento|hor[aá]rio|dispon[ií]vel|agendar|avalia/i);
     await cleanup(client, runId);
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-CONV-019
+  // Urgência clara no meio do fluxo de menu (sem keywords de booking).
+  // Paciente recebeu o menu e responde com emergência explícita.
+  //
+  // "dor", "sangramento", "emergência" não batem nenhum keyword do resolver →
+  // mensagem cai no LLM → classificada como clinical_urgency → handler correto.
+  //
+  // Comportamento esperado:
+  //   - needsAttention = true com attentionReason de urgência
+  //   - Resposta empática/urgente, sem menu re-exibido, sem slots
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-CONV-019 - urgência clara mid-menu escala sem oferecer slots', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-019');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+
+    await client.sendLeadMessage(runId, 'estou com dor intensa e sangramento, é uma emergência', 'urgency-mid-menu');
+    const state = await client.waitForAgentMessage(runId, 2);
+
+    const conv = state.conversations[0];
+    expect(conv?.needsAttention).toBe(true);
+    expect(conv?.attentionReason).toMatch(/urg[eê]ncia|emerg[eê]ncia/i);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/equipe|profissional|atendimento|socorro|imediato|ligo|contato|urg[eê]ncia/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-CONV-020
+  // Urgência com keyword de booking ("consulta") mid-menu.
+  //
+  // Bug: resolveMenuSelection captura "consulta" → book_appointment, antes do
+  // LLM classificar como clinical_urgency. Sistema oferece slots de agendamento
+  // para um paciente que está relatando dor insuportável.
+  //
+  // Comportamento esperado após correção:
+  //   - needsAttention = true (urgência reconhecida)
+  //   - Nenhum slot oferecido (não é um agendamento comum)
+  //   - Resposta prioriza segurança do paciente
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-CONV-020 - urgência com "consulta" mid-menu não aciona booking flow', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-020');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+
+    // "consulta" no resolver → book_appointment; mas a intenção real é urgência
+    await client.sendLeadMessage(runId, 'preciso de uma consulta urgente, estou com dor insuportável', 'urgency-with-consulta');
+    const state = await client.waitForAgentMessage(runId, 2);
+
+    const conv = state.conversations[0];
+    // Urgência deve escalar — não tratar como agendamento comum
+    expect(conv?.needsAttention).toBe(true);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/equipe|profissional|atendimento|urgente|dor|socorro|imediato|ligo/i);
+    await cleanup(client, runId);
+  });
 });

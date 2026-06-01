@@ -26,6 +26,11 @@ function todayAppointment(): { startsAt: Date; endsAt: Date } {
   return { startsAt, endsAt };
 }
 
+/** Hora local da clínica (UTC-3 / America/Sao_Paulo) para um Date UTC */
+function brazilHour(utc: Date): number {
+  return (utc.getUTCHours() - 3 + 24) % 24;
+}
+
 async function setup(client: SystemOpsE2eClient, runId: string) {
   activeRunIds.add(runId);
   await client.reset(runId);
@@ -200,6 +205,53 @@ test.describe('SystemOps Arrival Experience E2E', () => {
     expect(reply).toMatch(/esperamos|aguard|confirm|[oó]timo|perfeito|at[eé] logo|equipe|avisam|atendido/i);
     expect(latestSlotOffer(state)).toHaveLength(0);
     expect(state.appointments.filter(a => a.status === 'scheduled')).toHaveLength(1);
+
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-ARRIVAL-006
+  // Paciente tem dois appointments hoje (manhã e tarde) e avisa chegada.
+  //
+  // Bug: findTodayAppointment usa .limit(1) sem orderBy — com múltiplos
+  // appointments retorna o que vier primeiro no banco (ordem de inserção),
+  // podendo referenciar o horário errado na notificação ao operador.
+  //
+  // Comportamento esperado após correção:
+  //   - attentionReason menciona o appointment mais próximo (menor startsAt)
+  //   - NÃO menciona apenas o appointment mais distante
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-ARRIVAL-006 - múltiplos appointments hoje: attentionReason referencia o mais próximo', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-ARRIVAL-006');
+    await setup(client, runId);
+
+    // Appointment próximo: daqui a 1h
+    const nearStart = new Date(Date.now() + 1 * 60 * 60_000);
+    nearStart.setSeconds(0, 0);
+    const nearEnd = new Date(nearStart.getTime() + 60 * 60_000);
+
+    // Appointment distante: daqui a 4h (mesmo dia)
+    const farStart = new Date(Date.now() + 4 * 60 * 60_000);
+    farStart.setSeconds(0, 0);
+    const farEnd = new Date(farStart.getTime() + 60 * 60_000);
+
+    // Insere o distante primeiro para expor o bug (se não houver orderBy, retorna o distante)
+    await client.createAppointment({ runId, startsAt: farStart, endsAt: farEnd });
+    await client.createAppointment({ runId, startsAt: nearStart, endsAt: nearEnd });
+
+    await client.sendLeadMessage(runId, 'Cheguei, estou na recepção', 'arrival-multi-appt');
+    const state = await client.waitForAgentMessage(runId, 1);
+
+    const conv = state.conversations[0];
+    expect(conv?.needsAttention).toBe(true);
+
+    // attentionReason deve mencionar a hora do appointment MAIS PRÓXIMO
+    const nearHour = brazilHour(nearStart);
+    const farHour = brazilHour(farStart);
+    expect(conv?.attentionReason).toContain(`às ${nearHour}h`);
+    // Não deve referenciar exclusivamente o horário mais distante
+    expect(conv?.attentionReason).not.toMatch(new RegExp(`às ${farHour}h`));
 
     await cleanup(client, runId);
   });
