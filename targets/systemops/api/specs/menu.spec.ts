@@ -28,8 +28,20 @@ const CUSTOM_MENU_ITEMS: E2eMenuItem[] = [
   { number: 5, label: 'Falar com especialista', intent: 'needs_human', enabled: true }
 ];
 
+const PARAMETRIZED_MENU_ITEMS: E2eMenuItem[] = [
+  { number: 1, label: 'Sorriso Prime', intent: 'procedures', enabled: true },
+  { number: 2, label: 'Reservar visita', intent: 'book_appointment', enabled: true },
+  { number: 3, label: 'Planos flexíveis', intent: 'price_inquiry', enabled: true },
+  { number: 4, label: 'Como chegar', intent: 'location', enabled: true },
+  { number: 5, label: 'Chamar concierge', intent: 'needs_human', enabled: true }
+];
+
 function disabledPaymentMenu(): E2eMenuItem[] {
   return CUSTOM_MENU_ITEMS.map((item) => (item.number === 3 ? { ...item, enabled: false } : item));
+}
+
+function disabledParametrizedPaymentMenu(): E2eMenuItem[] {
+  return PARAMETRIZED_MENU_ITEMS.map((item) => (item.number === 3 ? { ...item, enabled: false } : item));
 }
 
 function expectMenuItems(reply: string, items: E2eMenuItem[]) {
@@ -42,9 +54,15 @@ function expectMenuItems(reply: string, items: E2eMenuItem[]) {
   }
 }
 
+function expectNoDefaultMenuLeak(reply: string) {
+  for (const item of DEFAULT_MENU_ITEMS) {
+    expect(reply).not.toContain(`${item.number}. ${item.label}`);
+  }
+}
+
 async function setup(client: SystemOpsE2eClient, runId: string) {
-  activeRunIds.add(runId);
   await client.reset(runId);
+  activeRunIds.add(runId);
   await client.seed();
 }
 
@@ -175,6 +193,115 @@ test.describe('SystemOps Menu Parametrizável E2E', () => {
 
     expect(reply).toMatch(/seja bem-vindo|ol[aá]|bom dia|boa tarde|boa noite/i);
     expectMenuItems(reply, DEFAULT_MENU_ITEMS);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-MENU-006 - lead ambíguo no primeiro contato recebe menu parametrizado sem acionar agenda', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-MENU-006');
+    await setup(client, runId);
+    await client.updateClinicSettings(runId, {
+      greetingMessage: 'Escolha o melhor caminho para continuar:',
+      menuItems: PARAMETRIZED_MENU_ITEMS
+    });
+
+    await client.sendLeadMessage(runId, 'quero entender melhor antes de decidir', 'ambiguous-first-contact');
+    const state = await client.waitForAgentMessage(runId, 1);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toContain('Escolha o melhor caminho para continuar:');
+    expectMenuItems(reply, PARAMETRIZED_MENU_ITEMS);
+    expectNoDefaultMenuLeak(reply);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(state.appointments.filter((appointment) => appointment.status === 'scheduled')).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-MENU-007 - lead indeciso depois do menu recebe o menu novamente, não uma resposta genérica', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-MENU-007');
+    await setup(client, runId);
+    await client.updateClinicSettings(runId, {
+      greetingMessage: 'Escolha o melhor caminho para continuar:',
+      menuItems: PARAMETRIZED_MENU_ITEMS
+    });
+
+    await client.sendLeadMessage(runId, 'oi', 'first-contact');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, 'não sei qual opção escolher', 'unclear-after-menu');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expectMenuItems(reply, PARAMETRIZED_MENU_ITEMS);
+    expectNoDefaultMenuLeak(reply);
+    expect(reply).toMatch(/escolh|op[cç][aã]o|menu|posso ajudar/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(state.appointments.filter((appointment) => appointment.status === 'scheduled')).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-MENU-008 - número inválido dentro do menu reoferece opções sem cair no LLM nem criar ação', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-MENU-008');
+    await setup(client, runId);
+    await client.updateClinicSettings(runId, {
+      greetingMessage: 'Escolha uma opção válida:',
+      menuItems: PARAMETRIZED_MENU_ITEMS
+    });
+
+    await client.sendLeadMessage(runId, 'oi', 'first-contact');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, '9', 'invalid-menu-number');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expectMenuItems(reply, PARAMETRIZED_MENU_ITEMS);
+    expectNoDefaultMenuLeak(reply);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(state.appointments.filter((appointment) => appointment.status === 'scheduled')).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-MENU-009 - lead digitando rótulo customizado usa o intent configurado pela clínica', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-MENU-009');
+    await setup(client, runId);
+    await client.updateClinicSettings(runId, {
+      greetingMessage: 'Escolha uma experiência:',
+      menuItems: PARAMETRIZED_MENU_ITEMS
+    });
+
+    await client.sendLeadMessage(runId, 'oi', 'first-contact');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, 'Sorriso Prime', 'custom-label-procedures');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/procedimento|tratamento|sorriso|avalia/i);
+    expect(reply).not.toContain('1. Sorriso Prime');
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-MENU-010 - rótulo de item desativado não aciona intent antigo nem hardcoded', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-MENU-010');
+    await setup(client, runId);
+    await client.updateClinicSettings(runId, {
+      greetingMessage: 'Escolha uma opção disponível:',
+      menuItems: disabledParametrizedPaymentMenu()
+    });
+
+    await client.sendLeadMessage(runId, 'oi', 'first-contact');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, 'Planos flexíveis', 'disabled-custom-label');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).not.toMatch(/pagamento|parcel|pre[cç]o|valor/i);
+    expect(reply).not.toContain('3. Planos flexíveis');
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(state.appointments.filter((appointment) => appointment.status === 'scheduled')).toHaveLength(0);
     await cleanup(client, runId);
   });
 });

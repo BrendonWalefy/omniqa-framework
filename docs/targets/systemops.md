@@ -125,6 +125,11 @@ Estes testes usam as rotas E2E seguras do SystemOps e esperam suporte a `PATCH /
 | SYS-MENU-003 | Seleção por número aciona a intenção mapeada ao slot |
 | SYS-MENU-004 | Item desativado some do menu e o número cai no fluxo normal |
 | SYS-MENU-005 | `menu_items` nulo mantém compatibilidade com menu padrão de cinco itens |
+| SYS-MENU-006 | Lead ambíguo no primeiro contato recebe menu parametrizado sem acionar agenda |
+| SYS-MENU-007 | Lead indeciso depois do menu recebe o menu novamente em vez de resposta genérica |
+| SYS-MENU-008 | Número inválido dentro do menu reoferece opções sem cair no LLM nem criar ação |
+| SYS-MENU-009 | Lead digitando rótulo customizado usa o intent configurado pela clínica |
+| SYS-MENU-010 | Rótulo de item desativado não aciona intent antigo nem hardcoded |
 
 ### Sandbox De Playbook
 
