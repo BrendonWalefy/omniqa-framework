@@ -170,3 +170,61 @@ test.describe('SystemOps Playbook Sandbox - Objeções', () => {
     expect(result.text).not.toMatch(/agenda|op[cç][aã]o 1|1\./i);
   });
 });
+
+// Playbook com procedimentos detalhados para validar respostas específicas.
+// Mock retorna texto genérico — esses três testes exigem LLM real (SYSTEMOPS_RUN_LLM_SANDBOX=true).
+const PROCEDURES_PLAYBOOK: Partial<SandboxPlaybook> = {
+  procedureDescription:
+    'Tratamentos oferecidos: ' +
+    'Lentes de contato dental (porcelana ou resina, sem desgaste do dente, 6 a 10 por arcada, resultado imediato). ' +
+    'Clareamento dental (em consultório: 2 a 3 sessões de 45 min; caseiro: 14 a 21 dias de uso noturno). ' +
+    'Implante dentário (cirurgia de implantação + osseointegração de 3 a 6 meses + coroa protética final).'
+};
+
+test.describe('SystemOps Playbook Sandbox - Procedimentos [LLM-only]', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    if (!systemopsConfig.runLlmSandbox) {
+      testInfo.skip();
+    }
+
+    if (systemopsConfig.baseUrl && isProductionLikeUrl(systemopsConfig.baseUrl)) {
+      throw new Error(`Refusing to run LLM sandbox tests against production-like URL: ${systemopsConfig.baseUrl}`);
+    }
+  });
+
+  test('SYS-PLAYBOOK-010 - pergunta sobre clareamento usa detalhes do playbook sem inventar', async ({ request }) => {
+    const result = await simulate(request, {
+      message: 'Como funciona o clareamento dental aí?',
+      playbook: PROCEDURES_PLAYBOOK
+    });
+
+    expect(result.text).toMatch(/sess[oõ][ea]|consultor[oi]|caseiro|dias|minutos/i);
+    expect(result.text).not.toMatch(/undefined|NaN/i);
+    // Não deve inventar marcas, produtos ou valores não presentes no playbook
+    expect(result.text).not.toMatch(/R\$\s?\d{3,}|\bPeroxide\b|\bZoom\b/i);
+  });
+
+  test('SYS-PLAYBOOK-011 - pergunta sobre duração do implante retorna prazo do playbook', async ({ request }) => {
+    const result = await simulate(request, {
+      message: 'Quanto tempo demora o tratamento de implante?',
+      playbook: PROCEDURES_PLAYBOOK
+    });
+
+    expect(result.text).toMatch(/m[eê]s|osseointegra|cirurgia|coroa|etapa/i);
+    expect(result.text).not.toMatch(/undefined|NaN/i);
+  });
+
+  test('SYS-PLAYBOOK-012 - comparação entre lentes e clareamento distingue os dois sem confundir', async ({ request }) => {
+    const result = await simulate(request, {
+      message: 'Qual a diferença entre lentes de contato e clareamento?',
+      playbook: PROCEDURES_PLAYBOOK
+    });
+
+    // Deve mencionar os dois procedimentos de forma distinguível
+    expect(result.text).toMatch(/lente/i);
+    expect(result.text).toMatch(/clareamento/i);
+    expect(result.text).not.toMatch(/undefined|NaN/i);
+    // Não deve tratar como mesma coisa
+    expect(result.text).not.toMatch(/s[aã]o a mesma coisa|mesmo procedimento/i);
+  });
+});
