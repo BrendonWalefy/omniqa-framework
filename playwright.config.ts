@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import { config as loadEnv } from 'dotenv';
+
+loadEnv({ path: '.env.local' });
 
 const systemopsBaseUrl = process.env.SYSTEMOPS_BASE_URL || 'http://localhost:3000';
 
