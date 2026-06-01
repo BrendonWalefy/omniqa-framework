@@ -31,6 +31,13 @@ export type E2eState = {
     endsAt: string;
     status: string;
   }>;
+  followUps?: Array<{
+    id: string;
+    leadId: string;
+    dueAt: string;
+    status: string;
+    reason: string;
+  }>;
 };
 
 export type E2eCalendarEvent = {
@@ -130,6 +137,14 @@ export class SystemOpsE2eClient {
       data: zapiTextPayload({ runId, text, step, phone, fromMe: true })
     });
     expect([200, 400]).toContain(response.status());
+  }
+
+  async markAppointmentStatus(appointmentId: string, status: 'scheduled' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'): Promise<void> {
+    const response = await this.request.patch('/api/e2e/appointments', {
+      headers: this.headers(),
+      data: { appointmentId, status }
+    });
+    expect(response.ok()).toBeTruthy();
   }
 
   async createAppointment(input: {
