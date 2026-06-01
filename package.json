@@ -57,7 +57,9 @@
     "test:systemops:inbox": "node core/runners/run-with-report.mjs test:systemops:inbox:raw junit",
     "test:systemops:inbox:raw": "playwright test --project=systemops-api targets/systemops/api/specs/inbox.spec.ts",
     "test:systemops:push": "node core/runners/run-with-report.mjs test:systemops:push:raw junit",
-    "test:systemops:push:raw": "playwright test --project=systemops-api targets/systemops/api/specs/push-notifications.spec.ts && playwright test --project=systemops-web-chromium targets/systemops/web/specs/push-notifications.spec.ts"
+    "test:systemops:push:raw": "playwright test --project=systemops-api targets/systemops/api/specs/push-notifications.spec.ts && playwright test --project=systemops-web-chromium targets/systemops/web/specs/push-notifications.spec.ts",
+    "test:systemops:arrival": "node core/runners/run-with-report.mjs test:systemops:arrival:raw junit",
+    "test:systemops:arrival:raw": "playwright test --project=systemops-api targets/systemops/api/specs/arrival-experience.spec.ts"
   },
   "keywords": [
     "qa",

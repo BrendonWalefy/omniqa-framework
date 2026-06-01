@@ -1,0 +1,196 @@
+import { expect, test } from '@playwright/test';
+import { createRunId } from '../../systemops.config';
+import {
+  agentMessageCount,
+  latestAgentMessage,
+  latestSlotOffer,
+  SystemOpsE2eClient
+} from '../support/e2eClient';
+
+// Specs de experiência de chegada — cenários reais onde o paciente avisa pelo
+// WhatsApp que chegou ou que vai se atrasar para uma consulta agendada.
+//
+// Ciclo TDD:
+//   RED  — specs escritas antes da feature existir
+//   GREEN — implementar patient_arrived intent + handler no ConversationOrchestrator
+
+test.describe.configure({ mode: 'serial' });
+
+const activeRunIds = new Set<string>();
+
+/** Appointment de 1h a partir de agora (simula consulta "hoje") */
+function todayAppointment(): { startsAt: Date; endsAt: Date } {
+  const startsAt = new Date();
+  startsAt.setMinutes(0, 0, 0);
+  const endsAt = new Date(startsAt.getTime() + 60 * 60_000);
+  return { startsAt, endsAt };
+}
+
+async function setup(client: SystemOpsE2eClient, runId: string) {
+  activeRunIds.add(runId);
+  await client.reset(runId);
+  await client.seed();
+}
+
+async function cleanup(client: SystemOpsE2eClient, runId: string) {
+  await client.reset(runId);
+  activeRunIds.delete(runId);
+}
+
+test.describe('SystemOps Arrival Experience E2E', () => {
+  test.afterEach(async ({ request }) => {
+    if (activeRunIds.size === 0) return;
+    const client = new SystemOpsE2eClient(request);
+    for (const runId of [...activeRunIds]) {
+      await client.reset(runId);
+      activeRunIds.delete(runId);
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-ARRIVAL-001
+  // Paciente tem consulta hoje e avisa que chegou antes do horário.
+  // Comportamento esperado:
+  //   - IA reconhece a chegada com mensagem acolhedora ("equipe foi avisada")
+  //   - NÃO exibe menu, NÃO oferece slots
+  //   - needsAttention = true com attentionReason mencionando a chegada
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-ARRIVAL-001 - paciente com consulta hoje avisa chegada e IA aciona equipe', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-ARRIVAL-001');
+    await setup(client, runId);
+
+    const { startsAt, endsAt } = todayAppointment();
+    await client.createAppointment({ runId, startsAt, endsAt });
+
+    await client.sendLeadMessage(runId, 'Cheguei um pouco antes, estou esperando na recepção', 'arrival');
+    const state = await client.waitForAgentMessage(runId, 1);
+
+    const conv = state.conversations[0];
+    expect(conv?.needsAttention).toBe(true);
+    expect(conv?.attentionReason).toMatch(/chegad|paciente|recep|aguard/i);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/equipe|avisad|aguard|momento|j[aá] (te |os )?esperamos/i);
+    expect(reply).not.toMatch(/1\. Procedimentos|2\. Agendar|Como posso (te |lhe )?ajudar/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-ARRIVAL-002
+  // Paciente diz "cheguei" mas NÃO tem agendamento hoje.
+  // Comportamento esperado:
+  //   - IA trata como primeiro contato normal (exibe menu de boas-vindas)
+  //   - needsAttention = false (não há urgência real)
+  //   - NÃO sinaliza equipe sem contexto de consulta
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-ARRIVAL-002 - "cheguei" sem agendamento hoje recebe menu normal', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-ARRIVAL-002');
+    await setup(client, runId);
+
+    // Sem createAppointment — paciente sem consulta hoje
+    await client.sendLeadMessage(runId, 'Cheguei', 'arrival-no-appointment');
+    const state = await client.waitForAgentMessage(runId, 1);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/[Oo]l[aá]|[Bb]om [Dd]ia|[Bb]oa [Tt]arde|[Bb]oa [Nn]oite|[Ss]eja bem-vindo|[Bb]em-vindo/i);
+
+    const conv = state.conversations[0];
+    expect(conv?.needsAttention).toBe(false);
+
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-ARRIVAL-003
+  // Paciente tem consulta hoje e avisa que vai chegar atrasado.
+  // Comportamento esperado:
+  //   - IA confirma que recebeu o recado ("anotado", "obrigado por avisar")
+  //   - needsAttention = true para o operador saber do atraso
+  //   - NÃO cancela a consulta, NÃO oferece reagendamento automático
+  //   - NÃO oferece slots (não é pedido de remarcação)
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-ARRIVAL-003 - paciente com consulta avisa atraso e IA notifica equipe', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-ARRIVAL-003');
+    await setup(client, runId);
+
+    const { startsAt, endsAt } = todayAppointment();
+    await client.createAppointment({ runId, startsAt, endsAt });
+
+    // Estabelece conversa antes (simula paciente com histórico)
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+
+    await client.sendLeadMessage(runId, 'Vou me atrasar uns 20 minutos, chego por volta das 12h20', 'late-arrival');
+    const state = await client.waitForAgentMessage(runId, 2);
+
+    const conv = state.conversations[0];
+    expect(conv?.needsAttention).toBe(true);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/obrigado|anotad|avisa|certo|tranquil|sem problema/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(state.appointments.filter(a => a.status === 'scheduled')).toHaveLength(1);
+
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-ARRIVAL-004
+  // Paciente tem consulta hoje e cancela no dia.
+  // Comportamento esperado:
+  //   - IA cancela o agendamento
+  //   - Resposta oferece reagendamento de forma acolhedora
+  //   - Appointment muda para status 'cancelled'
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-ARRIVAL-004 - paciente cancela no dia e IA oferece reagendamento', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-ARRIVAL-004');
+    await setup(client, runId);
+
+    const { startsAt, endsAt } = todayAppointment();
+    await client.createAppointment({ runId, startsAt, endsAt });
+
+    await client.sendLeadMessage(runId, 'Não vou conseguir ir hoje, preciso remarcar', 'cancel-day-of');
+    const state = await client.waitForAgentMessage(runId, 1);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/remarcar|reagend|hor[aá]rio|dispon|outro dia/i);
+
+    const cancelled = state.appointments.filter(a => a.status === 'cancelled');
+    expect(cancelled).toHaveLength(1);
+
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-ARRIVAL-005
+  // Paciente confirma presença na véspera da consulta.
+  // Comportamento esperado:
+  //   - IA confirma o agendamento de forma acolhedora ("te esperamos!")
+  //   - NÃO oferece slots (paciente não quer remarcar)
+  //   - Appointment permanece 'scheduled'
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-ARRIVAL-005 - confirmação de presença mantém consulta e responde com acolhimento', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-ARRIVAL-005');
+    await setup(client, runId);
+
+    const { startsAt, endsAt } = todayAppointment();
+    await client.createAppointment({ runId, startsAt, endsAt });
+
+    await client.sendLeadMessage(runId, 'Só confirmando que estarei aí no horário combinado', 'confirm-presence');
+    const state = await client.waitForAgentMessage(runId, 1);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/esperamos|aguard|confirm|[oó]timo|perfeito|at[eé] logo/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(state.appointments.filter(a => a.status === 'scheduled')).toHaveLength(1);
+
+    await cleanup(client, runId);
+  });
+});

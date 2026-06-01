@@ -40,6 +40,14 @@ export type E2eCalendarEvent = {
   endsAt: string;
 };
 
+export type E2eAppointment = {
+  id: string;
+  leadId: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+};
+
 export type E2eMenuItem = {
   number: number;
   label: string;
@@ -122,6 +130,24 @@ export class SystemOpsE2eClient {
       data: zapiTextPayload({ runId, text, step, phone, fromMe: true })
     });
     expect([200, 400]).toContain(response.status());
+  }
+
+  async createAppointment(input: {
+    runId: string;
+    startsAt: Date;
+    endsAt: Date;
+  }): Promise<E2eAppointment> {
+    const response = await this.request.post('/api/e2e/appointments', {
+      headers: this.headers(),
+      data: {
+        runId: input.runId,
+        startsAt: input.startsAt.toISOString(),
+        endsAt: input.endsAt.toISOString(),
+      }
+    });
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json() as { appointment: E2eAppointment };
+    return body.appointment;
   }
 
   async createCalendarEvent(input: {
