@@ -9,6 +9,8 @@ export const systemopsConfig = {
   testPhone: process.env.SYSTEMOPS_TEST_PHONE ?? '5511999999999',
   runDestructive: process.env.SYSTEMOPS_RUN_DESTRUCTIVE === 'true',
   runProductionSmoke: process.env.SYSTEMOPS_RUN_PRODUCTION_SMOKE === 'true',
+  runLlmSandbox: process.env.SYSTEMOPS_RUN_LLM_SANDBOX === 'true',
+  simulateApiKey: process.env.SYSTEMOPS_SIMULATE_API_KEY,
 };
 
 export function requireBaseUrl(): string {
@@ -41,6 +43,26 @@ export function requireE2eConfig(): { baseUrl: string; secret: string } {
   }
 
   return { baseUrl, secret: systemopsConfig.e2eSecret };
+}
+
+export function e2eSkipReason(): string | null {
+  if (!systemopsConfig.baseUrl) {
+    return 'SYSTEMOPS_BASE_URL é obrigatório para testes E2E destrutivos do SystemOps.';
+  }
+
+  if (!systemopsConfig.e2eSecret) {
+    return 'SYSTEMOPS_E2E_SECRET não configurado — teste E2E destrutivo ignorado.';
+  }
+
+  if (isProductionLikeUrl(systemopsConfig.baseUrl)) {
+    return `Ambiente de produção detectado (${systemopsConfig.baseUrl}) — teste E2E destrutivo ignorado.`;
+  }
+
+  if (!systemopsConfig.runDestructive) {
+    return 'SYSTEMOPS_RUN_DESTRUCTIVE=true é necessário para testes E2E destrutivos.';
+  }
+
+  return null;
 }
 
 export function createRunId(scenarioId: string): string {

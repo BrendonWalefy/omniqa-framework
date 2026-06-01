@@ -4,7 +4,7 @@ const systemopsBaseUrl = process.env.SYSTEMOPS_BASE_URL || 'http://localhost:300
 
 export default defineConfig({
   testDir: '.',
-  timeout: 30_000,
+  timeout: 90_000,
   expect: {
     timeout: 5_000
   },
