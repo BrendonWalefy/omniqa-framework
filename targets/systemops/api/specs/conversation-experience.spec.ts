@@ -166,4 +166,46 @@ test.describe('SystemOps Conversation Experience E2E', () => {
     expect(await client.listCalendarEvents(runId)).toHaveLength(0);
     await cleanup(client, runId);
   });
+
+  test('SYS-CONV-009 - urgência no primeiro contato bypassa o menu e aciona equipe', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-009');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'Estou com dor de dente muito forte, não aguento mais', 'urgency-first-contact');
+    const state = await expectNoBookingSideEffects(client, runId);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/urg[eê]ncia|equipe|contato|acion|imediato/i);
+    expect(reply).not.toMatch(/como posso te ajudar hoje|1\. Procedimentos|2\. Agendar/i);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-010 - urgência mista no primeiro contato prioriza segurança sobre agendamento', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-010');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'tô com sangramento mas quero marcar uma consulta', 'urgency-mixed-first-contact');
+    const state = await expectNoBookingSideEffects(client, runId);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/urg[eê]ncia|equipe|contato|acion/i);
+    expect(reply).not.toMatch(/1\. Procedimentos|2\. Agendar/i);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-011 - handoff explícito no primeiro contato não exibe menu', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-011');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'quero falar com o dentista antes de agendar', 'needs-human-first-contact');
+    const state = await expectNoBookingSideEffects(client, runId);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/equipe|avisad|responder|aten[çc][aã]o/i);
+    expect(reply).not.toMatch(/1\. Procedimentos|2\. Agendar/i);
+    await cleanup(client, runId);
+  });
 });
