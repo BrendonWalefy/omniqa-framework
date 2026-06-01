@@ -208,4 +208,73 @@ test.describe('SystemOps Conversation Experience E2E', () => {
     expect(reply).not.toMatch(/1\. Procedimentos|2\. Agendar/i);
     await cleanup(client, runId);
   });
+
+  test('SYS-CONV-012 - opção 1 do menu descreve procedimentos sem re-exibir o menu', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-012');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, '1', 'menu-procedures');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/procedimento|tratamento|avalia|lente|clareamento|implante|ortodon/i);
+    expect(reply).not.toMatch(/1\. Procedimentos oferecidos.*2\. Agendar/is);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-013 - opção 2 do menu oferece horários para agendamento', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-013');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, '2', 'menu-schedule');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/hor[aá]rio|agend|dispon|data|op[çc][ãa]o/i);
+    expect(reply).not.toMatch(/1\. Procedimentos oferecidos/i);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-014 - número "2" sem menu ativo não aciona agendamento direto', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-014');
+    await setup(client, runId);
+
+    // Envia "2" sem ter visto o menu — deve receber a saudação+menu, não slots
+    await client.sendLeadMessage(runId, '2', 'number-without-menu');
+    const state = await expectNoBookingSideEffects(client, runId);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/ol[aá]|bom dia|boa tarde|boa noite/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-015 - reagendamento interpreta pedido de mudança de horário', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-015');
+    await setup(client, runId);
+
+    // Faz o agendamento primeiro
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, '2', 'menu-schedule');
+    await client.waitForAgentMessage(runId, 2);
+    await client.sendLeadMessage(runId, '1', 'confirm-slot');
+    await client.waitForAgentMessage(runId, 3);
+
+    // Agora pede para mudar
+    await client.sendLeadMessage(runId, 'preciso mudar o horário que marquei', 'reschedule');
+    const state = await client.waitForAgentMessage(runId, 4);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/remarcar|reagend|horário|dispon|mudar|novos/i);
+    await cleanup(client, runId);
+  });
 });
