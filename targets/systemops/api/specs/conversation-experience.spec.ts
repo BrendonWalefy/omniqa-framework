@@ -321,4 +321,92 @@ test.describe('SystemOps Conversation Experience E2E', () => {
     expect(reply).toMatch(/remarcar|reagend|horário|dispon|mudar|novos/i);
     await cleanup(client, runId);
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-CONV-016
+  // Paciente responde ao menu com "remarcar" — bug latente de substring.
+  //
+  // Bug: resolveMenuSelection usa n.includes("marcar"), que captura "re[marcar]"
+  // e "des[marcar]", classificando como book_appointment antes de o LLM ver a msg.
+  //
+  // Comportamento esperado após correção:
+  //   - "remarcar" cai fora do resolver (retorna null) → LLM classifica como
+  //     reschedule_appointment
+  //   - Resposta reconhece o contexto de remarcação, não inicia fluxo de novo agendamento
+  //   - Nenhum novo appointment criado
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-CONV-016 - "remarcar" no menu não aciona book_appointment por substring', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-016');
+    await setup(client, runId);
+
+    // Primeiro contato: IA exibe menu (isMenuActive=true para a próxima mensagem)
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+
+    // "remarcar" contém "marcar" — bug dispara book_appointment via substring
+    await client.sendLeadMessage(runId, 'quero remarcar minha consulta', 'reschedule-mid-menu');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    // Reschedule path: oferece "novos horários" (replacement slots) — não pede procedimento como booking novo
+    // "novos horários" é produzido pelo handler de reschedule_appointment, não pelo de book_appointment
+    expect(reply).toMatch(/novos hor[aá]rios|remarc|reagend|mudar|trocar|alterar/i);
+    // Não deve tratar como agendamento novo (pedir procedimento do zero)
+    expect(reply).not.toMatch(/qual procedimento.*agendar|primeira.*avalia|implante|clareamento/i);
+    // Remarcação sem consulta prévia não deve criar appointment novo
+    expect(state.appointments.filter(a => a.status === 'scheduled')).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-CONV-017
+  // Paciente responde ao menu com "desmarcar" — mesmo bug de substring.
+  //
+  // Comportamento esperado após correção:
+  //   - "desmarcar" cai fora do resolver → LLM classifica como cancel_appointment
+  //   - Resposta reconhece o cancelamento, não inicia fluxo de agendamento
+  //   - Nenhum slot oferecido
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-CONV-017 - "desmarcar" no menu não aciona book_appointment por substring', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-017');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+
+    await client.sendLeadMessage(runId, 'preciso desmarcar minha consulta', 'cancel-mid-menu');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    // Cancel path: sem appointment no sistema → "não possui consultas agendadas" (não oferece slots de novo booking)
+    expect(reply).toMatch(/cancel|desmarc|remov|n[aã]o possui|sem consulta|n[aã]o.*agendad/i);
+    // Não deve tratar como agendamento novo
+    expect(reply).not.toMatch(/qual procedimento.*agendar/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYS-CONV-018 — sanity check
+  // "quero marcar uma consulta" (sem prefixo) DEVE continuar acionando
+  // book_appointment — garante que a correção do bug não quebrou o caminho feliz.
+  // ─────────────────────────────────────────────────────────────────────────
+  test('SYS-CONV-018 - "marcar" sem prefixo no menu aciona book_appointment normalmente', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-018');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+
+    await client.sendLeadMessage(runId, 'quero marcar uma consulta', 'book-mid-menu');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    // Deve iniciar fluxo de agendamento
+    expect(reply).toMatch(/procedimento|hor[aá]rio|dispon[ií]vel|agendar|avalia/i);
+    await cleanup(client, runId);
+  });
 });
