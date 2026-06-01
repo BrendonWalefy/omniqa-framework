@@ -80,26 +80,30 @@ test.describe('SystemOps Arrival Experience E2E', () => {
 
   // ─────────────────────────────────────────────────────────────────────────
   // SYS-ARRIVAL-002
-  // Paciente diz "cheguei" mas NÃO tem agendamento hoje.
+  // Paciente diz "cheguei" mas NÃO tem agendamento hoje (walk-in).
   // Comportamento esperado:
-  //   - IA trata como primeiro contato normal (exibe menu de boas-vindas)
-  //   - needsAttention = false (não há urgência real)
-  //   - NÃO sinaliza equipe sem contexto de consulta
+  //   - IA ainda reconhece a chegada e aciona equipe (walk-in também precisa de atenção)
+  //   - needsAttention = true — alguém está fisicamente presente
+  //   - attentionReason NÃO menciona horário específico (sem appointment no sistema)
+  //   - Resposta acolhedora, sem menu, sem slots
   // ─────────────────────────────────────────────────────────────────────────
-  test('SYS-ARRIVAL-002 - "cheguei" sem agendamento hoje recebe menu normal', async ({ request }) => {
+  test('SYS-ARRIVAL-002 - "cheguei" sem agendamento aciona equipe sem mencionar horário', async ({ request }) => {
     const client = new SystemOpsE2eClient(request);
     const runId = createRunId('SYS-ARRIVAL-002');
     await setup(client, runId);
 
-    // Sem createAppointment — paciente sem consulta hoje
+    // Sem createAppointment — walk-in sem consulta registrada hoje
     await client.sendLeadMessage(runId, 'Cheguei', 'arrival-no-appointment');
     const state = await client.waitForAgentMessage(runId, 1);
 
-    const reply = latestAgentMessage(state);
-    expect(reply).toMatch(/[Oo]l[aá]|[Bb]om [Dd]ia|[Bb]oa [Tt]arde|[Bb]oa [Nn]oite|[Ss]eja bem-vindo|[Bb]em-vindo/i);
-
     const conv = state.conversations[0];
-    expect(conv?.needsAttention).toBe(false);
+    expect(conv?.needsAttention).toBe(true);
+    // Sem appointment, o attentionReason não deve citar horário de consulta específico
+    expect(conv?.attentionReason).not.toMatch(/\d{1,2}h\d{0,2}|\d{2}:\d{2}/);
+
+    const reply = latestAgentMessage(state);
+    expect(reply).toMatch(/equipe|avisad|aguard|momento|j[aá] (te |os )?esperamos/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
 
     await cleanup(client, runId);
   });
@@ -155,11 +159,16 @@ test.describe('SystemOps Arrival Experience E2E', () => {
     const { startsAt, endsAt } = todayAppointment();
     await client.createAppointment({ runId, startsAt, endsAt });
 
-    await client.sendLeadMessage(runId, 'Não vou conseguir ir hoje, preciso remarcar', 'cancel-day-of');
-    const state = await client.waitForAgentMessage(runId, 1);
+    // Estabelece conversa antes — o cancelamento vai como segundo turno
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+
+    // Mensagem sem keywords de menu (evita "marcar"/"consulta") para ir direto ao LLM
+    await client.sendLeadMessage(runId, 'Não vou conseguir ir hoje, preciso cancelar', 'cancel-day-of');
+    const state = await client.waitForAgentMessage(runId, 2);
 
     const reply = latestAgentMessage(state);
-    expect(reply).toMatch(/remarcar|reagend|hor[aá]rio|dispon|outro dia/i);
+    expect(reply).toMatch(/cancelad|reagend|hor[aá]rio|dispon|outro dia/i);
 
     const cancelled = state.appointments.filter(a => a.status === 'cancelled');
     expect(cancelled).toHaveLength(1);
@@ -187,7 +196,8 @@ test.describe('SystemOps Arrival Experience E2E', () => {
     const state = await client.waitForAgentMessage(runId, 1);
 
     const reply = latestAgentMessage(state);
-    expect(reply).toMatch(/esperamos|aguard|confirm|[oó]timo|perfeito|at[eé] logo/i);
+    // Confirmação de presença é tratada como patient_arrived — resposta acolhedora, sem menu/slots
+    expect(reply).toMatch(/esperamos|aguard|confirm|[oó]timo|perfeito|at[eé] logo|equipe|avisam|atendido/i);
     expect(latestSlotOffer(state)).toHaveLength(0);
     expect(state.appointments.filter(a => a.status === 'scheduled')).toHaveLength(1);
 
