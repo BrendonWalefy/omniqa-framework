@@ -33,7 +33,7 @@ export async function loginAdmin(page: Page) {
   const dashboardPage = new DashboardPage(page);
 
   await loginPage.goto();
-  await loginPage.login(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!);
+  await loginPage.loginAndWaitFor(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!, /\/app\//);
   await dashboardPage.expectLoaded();
   await expect(page.locator('body')).not.toContainText(/E-mail ou senha incorretos/i);
 }

@@ -11,10 +11,10 @@ function menuLabelInputs(page: Page): Locator {
   return page.locator('input:not([type])');
 }
 
-async function gotoGeneralTab(page: Page) {
+async function gotoBehaviorTab(page: Page) {
   await page.goto('/app/settings/playbook');
   await expect(page.getByRole('heading', { name: /Configurações da IA/i })).toBeVisible();
-  await page.getByRole('button', { name: 'Geral' }).click();
+  await page.getByRole('button', { name: 'Comportamento' }).click();
   await expect(page.getByText('Menu de opções', { exact: true })).toBeVisible();
   await expect(previewPanel(page)).toBeVisible();
 }
@@ -41,7 +41,7 @@ test.describe('SystemOps IA Settings - Menu de opções', () => {
     if (skipReason) test.skip(true, skipReason);
 
     await loginAdmin(page);
-    await gotoGeneralTab(page);
+    await gotoBehaviorTab(page);
   });
 
   test('SYS-IA-001 - edição de rótulo e toggle atualizam prévia e persistem após reload', async ({ page }, testInfo) => {
@@ -75,7 +75,7 @@ test.describe('SystemOps IA Settings - Menu de opções', () => {
       await waitForAutosave(page);
 
       await page.reload();
-      await gotoGeneralTab(page);
+      await gotoBehaviorTab(page);
       await expect(menuLabelInputs(page).nth(0)).toHaveValue(customLabel);
       await expect(previewPanel(page)).toContainText(`1. ${customLabel}`);
     } finally {
@@ -90,7 +90,7 @@ test.describe('SystemOps IA Settings - Menu de opções', () => {
 
   test('SYS-IA-002 - mobile 375px renderiza menu sem corte e oculta label de intent', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await gotoGeneralTab(page);
+    await gotoBehaviorTab(page);
 
     await expect(page.locator('.menu-intent-label').first()).toBeHidden();
     const textareaBox = await page.locator('textarea').first().boundingBox();
@@ -125,7 +125,7 @@ test.describe('SystemOps IA Settings - Menu de opções', () => {
       await waitForAutosave(page);
 
       await page.reload();
-      await gotoGeneralTab(page);
+      await gotoBehaviorTab(page);
       await expect(page.locator('textarea').first()).toHaveValue(customGreeting);
       await expect(previewPanel(page)).toContainText(customGreeting);
     } finally {
@@ -158,7 +158,7 @@ test.describe('SystemOps IA Settings - Menu de opções', () => {
       await waitForAutosave(page);
 
       await page.reload();
-      await gotoGeneralTab(page);
+      await gotoBehaviorTab(page);
       await expect(page.getByPlaceholder('Ex: Segunda a sexta das 8h às 18h. Sábado das 8h às 13h.')).toHaveValue(customBusinessHours);
       await expect(page.locator('input[type="number"]').nth(0)).toHaveValue('6');
       await expect(page.locator('input[type="number"]').nth(1)).toHaveValue('45');

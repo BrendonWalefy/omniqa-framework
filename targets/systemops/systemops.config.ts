@@ -1,6 +1,7 @@
 export const systemopsConfig = {
   baseUrl: process.env.SYSTEMOPS_BASE_URL ?? '',
   e2eSecret: process.env.SYSTEMOPS_E2E_SECRET,
+  e2eClinicId: process.env.SYSTEMOPS_E2E_CLINIC_ID ?? process.env.E2E_CLINIC_ID,
   e2eRunPrefix: process.env.SYSTEMOPS_E2E_RUN_PREFIX ?? 'local',
   adminEmail: process.env.SYSTEMOPS_ADMIN_EMAIL,
   adminPassword: process.env.SYSTEMOPS_ADMIN_PASSWORD,
@@ -28,10 +29,14 @@ export function hasOwnerCredentials(): boolean {
   return Boolean(systemopsConfig.ownerEmail && systemopsConfig.ownerPassword);
 }
 
-export function requireE2eConfig(): { baseUrl: string; secret: string } {
+export function requireE2eConfig(): { baseUrl: string; secret: string; clinicId: string } {
   const baseUrl = requireBaseUrl();
   if (!systemopsConfig.e2eSecret) {
     throw new Error('SYSTEMOPS_E2E_SECRET is required for SystemOps scheduling E2E tests.');
+  }
+
+  if (!systemopsConfig.e2eClinicId) {
+    throw new Error('SYSTEMOPS_E2E_CLINIC_ID or E2E_CLINIC_ID is required for SystemOps E2E tests.');
   }
 
   if (isProductionLikeUrl(baseUrl)) {
@@ -42,7 +47,7 @@ export function requireE2eConfig(): { baseUrl: string; secret: string } {
     throw new Error('Set SYSTEMOPS_RUN_DESTRUCTIVE=true to run SystemOps scheduling E2E tests.');
   }
 
-  return { baseUrl, secret: systemopsConfig.e2eSecret };
+  return { baseUrl, secret: systemopsConfig.e2eSecret, clinicId: systemopsConfig.e2eClinicId };
 }
 
 export function e2eSkipReason(): string | null {
@@ -52,6 +57,10 @@ export function e2eSkipReason(): string | null {
 
   if (!systemopsConfig.e2eSecret) {
     return 'SYSTEMOPS_E2E_SECRET não configurado — teste E2E destrutivo ignorado.';
+  }
+
+  if (!systemopsConfig.e2eClinicId) {
+    return 'SYSTEMOPS_E2E_CLINIC_ID ou E2E_CLINIC_ID não configurado — teste E2E destrutivo ignorado.';
   }
 
   if (isProductionLikeUrl(systemopsConfig.baseUrl)) {

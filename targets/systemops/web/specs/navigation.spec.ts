@@ -31,9 +31,9 @@ test.describe('SystemOps - Navegação autenticada', () => {
     const destinations = [
       { name: 'Dashboard', url: /\/app\/dashboard/, readyText: 'Dashboard' },
       { name: 'Inbox', url: /\/app\/inbox/, readyText: /Inbox|Nenhuma conversa ainda/i },
-      { name: 'Agenda', url: /\/app\/agenda/, readyText: 'Gerenciar bloqueios' },
-      { name: 'IA', url: /\/app\/settings\/playbook/, readyText: 'Configurações da IA' },
-      { name: 'Procedimentos', url: /\/app\/settings\/tratamentos/, readyText: 'Procedimentos' }
+      { name: 'Agenda', url: /\/app\/agenda/, readyText: 'Agenda da clínica' },
+      { name: 'Configurações', url: /\/app\/settings\/playbook/, readyText: 'Configurações da IA' },
+      { name: 'Profissionais', url: /\/app\/settings\/profissionais/, readyText: 'Profissionais' }
     ];
 
     for (const destination of destinations) {

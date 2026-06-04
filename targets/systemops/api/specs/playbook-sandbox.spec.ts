@@ -1,5 +1,6 @@
 import { APIRequestContext, expect, test } from '@playwright/test';
-import { isProductionLikeUrl, systemopsConfig } from '../../systemops.config';
+import { createRunId, isProductionLikeUrl, systemopsConfig } from '../../systemops.config';
+import { SystemOpsE2eClient } from '../support/e2eClient';
 
 type SandboxPlaybook = {
   specialty: string;
@@ -38,6 +39,7 @@ async function simulate(
     data: {
       message: input.message,
       history: input.history ?? [],
+      clinicId: systemopsConfig.e2eClinicId,
       playbook: {
         ...BASE_PLAYBOOK,
         ...input.playbook
@@ -52,6 +54,10 @@ test.describe('SystemOps Playbook Sandbox - Objeções', () => {
   test.beforeEach(async ({}, testInfo) => {
     if (!systemopsConfig.runLlmSandbox) {
       testInfo.skip();
+    }
+
+    if (!systemopsConfig.e2eClinicId) {
+      testInfo.skip(true, 'SYSTEMOPS_E2E_CLINIC_ID ou E2E_CLINIC_ID não configurado — sandbox sem sessão precisa de clínica no banco.');
     }
 
     if (systemopsConfig.baseUrl && isProductionLikeUrl(systemopsConfig.baseUrl)) {
@@ -101,15 +107,20 @@ test.describe('SystemOps Playbook Sandbox - Objeções', () => {
   });
 
   test('SYS-PLAYBOOK-004 - saudação customizada no primeiro contato retorna sem depender do menu', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-PLAYBOOK-004');
     const greetingMessage = 'Olá! Aqui é a assistente QA. Posso te ajudar com avaliação, agendamento ou pagamento.';
-    const result = await simulate(request, {
-      message: 'oi',
-      playbook: { greetingMessage }
-    });
+    await client.updateClinicSettings(runId, { greetingMessage });
 
-    expect(result.intent).toBe('greeting');
-    // Mock pode adicionar menu após saudação; verifica que o texto customizado está presente
-    expect(result.text).toContain(greetingMessage.slice(0, 20));
+    try {
+      const result = await simulate(request, { message: 'oi' });
+
+      expect(result.intent).toBe('greeting');
+      // Mock pode adicionar menu após saudação; verifica que o texto customizado está presente
+      expect(result.text).toContain(greetingMessage.slice(0, 20));
+    } finally {
+      await client.updateClinicSettings(runId, { greetingMessage: null });
+    }
   });
 
   test('SYS-PLAYBOOK-005 - pergunta de preço usa política comercial sem inventar valor fechado', async ({ request }) => {
@@ -187,10 +198,64 @@ const PROCEDURES_PLAYBOOK: Partial<SandboxPlaybook> = {
     'Implante dentário (cirurgia de implantação + osseointegração de 3 a 6 meses + coroa protética final).'
 };
 
+const LENSES_SPECIALIST_PLAYBOOK: Partial<SandboxPlaybook> = {
+  specialty: 'Lentes de contato dental e odontologia estética',
+  procedureDescription:
+    'A clínica é especialista em transformação do sorriso com lentes de contato dental. ' +
+    'Principais procedimentos: lente de resina, lente de porcelana e avaliação estética de lentes. ' +
+    'Também oferece clareamento dental, implante dentário, limpeza e manutenção das lentes.',
+  differentials: [
+    'Planejamento personalizado para lentes de contato dental',
+    'Foco em naturalidade, harmonia facial e segurança clínica'
+  ],
+  commercialPolicy:
+    'Avaliação estética para lentes: R$ 100. ' +
+    'Lente de resina: R$ 1.111 por dente. ' +
+    'Lente de porcelana: R$ 2.222 por dente. ' +
+    'Valores finais dependem da avaliação clínica e podem ser parcelados conforme análise.'
+};
+
+function currencyMentions(text: string): string[] {
+  return text.match(/R\$\s?\d[\d.,]*/g) ?? [];
+}
+
+function firstIndexOfAny(text: string, patterns: RegExp[]): number {
+  const indexes = patterns
+    .map((pattern) => text.search(pattern))
+    .filter((index) => index >= 0);
+  return indexes.length === 0 ? -1 : Math.min(...indexes);
+}
+
+function procedureTopicLines(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => /^([-*•]|\d+[.)])\s+/.test(line) || /^(lentes?|clareamento|implante|limpeza|manuten)/i.test(line));
+}
+
+function expectConciseProcedureTopics(reply: string) {
+  const topics = procedureTopicLines(reply);
+  const topicText = topics.join('\n');
+
+  expect(topics.length).toBeGreaterThanOrEqual(3);
+  expect(topicText).toMatch(/lente/i);
+  expect(topicText).toMatch(/clareamento|implante|limpeza|manuten/i);
+  for (const topic of topics) {
+    expect(topic.length).toBeLessThanOrEqual(180);
+  }
+  expect(reply.length).toBeLessThanOrEqual(1400);
+  expect(reply).toMatch(/detalh|mais informa|explic|quer saber|posso te contar|digite|escolh/i);
+}
+
 test.describe('SystemOps Playbook Sandbox - Procedimentos [LLM-only]', () => {
   test.beforeEach(async ({}, testInfo) => {
     if (!systemopsConfig.runLlmSandbox) {
       testInfo.skip();
+    }
+
+    if (!systemopsConfig.e2eClinicId) {
+      testInfo.skip(true, 'SYSTEMOPS_E2E_CLINIC_ID ou E2E_CLINIC_ID não configurado — sandbox sem sessão precisa de clínica no banco.');
     }
 
     if (systemopsConfig.baseUrl && isProductionLikeUrl(systemopsConfig.baseUrl)) {
@@ -247,5 +312,64 @@ test.describe('SystemOps Playbook Sandbox - Procedimentos [LLM-only]', () => {
     expect(result.text).not.toMatch(/undefined|NaN/i);
     // Não deve tratar como mesma coisa
     expect(result.text).not.toMatch(/s[aã]o a mesma coisa|mesmo procedimento/i);
+  });
+
+  test('SYS-PLAYBOOK-013 - lista de procedimentos evidencia lentes como especialidade sem esconder outros serviços', async ({ request }, testInfo) => {
+    const result = await simulate(request, {
+      message: 'Quais tratamentos a clínica oferece?',
+      playbook: LENSES_SPECIALIST_PLAYBOOK
+    });
+
+    if (result.text.startsWith('[MOCK]')) {
+      testInfo.skip(true, 'Servidor usa mock — teste LLM-only requer DISABLE_REAL_OPENAI=false');
+      return;
+    }
+
+    const lensIndex = firstIndexOfAny(result.text, [/lente/i, /resina/i, /porcelana/i]);
+    const otherServiceIndex = firstIndexOfAny(result.text, [/clareamento/i, /implante/i, /limpeza/i, /manuten/i]);
+
+    expect(lensIndex).toBeGreaterThanOrEqual(0);
+    expect(otherServiceIndex).toBeGreaterThanOrEqual(0);
+    expect(lensIndex).toBeLessThan(otherServiceIndex);
+    expect(result.text).toMatch(/especiali|foco|principal|destaque|transforma/i);
+    expectConciseProcedureTopics(result.text);
+    expect(result.text).not.toMatch(/undefined|NaN/i);
+  });
+
+  test('SYS-PLAYBOOK-014 - valores de resina e porcelana vêm do playbook sem inventar preço fechado', async ({ request }, testInfo) => {
+    const result = await simulate(request, {
+      message: 'Qual o valor das lentes de resina e das lentes de porcelana?',
+      playbook: LENSES_SPECIALIST_PLAYBOOK
+    });
+
+    if (result.text.startsWith('[MOCK]')) {
+      testInfo.skip(true, 'Servidor usa mock — teste LLM-only requer DISABLE_REAL_OPENAI=false');
+      return;
+    }
+
+    expect(result.intent).toBe('price_inquiry');
+    expect(result.text).toMatch(/resina/i);
+    expect(result.text).toMatch(/porcelana/i);
+    expect(result.text).toMatch(/R\$\s?1\.111/);
+    expect(result.text).toMatch(/R\$\s?2\.222/);
+    expect(currencyMentions(result.text).length).toBeGreaterThanOrEqual(2);
+    expect(result.text).not.toMatch(/undefined|NaN/i);
+  });
+
+  test('SYS-PLAYBOOK-015 - interesse em lentes conduz para avaliação sem vender procedimento fechado', async ({ request }, testInfo) => {
+    const result = await simulate(request, {
+      message: 'Tenho interesse em colocar lentes, como começo?',
+      playbook: LENSES_SPECIALIST_PLAYBOOK
+    });
+
+    if (result.text.startsWith('[MOCK]')) {
+      testInfo.skip(true, 'Servidor usa mock — teste LLM-only requer DISABLE_REAL_OPENAI=false');
+      return;
+    }
+
+    expect(result.text).toMatch(/avalia[çc][aã]o|avaliar|consulta|agend/i);
+    expect(result.text).toMatch(/lente/i);
+    expect(result.text).not.toMatch(/procedimento fechado|j[aá] est[aá] definido|240\s?min/i);
+    expect(result.text).not.toMatch(/undefined|NaN/i);
   });
 });

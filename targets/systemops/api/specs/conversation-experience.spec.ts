@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createRunId } from '../../systemops.config';
+import { createRunId, e2eSkipReason } from '../../systemops.config';
 import { nextLocalWeekday } from '../support/calendarAssertions';
 import {
   agentMessageCount,
@@ -42,7 +42,38 @@ async function expectNoBookingSideEffects(client: SystemOpsE2eClient, runId: str
   return state;
 }
 
+function currencyMentions(text: string): string[] {
+  return text.match(/R\$\s?\d[\d.,]*/g) ?? [];
+}
+
+function procedureTopicLines(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => /^([-*•]|\d+[.)])\s+/.test(line) || /^(lentes?|clareamento|implante|limpeza|manuten)/i.test(line));
+}
+
+function expectConciseProcedureTopics(reply: string) {
+  const topics = procedureTopicLines(reply);
+  const topicText = topics.join('\n');
+
+  expect(topics.length).toBeGreaterThanOrEqual(3);
+  expect(topicText).toMatch(/lente/i);
+  expect(topicText).toMatch(/clareamento|implante|limpeza|manuten/i);
+  for (const topic of topics) {
+    expect(topic.length).toBeLessThanOrEqual(180);
+  }
+  expect(reply.length).toBeLessThanOrEqual(1400);
+  expect(reply).toMatch(/detalh|mais informa|explic|quer saber|posso te contar|digite|escolh/i);
+}
+
 test.describe('SystemOps Conversation Experience E2E', () => {
+  test.beforeEach(async () => {
+    const skipReason = e2eSkipReason();
+    if (skipReason) test.skip(true, skipReason);
+  });
+
   test.afterEach(async ({ request }) => {
     if (activeRunIds.size === 0) return;
 
@@ -381,7 +412,7 @@ test.describe('SystemOps Conversation Experience E2E', () => {
     const reply = latestAgentMessage(state);
 
     // Cancel path: sem appointment no sistema → "não possui consultas agendadas" (não oferece slots de novo booking)
-    expect(reply).toMatch(/cancel|desmarc|remov|n[aã]o possui|sem consulta|n[aã]o.*agendad/i);
+    expect(reply).toMatch(/cancel|desmarc|remov|n[aã]o possui|sem consulta|n[aã]o (tem|possui).*(agendament|consulta)|agendamentos? ativos|consultas agendadas/i);
     // Não deve tratar como agendamento novo
     expect(reply).not.toMatch(/qual procedimento.*agendar/i);
     expect(latestSlotOffer(state)).toHaveLength(0);
@@ -475,6 +506,79 @@ test.describe('SystemOps Conversation Experience E2E', () => {
 
     const reply = latestAgentMessage(state);
     expect(reply).toMatch(/equipe|profissional|atendimento|urgente|dor|socorro|imediato|ligo/i);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-021 - primeiro contato evidencia especialidade em lentes sem abrir agenda', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-021');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi, quero conhecer a clínica', 'first-contact-lenses');
+    const state = await expectNoBookingSideEffects(client, runId);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/lente|resina|porcelana|sorriso/i);
+    expect(reply).toMatch(/especiali|foco|principal|refer[eê]ncia|transforma/i);
+    expect(reply).toMatch(/1\..*2\..*3\..*4\..*5\./s);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-022 - opção de procedimentos prioriza lentes e mantém outros serviços disponíveis', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-022');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, '1', 'menu-procedures-lenses');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/lente|resina|porcelana/i);
+    expect(reply).toMatch(/clareamento|implante|limpeza|manuten/i);
+    expectConciseProcedureTopics(reply);
+    expect(reply).not.toMatch(/1\. Procedimentos.*2\. Agendar/is);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(await client.listCalendarEvents(runId)).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-023 - pergunta de valores de resina e porcelana usa preços do playbook', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-023');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, 'qual o valor das lentes de resina e das lentes de porcelana?', 'lenses-prices');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/resina/i);
+    expect(reply).toMatch(/porcelana/i);
+    expect(currencyMentions(reply).length).toBeGreaterThanOrEqual(2);
+    expect(reply).not.toMatch(/caso a caso.*caso a caso|undefined|NaN/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(await client.listCalendarEvents(runId)).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-CONV-024 - pergunta sobre outros serviços responde sem perder foco em lentes', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-CONV-024');
+    await setup(client, runId);
+
+    await client.sendLeadMessage(runId, 'oi', 'greeting');
+    await client.waitForAgentMessage(runId, 1);
+    await client.sendLeadMessage(runId, 'vocês também fazem clareamento e implante ou só lentes?', 'other-services');
+    const state = await client.waitForAgentMessage(runId, 2);
+    const reply = latestAgentMessage(state);
+
+    expect(reply).toMatch(/clareamento|implante/i);
+    expect(reply).toMatch(/lente|especiali|principal|foco/i);
+    expect(latestSlotOffer(state)).toHaveLength(0);
+    expect(await client.listCalendarEvents(runId)).toHaveLength(0);
     await cleanup(client, runId);
   });
 });

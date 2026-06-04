@@ -37,7 +37,8 @@ npm run test:systemops:scheduling
 | Avaliação 60min | Tratamento Ximendes |
 | Limpeza 60min | Tratamento Ximendes |
 | Manutenção das lentes 60min | Tratamento Ximendes |
-| 20 Lentes 240min | Tratamento Ximendes |
+| Avaliação para 20 Lentes 60min | Regra clínica Ximendes |
+| Procedimento de 20 Lentes já acordado 240min | Tratamento Ximendes |
 | Não informar preço fechado no chat | Política comercial |
 | Urgência clínica precisa de humano | Segurança do atendimento |
 
@@ -52,7 +53,7 @@ npm run test:systemops:scheduling
 | SYS-AGENDA-005 | Pedido de tarde retorna apenas tarde | E2E | Preferência ignorada |
 | SYS-AGENDA-006 | Pedido de noite não oferta fora do expediente | E2E | Prometer horário inexistente |
 | SYS-AGENDA-007 | Pedido de sexta respeita timezone local | E2E | Dia errado |
-| SYS-AGENDA-008 | Procedimento longo não é ofertado quando não cabe | E2E | 20 Lentes encaixado errado |
+| SYS-AGENDA-008 | Procedimento de 20 Lentes já acordado não é ofertado quando não cabe | E2E | Procedimento de 240min encaixado errado |
 | SYS-AGENDA-009 | Confirmação cria exatamente um evento | E2E | Não persistir agenda |
 | SYS-AGENDA-010 | Confirmações concorrentes criam só um evento | E2E | Double booking |
 | SYS-AGENDA-011 | Evento manual após oferta bloqueia confirmação | E2E | Agenda mudou depois da oferta |
@@ -60,13 +61,13 @@ npm run test:systemops:scheduling
 | SYS-AGENDA-013 | Remarcação cancela antigo e cria novo | E2E | Duplicar agendamento |
 | SYS-AGENDA-014 | Cleanup limpa agenda QA | E2E | Sujar ambiente de teste |
 | SYS-AGENDA-015 | Pedido genérico pergunta procedimento | E2E | Duração errada por ambiguidade |
-| SYS-AGENDA-016 | 20 Lentes usa 240 minutos | E2E | Duração especial ignorada |
+| SYS-AGENDA-016 | Avaliação para 20 Lentes usa 60 minutos | E2E | Avaliação tratada como procedimento longo |
 | SYS-AGENDA-017 | Opção inexistente não confirma fallback | E2E | Agendar slot errado |
 | SYS-AGENDA-018 | Pergunta de preço não cria oferta/evento | E2E | Conversão agressiva ou estado errado |
 | SYS-AGENDA-019 | Urgência aciona atenção humana sem agendar | E2E | Segurança clínica |
 | SYS-AGENDA-020 | Sábado termina às 13h | E2E | Oferta fora do expediente real |
 | SYS-AGENDA-021 | Remarcação genérica pede procedimento e mantém agenda antiga | E2E | Cancelar antes de confirmar |
-| SYS-AGENDA-022 | Remarcação de 20 Lentes mantém 240 minutos | E2E | Remarcar com duração errada |
+| SYS-AGENDA-022 | Remarcação da avaliação de 20 Lentes mantém 60 minutos | E2E | Remarcar com duração errada |
 
 ## Exploração Manual Guiada
 

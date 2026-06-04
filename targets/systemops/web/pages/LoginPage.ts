@@ -23,6 +23,15 @@ export class LoginPage {
     await this.submitButton.click();
   }
 
+  async loginAndWaitFor(email: string, password: string, url: RegExp) {
+    await this.emailInput.fill(email);
+    await this.passwordInput.fill(password);
+    await Promise.all([
+      this.page.waitForURL(url, { timeout: 10_000 }),
+      this.submitButton.click()
+    ]);
+  }
+
   async expectErrorVisible() {
     await expect(this.errorMessage).toBeVisible();
   }

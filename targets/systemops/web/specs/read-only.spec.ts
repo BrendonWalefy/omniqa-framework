@@ -20,7 +20,7 @@ test.describe('SystemOps - Smoke read-only', () => {
     const dashboardPage = new DashboardPage(page);
 
     await loginPage.goto();
-    await loginPage.login(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!);
+    await loginPage.loginAndWaitFor(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!, /\/app\//);
     await dashboardPage.expectLoaded();
   });
 
@@ -33,7 +33,7 @@ test.describe('SystemOps - Smoke read-only', () => {
     const inboxPage = new InboxPage(page);
 
     await loginPage.goto();
-    await loginPage.login(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!);
+    await loginPage.loginAndWaitFor(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!, /\/app\//);
     await inboxPage.goto();
     await inboxPage.expectLoaded();
   });

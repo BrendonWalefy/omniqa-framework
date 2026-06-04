@@ -40,7 +40,7 @@
 | SYS-AGENDA-005 | API E2E | Agenda | Lead pede tarde e recebe apenas tarde | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-AGENDA-006 | API E2E | Agenda | Lead pede noite e sistema não oferta fora do expediente | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-AGENDA-007 | API E2E | Agenda | Lead pede sexta e recebe somente sexta no timezone da clínica | E2E Destrutivo | Alta | Sim | Automatizado |
-| SYS-AGENDA-008 | API E2E | Agenda | Procedimento longo não é ofertado quando não cabe | E2E Destrutivo | Alta | Sim | Automatizado |
+| SYS-AGENDA-008 | API E2E | Agenda | Procedimento de 20 Lentes já acordado não é ofertado quando não cabe | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-AGENDA-009 | API E2E | Agenda | Confirmação cria exatamente um evento no Calendar | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-AGENDA-010 | API E2E | Agenda | Confirmações concorrentes criam só um evento | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-AGENDA-011 | API E2E | Agenda | Operador ocupa horário após oferta — confirmação falha e sistema reoferta | E2E Destrutivo | Alta | Sim | Automatizado |
@@ -48,13 +48,13 @@
 | SYS-AGENDA-013 | API E2E | Agenda | Remarcação cancela antigo e cria novo sem duplicar | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-AGENDA-014 | API E2E | Agenda | Cleanup deixa agenda QA sem eventos do runId | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-AGENDA-015 | API E2E | Agenda | Pedido genérico pergunta procedimento antes de ofertar slot | E2E Destrutivo | Media | Sim | Automatizado |
-| SYS-AGENDA-016 | API E2E | Agenda | 20 Lentes reserva slots de 240 minutos | E2E Destrutivo | Media | Sim | Automatizado |
+| SYS-AGENDA-016 | API E2E | Agenda | Avaliação para 20 Lentes reserva slots de 60 minutos | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-AGENDA-017 | API E2E | Agenda | Opção inexistente não confirma fallback silencioso | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-AGENDA-018 | API E2E | Agenda | Pergunta de preço não cria oferta nem evento | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-AGENDA-019 | API E2E | Agenda | Urgência clínica aciona atenção humana sem agendar | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-AGENDA-020 | API E2E | Agenda | Sábado da Ximendes termina às 13h | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-AGENDA-021 | API E2E | Agenda | Remarcação genérica pede procedimento e mantém agenda antiga | E2E Destrutivo | Media | Sim | Automatizado |
-| SYS-AGENDA-022 | API E2E | Agenda | Remarcação de 20 Lentes mantém duração de 240 minutos | E2E Destrutivo | Media | Sim | Automatizado |
+| SYS-AGENDA-022 | API E2E | Agenda | Remarcação da avaliação de 20 Lentes mantém duração de 60 minutos | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-CONV-001 | API E2E | Conversa | Saudação responde de forma acolhedora sem abrir agenda | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-CONV-002 | API E2E | Conversa | Fora de escopo mantém limite da clínica | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-CONV-003 | API E2E | Conversa | Pergunta de preço não inventa valor | E2E Destrutivo | Alta | Sim | Automatizado |
@@ -63,6 +63,14 @@
 | SYS-CONV-006 | API E2E | Conversa | "pode ser" sem oferta pendente não agenda nada | E2E Destrutivo | Alta | Sim | Automatizado |
 | SYS-CONV-007 | API E2E | Conversa | Encerramento não tenta reabrir venda | E2E Destrutivo | Media | Sim | Automatizado |
 | SYS-CONV-008 | API E2E | Conversa | Operador assume e IA não responde por cima | E2E Destrutivo | Alta | Sim | Automatizado |
+| SYS-CONV-021 | API E2E | Conversa/UX | Primeiro contato evidencia especialidade em lentes sem abrir agenda | E2E Destrutivo | Alta | Sim | Automatizado |
+| SYS-CONV-022 | API E2E | Conversa/UX | Opção de procedimentos prioriza lentes em tópicos curtos e mantém outros serviços disponíveis | E2E Destrutivo | Alta | Sim | Automatizado |
+| SYS-CONV-023 | API E2E | Conversa/Playbook | Pergunta de valores de resina e porcelana usa preços do playbook | E2E Destrutivo | Alta | Sim | Automatizado |
+| SYS-CONV-024 | API E2E | Conversa/UX | Pergunta sobre outros serviços responde sem perder foco em lentes | E2E Destrutivo | Media | Sim | Automatizado |
+| SYS-MENU-011 | API E2E | Menu/UX | Menu de experiência em lentes navega todas as opções e mostra procedimentos em tópicos curtos | E2E Destrutivo | Alta | Sim | Automatizado |
+| SYS-PLAYBOOK-013 | API E2E | Playbook | Lista de procedimentos evidencia lentes em tópicos curtos sem esconder outros serviços | LLM Sandbox | Alta | Sim | Automatizado |
+| SYS-PLAYBOOK-014 | API E2E | Playbook | Valores de resina e porcelana vêm do playbook sem inventar preço fechado | LLM Sandbox | Alta | Sim | Automatizado |
+| SYS-PLAYBOOK-015 | API E2E | Playbook | Interesse em lentes conduz para avaliação sem vender procedimento fechado | LLM Sandbox | Media | Sim | Automatizado |
 | SYS-PUSH-001 | API | Push Guard | POST /api/push/subscribe sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
 | SYS-PUSH-002 | API | Push Guard | DELETE /api/push/subscribe sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
 | SYS-PUSH-003 | Web | Push | POST com campos ausentes retorna 400 | API | Alta | Sim | Automatizado |

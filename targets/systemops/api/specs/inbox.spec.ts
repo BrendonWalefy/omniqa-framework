@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createRunId } from '../../systemops.config';
+import { createRunId, e2eSkipReason } from '../../systemops.config';
 import { agentMessageCount, SystemOpsE2eClient } from '../support/e2eClient';
 import { e2ePhone } from '../support/zapiPayloadFactory';
 
@@ -19,6 +19,11 @@ async function cleanup(client: SystemOpsE2eClient, runId: string) {
 }
 
 test.describe('SystemOps Inbox - Fluxos de Takeover e Múltiplos Leads', () => {
+  test.beforeEach(async () => {
+    const skipReason = e2eSkipReason();
+    if (skipReason) test.skip(true, skipReason);
+  });
+
   test.afterEach(async ({ request }) => {
     if (activeRunIds.size === 0) return;
     const client = new SystemOpsE2eClient(request);

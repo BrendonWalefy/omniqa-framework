@@ -16,7 +16,7 @@ async function loginAdmin(page: Page) {
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
   await loginPage.goto();
-  await loginPage.login(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!);
+  await loginPage.loginAndWaitFor(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!, /\/app\//);
   await dashboardPage.expectLoaded();
 }
 

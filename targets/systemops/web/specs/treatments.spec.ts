@@ -4,8 +4,9 @@ import { adminSkipReason, destructiveWebSkipReason, ensureNotProductionLike, log
 test.describe.configure({ mode: 'serial' });
 
 async function gotoTreatments(page: Page) {
-  await page.goto('/app/settings/tratamentos');
-  await expect(page.getByRole('heading', { name: 'Procedimentos' })).toBeVisible();
+  await page.goto('/app/settings/playbook');
+  await expect(page.getByRole('heading', { name: /Configurações da IA/i })).toBeVisible();
+  await page.getByRole('button', { name: 'Procedimentos' }).click();
   await expect(page.getByText('Adicionar procedimento')).toBeVisible();
 }
 

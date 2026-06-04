@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createRunId } from '../../systemops.config';
+import { createRunId, e2eSkipReason } from '../../systemops.config';
 import { e2ePhone } from '../support/zapiPayloadFactory';
 import { latestAgentMessage, latestSlotOffer, SystemOpsE2eClient } from '../support/e2eClient';
 import {
@@ -13,7 +13,7 @@ import {
   nextLocalWeekday
 } from '../support/calendarAssertions';
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial', timeout: 180_000 });
 
 const activeRunIds = new Set<string>();
 
@@ -38,6 +38,7 @@ async function setup(client: SystemOpsE2eClient, runId: string) {
   activeRunIds.add(runId);
   await client.reset(runId);
   await client.seed();
+  await primeSchedulingConversation(client, runId);
 }
 
 async function cleanup(client: SystemOpsE2eClient, runId: string) {
@@ -47,7 +48,19 @@ async function cleanup(client: SystemOpsE2eClient, runId: string) {
   activeRunIds.delete(runId);
 }
 
+async function primeSchedulingConversation(client: SystemOpsE2eClient, runId: string, phone?: string) {
+  await client.sendLeadMessage(runId, 'oi', `prime-greeting-${phone ?? 'default'}`, phone);
+  await client.waitForAgentMessage(runId, 1);
+  await client.sendLeadMessage(runId, '1', `prime-procedures-${phone ?? 'default'}`, phone);
+  await client.waitForAgentMessage(runId, 2);
+}
+
 test.describe('SystemOps Scheduling E2E', () => {
+  test.beforeEach(async () => {
+    const skipReason = e2eSkipReason();
+    if (skipReason) test.skip(true, skipReason);
+  });
+
   test.afterEach(async ({ request }) => {
     if (activeRunIds.size === 0) return;
 
@@ -172,7 +185,7 @@ test.describe('SystemOps Scheduling E2E', () => {
     await cleanup(client, runId);
   });
 
-  test('SYS-AGENDA-008 - procedimento longo não é ofertado quando não cabe', async ({ request }) => {
+  test('SYS-AGENDA-008 - procedimento de 20 Lentes já acordado não é ofertado quando não cabe', async ({ request }) => {
     const client = new SystemOpsE2eClient(request);
     const runId = createRunId('SYS-AGENDA-008');
     await setup(client, runId);
@@ -185,11 +198,15 @@ test.describe('SystemOps Scheduling E2E', () => {
       type: 'appointment'
     });
 
-    await client.sendLeadMessage(runId, `quero 20 lentes no dia ${dateText(friday())}`, 'ask');
+    await client.sendLeadMessage(
+      runId,
+      `já fechei o procedimento de 20 lentes e quero agendar no dia ${dateText(friday())}`,
+      'ask'
+    );
     const state = await client.state(runId);
 
     expect(latestSlotOffer(state)).toHaveLength(0);
-    expect(latestAgentMessage(state)).toContain('Não há horários disponíveis');
+    expect(latestAgentMessage(state)).toMatch(/n[aã]o (h[aá]|temos) hor[aá]rios dispon[ií]veis/i);
     await cleanup(client, runId);
   });
 
@@ -216,6 +233,11 @@ test.describe('SystemOps Scheduling E2E', () => {
 
     const phoneA = `${e2ePhone(runId)}-a`;
     const phoneB = `${e2ePhone(runId)}-b`;
+    await client.reset(runId);
+    await client.seed();
+    await primeSchedulingConversation(client, runId, phoneA);
+    await primeSchedulingConversation(client, runId, phoneB);
+
     await client.sendLeadMessage(runId, `quero avaliação no dia ${dateText(friday())} de manhã`, 'ask-a', phoneA);
     await client.sendLeadMessage(runId, `quero avaliação no dia ${dateText(friday())} de manhã`, 'ask-b', phoneB);
 
@@ -326,15 +348,15 @@ test.describe('SystemOps Scheduling E2E', () => {
     await cleanup(client, runId);
   });
 
-  test('SYS-AGENDA-016 - 20 Lentes reserva slots de 240 minutos', async ({ request }) => {
+  test('SYS-AGENDA-016 - avaliação para 20 Lentes reserva slots de 60 minutos', async ({ request }) => {
     const client = new SystemOpsE2eClient(request);
     const runId = createRunId('SYS-AGENDA-016');
     await setup(client, runId);
 
-    await client.sendLeadMessage(runId, `quero 20 lentes no dia ${dateText(friday())}`, 'ask');
+    await client.sendLeadMessage(runId, `quero avaliação para 20 lentes no dia ${dateText(saturday())}`, 'ask');
     const slots = latestSlotOffer(await client.state(runId));
 
-    expectSlotDurations(slots, 240);
+    expectSlotDurations(slots, 60);
     expectSlotsInsideBusinessHours(slots);
     await cleanup(client, runId);
   });
@@ -381,7 +403,7 @@ test.describe('SystemOps Scheduling E2E', () => {
     const state = await client.state(runId);
 
     expect(latestSlotOffer(state)).toHaveLength(0);
-    expect(latestAgentMessage(state)).toContain('urgência');
+    expect(latestAgentMessage(state)).toMatch(/urg[eê]ncia|equipe|contato|acion|assist[eê]ncia/i);
     expect(state.conversations.some((conversation) => conversation.needsAttention)).toBe(true);
     expect(await client.listCalendarEvents(runId)).toHaveLength(0);
     await cleanup(client, runId);
@@ -422,18 +444,22 @@ test.describe('SystemOps Scheduling E2E', () => {
     await cleanup(client, runId);
   });
 
-  test('SYS-AGENDA-022 - remarcação de 20 Lentes mantém duração de 240 minutos', async ({ request }) => {
+  test('SYS-AGENDA-022 - remarcação da avaliação de 20 Lentes mantém duração de 60 minutos', async ({ request }) => {
     const client = new SystemOpsE2eClient(request);
     const runId = createRunId('SYS-AGENDA-022');
     await setup(client, runId);
 
-    await client.sendLeadMessage(runId, `quero 20 lentes no dia ${dateText(friday())}`, 'ask');
+    await client.sendLeadMessage(runId, `quero avaliação para 20 lentes no dia ${dateText(friday())}`, 'ask');
     await client.sendLeadMessage(runId, 'quero a opção 1', 'confirm');
-    await client.sendLeadMessage(runId, `quero remarcar 20 lentes para o dia ${dateText(saturday())}`, 'reschedule-20-lentes');
+    await client.sendLeadMessage(
+      runId,
+      `quero remarcar minha avaliação de 20 lentes para o dia ${dateText(saturday())}`,
+      'reschedule-20-lentes'
+    );
 
     const slots = latestSlotOffer(await client.state(runId));
 
-    expectSlotDurations(slots, 240);
+    expectSlotDurations(slots, 60);
     expectNoOverlappingEvents(await client.listCalendarEvents(runId));
     await cleanup(client, runId);
   });

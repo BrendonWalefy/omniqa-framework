@@ -14,7 +14,7 @@ test.describe('SystemOps - Autenticação', () => {
     const dashboardPage = new DashboardPage(page);
 
     await loginPage.goto();
-    await loginPage.login(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!);
+    await loginPage.loginAndWaitFor(systemopsConfig.adminEmail!, systemopsConfig.adminPassword!, /\/app\//);
     await dashboardPage.expectLoaded();
   });
 
@@ -27,7 +27,7 @@ test.describe('SystemOps - Autenticação', () => {
     const ownerPage = new OwnerPage(page);
 
     await loginPage.goto();
-    await loginPage.login(systemopsConfig.ownerEmail!, systemopsConfig.ownerPassword!);
+    await loginPage.loginAndWaitFor(systemopsConfig.ownerEmail!, systemopsConfig.ownerPassword!, /\/owner/);
     await ownerPage.expectLoaded();
   });
 

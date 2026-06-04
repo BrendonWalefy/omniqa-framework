@@ -78,9 +78,12 @@ type SlotsPayload = {
 
 export class SystemOpsE2eClient {
   private readonly secret: string;
+  private readonly clinicId: string;
 
   constructor(private readonly request: APIRequestContext) {
-    this.secret = requireE2eConfig().secret;
+    const config = requireE2eConfig();
+    this.secret = config.secret;
+    this.clinicId = config.clinicId;
   }
 
   private headers() {
@@ -123,8 +126,8 @@ export class SystemOpsE2eClient {
   }
 
   async sendLeadMessage(runId: string, text: string, step: string, phone?: string) {
-    const clinicId = process.env.E2E_CLINIC_ID ?? '';
-    const response = await this.request.post(`/api/whatsapp/zapi?clinicId=${clinicId}`, {
+    const response = await this.request.post(`/api/whatsapp/zapi?clinicId=${encodeURIComponent(this.clinicId)}`, {
+      headers: this.headers(),
       data: zapiTextPayload({ runId, text, step, phone })
     });
     // 200 = processado e enviado; 400 pode ocorrer quando Z-API send falha mas mensagem foi salva
@@ -132,8 +135,8 @@ export class SystemOpsE2eClient {
   }
 
   async sendOperatorMessage(runId: string, text: string, step: string, phone?: string) {
-    const clinicId = process.env.E2E_CLINIC_ID ?? '';
-    const response = await this.request.post(`/api/whatsapp/zapi?clinicId=${clinicId}`, {
+    const response = await this.request.post(`/api/whatsapp/zapi?clinicId=${encodeURIComponent(this.clinicId)}`, {
+      headers: this.headers(),
       data: zapiTextPayload({ runId, text, step, phone, fromMe: true })
     });
     expect([200, 400]).toContain(response.status());

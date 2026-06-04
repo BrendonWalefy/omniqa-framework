@@ -43,6 +43,8 @@ export default defineConfig({
     {
       name: 'systemops-api',
       testMatch: /targets\/systemops\/api\/specs\/.*\.spec\.ts/,
+      fullyParallel: false,
+      workers: 1,
       use: {
         baseURL: systemopsBaseUrl,
         extraHTTPHeaders: {
@@ -53,6 +55,8 @@ export default defineConfig({
     {
       name: 'systemops-web-chromium',
       testMatch: /targets\/systemops\/web\/specs\/.*\.spec\.ts/,
+      fullyParallel: false,
+      workers: 1,
       use: {
         ...devices['Desktop Chrome'],
         baseURL: systemopsBaseUrl
@@ -61,6 +65,8 @@ export default defineConfig({
     {
       name: 'systemops-web-mobile',
       testMatch: /targets\/systemops\/web\/specs\/.*\.spec\.ts/,
+      fullyParallel: false,
+      workers: 1,
       use: {
         ...devices['Pixel 5'],
         baseURL: systemopsBaseUrl

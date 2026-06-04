@@ -36,6 +36,14 @@ const PARAMETRIZED_MENU_ITEMS: E2eMenuItem[] = [
   { number: 5, label: 'Chamar concierge', intent: 'needs_human', enabled: true }
 ];
 
+const LENSES_EXPERIENCE_MENU_ITEMS: E2eMenuItem[] = [
+  { number: 1, label: 'Lentes e tratamentos', intent: 'procedures', enabled: true },
+  { number: 2, label: 'Agendar avaliação', intent: 'book_appointment', enabled: true },
+  { number: 3, label: 'Valores das lentes', intent: 'price_inquiry', enabled: true },
+  { number: 4, label: 'Localização da clínica', intent: 'location', enabled: true },
+  { number: 5, label: 'Falar com especialista', intent: 'needs_human', enabled: true }
+];
+
 function disabledPaymentMenu(): E2eMenuItem[] {
   return CUSTOM_MENU_ITEMS.map((item) => (item.number === 3 ? { ...item, enabled: false } : item));
 }
@@ -58,6 +66,28 @@ function expectNoDefaultMenuLeak(reply: string) {
   for (const item of DEFAULT_MENU_ITEMS) {
     expect(reply).not.toContain(`${item.number}. ${item.label}`);
   }
+}
+
+function procedureTopicLines(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => /^([-*•]|\d+[.)])\s+/.test(line) || /^(lentes?|clareamento|implante|limpeza|manuten)/i.test(line));
+}
+
+function expectConciseProcedureTopics(reply: string) {
+  const topics = procedureTopicLines(reply);
+  const topicText = topics.join('\n');
+
+  expect(topics.length).toBeGreaterThanOrEqual(3);
+  expect(topicText).toMatch(/lente/i);
+  expect(topicText).toMatch(/clareamento|implante|limpeza|manuten/i);
+  for (const topic of topics) {
+    expect(topic.length).toBeLessThanOrEqual(180);
+  }
+  expect(reply.length).toBeLessThanOrEqual(1400);
+  expect(reply).toMatch(/detalh|mais informa|explic|quer saber|posso te contar|digite|escolh/i);
 }
 
 async function setup(client: SystemOpsE2eClient, runId: string) {
@@ -302,6 +332,52 @@ test.describe('SystemOps Menu Parametrizável E2E', () => {
     expect(reply).not.toContain('3. Planos flexíveis');
     expect(latestSlotOffer(state)).toHaveLength(0);
     expect(state.appointments.filter((appointment) => appointment.status === 'scheduled')).toHaveLength(0);
+    await cleanup(client, runId);
+  });
+
+  test('SYS-MENU-011 - menu de experiência em lentes navega opções e mostra procedimentos em tópicos curtos', async ({ request }) => {
+    const client = new SystemOpsE2eClient(request);
+    const runId = createRunId('SYS-MENU-011');
+    await setup(client, runId);
+    await client.updateClinicSettings(runId, {
+      greetingMessage: 'Somos especialistas em lentes de contato dental. Escolha como podemos ajudar:',
+      menuItems: LENSES_EXPERIENCE_MENU_ITEMS
+    });
+
+    let expectedAgentMessages = 0;
+    async function choose(option: string, step: string) {
+      const phone = `${e2ePhone(runId)}-${step}`;
+      await client.sendLeadMessage(runId, 'oi', `open-${step}`, phone);
+      expectedAgentMessages += 1;
+      await client.waitForAgentMessage(runId, expectedAgentMessages);
+      await client.sendLeadMessage(runId, option, `choose-${step}`, phone);
+      expectedAgentMessages += 1;
+      return client.waitForAgentMessage(runId, expectedAgentMessages);
+    }
+
+    const proceduresState = await choose('1', 'procedures');
+    const proceduresReply = latestAgentMessage(proceduresState);
+    expect(proceduresReply).toMatch(/lente|resina|porcelana|tratamento|procedimento/i);
+    expectConciseProcedureTopics(proceduresReply);
+    expect(proceduresReply).not.toContain('1. Lentes e tratamentos');
+    expect(latestSlotOffer(proceduresState)).toHaveLength(0);
+
+    const scheduleState = await choose('2', 'schedule');
+    expect(latestAgentMessage(scheduleState)).toMatch(/agend|avalia|hor[aá]rio|procedimento|data/i);
+
+    const priceState = await choose('3', 'prices');
+    expect(latestAgentMessage(priceState)).toMatch(/valor|pre[cç]o|or[çc]amento|avalia|resina|porcelana|parcel/i);
+    expect(latestSlotOffer(priceState)).toHaveLength(0);
+
+    const locationState = await choose('4', 'location');
+    expect(latestAgentMessage(locationState)).toMatch(/endere[cç]o|localiza|chegar|rua|cl[ií]nica|unidade/i);
+    expect(latestSlotOffer(locationState)).toHaveLength(0);
+
+    const humanState = await choose('5', 'human');
+    expect(latestAgentMessage(humanState)).toMatch(/especialista|equipe|humano|avisad|contato|responder/i);
+    expect(humanState.conversations.some((conversation) => conversation.needsAttention)).toBe(true);
+    expect(latestSlotOffer(humanState)).toHaveLength(0);
+
     await cleanup(client, runId);
   });
 });

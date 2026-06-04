@@ -130,6 +130,7 @@ Estes testes usam as rotas E2E seguras do SystemOps e esperam suporte a `PATCH /
 | SYS-MENU-008 | Número inválido dentro do menu reoferece opções sem cair no LLM nem criar ação |
 | SYS-MENU-009 | Lead digitando rótulo customizado usa o intent configurado pela clínica |
 | SYS-MENU-010 | Rótulo de item desativado não aciona intent antigo nem hardcoded |
+| SYS-MENU-011 | Menu de experiência em lentes navega todas as opções e mostra procedimentos em tópicos curtos |
 
 ### Sandbox De Playbook
 
@@ -149,6 +150,9 @@ Por padrão estes testes ficam skipped. Habilite somente em ambiente local/contr
 | SYS-PLAYBOOK-010 | Pergunta sobre clareamento usa detalhes do playbook sem inventar [LLM-only] |
 | SYS-PLAYBOOK-011 | Pergunta sobre duração do implante retorna prazo do playbook [LLM-only] |
 | SYS-PLAYBOOK-012 | Comparação entre lentes e clareamento distingue os dois sem confundir [LLM-only] |
+| SYS-PLAYBOOK-013 | Lista de procedimentos evidencia lentes em tópicos curtos sem esconder outros serviços [LLM-only] |
+| SYS-PLAYBOOK-014 | Valores de resina e porcelana vêm do playbook sem inventar preço fechado [LLM-only] |
+| SYS-PLAYBOOK-015 | Interesse em lentes conduz para avaliação sem vender procedimento fechado [LLM-only] |
 
 ### Performance
 
@@ -180,7 +184,7 @@ DISABLE_REAL_OPENAI=true
 | SYS-AGENDA-005 | Pedido de tarde retorna apenas tarde |
 | SYS-AGENDA-006 | Pedido de noite não oferta fora do expediente |
 | SYS-AGENDA-007 | Pedido de sexta respeita timezone local |
-| SYS-AGENDA-008 | Procedimento longo não é ofertado quando não cabe |
+| SYS-AGENDA-008 | Procedimento de 20 Lentes já acordado não é ofertado quando não cabe |
 | SYS-AGENDA-009 | Confirmação cria exatamente um evento |
 | SYS-AGENDA-010 | Confirmações concorrentes criam só um evento |
 | SYS-AGENDA-011 | Evento manual após oferta bloqueia confirmação |
@@ -188,13 +192,13 @@ DISABLE_REAL_OPENAI=true
 | SYS-AGENDA-013 | Remarcação cancela antigo e cria novo |
 | SYS-AGENDA-014 | Cleanup deixa agenda QA sem eventos do runId |
 | SYS-AGENDA-015 | Pedido genérico pergunta procedimento antes de ofertar slot |
-| SYS-AGENDA-016 | 20 Lentes reserva slots de 240 minutos |
+| SYS-AGENDA-016 | Avaliação para 20 Lentes reserva slots de 60 minutos |
 | SYS-AGENDA-017 | Opção inexistente não confirma fallback silencioso |
 | SYS-AGENDA-018 | Pergunta de preço não cria oferta nem evento |
 | SYS-AGENDA-019 | Urgência clínica aciona atenção humana sem agendar |
 | SYS-AGENDA-020 | Sábado da Ximendes termina às 13h |
 | SYS-AGENDA-021 | Remarcação genérica pede procedimento e mantém agenda antiga |
-| SYS-AGENDA-022 | Remarcação de 20 Lentes mantém duração de 240 minutos |
+| SYS-AGENDA-022 | Remarcação da avaliação de 20 Lentes mantém duração de 60 minutos |
 
 ### Experiência De Conversa E2E
 
@@ -215,6 +219,15 @@ DISABLE_REAL_OPENAI=true
 | SYS-CONV-013 | Opção 2 do menu oferece horários para agendamento |
 | SYS-CONV-014 | Número "2" sem menu ativo não aciona agendamento direto |
 | SYS-CONV-015 | Reagendamento interpreta pedido de mudança de horário |
+| SYS-CONV-016 | "remarcar" no menu não aciona book_appointment por substring |
+| SYS-CONV-017 | "desmarcar" no menu não aciona book_appointment por substring |
+| SYS-CONV-018 | "marcar" sem prefixo no menu aciona book_appointment normalmente |
+| SYS-CONV-019 | Urgência clara mid-menu escala sem oferecer slots |
+| SYS-CONV-020 | Urgência com "consulta" mid-menu não aciona booking flow |
+| SYS-CONV-021 | Primeiro contato evidencia especialidade em lentes sem abrir agenda |
+| SYS-CONV-022 | Opção de procedimentos prioriza lentes em tópicos curtos e mantém outros serviços disponíveis |
+| SYS-CONV-023 | Pergunta de valores de resina e porcelana usa preços do playbook |
+| SYS-CONV-024 | Pergunta sobre outros serviços responde sem perder foco em lentes |
 
 ---
 

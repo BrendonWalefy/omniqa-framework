@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createRunId } from '../../systemops.config';
+import { createRunId, e2eSkipReason } from '../../systemops.config';
 import {
   agentMessageCount,
   latestAgentMessage,
@@ -43,6 +43,11 @@ async function cleanup(client: SystemOpsE2eClient, runId: string) {
 }
 
 test.describe('SystemOps Arrival Experience E2E', () => {
+  test.beforeEach(async () => {
+    const skipReason = e2eSkipReason();
+    if (skipReason) test.skip(true, skipReason);
+  });
+
   test.afterEach(async ({ request }) => {
     if (activeRunIds.size === 0) return;
     const client = new SystemOpsE2eClient(request);
