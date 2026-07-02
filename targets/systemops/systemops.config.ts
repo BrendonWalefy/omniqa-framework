@@ -12,6 +12,10 @@ export const systemopsConfig = {
   runProductionSmoke: process.env.SYSTEMOPS_RUN_PRODUCTION_SMOKE === 'true',
   runLlmSandbox: process.env.SYSTEMOPS_RUN_LLM_SANDBOX === 'true',
   simulateApiKey: process.env.SYSTEMOPS_SIMULATE_API_KEY,
+  // Clínica real (isTest=false) usada como fonte de mensagens reais de leads para o
+  // replay de melhoria contínua (production-replay.spec.ts). Nunca a mesma que
+  // e2eClinicId — o replay lê daqui e escreve/testa contra e2eClinicId.
+  productionClinicId: process.env.SYSTEMOPS_PRODUCTION_CLINIC_ID,
 };
 
 export function requireBaseUrl(): string {

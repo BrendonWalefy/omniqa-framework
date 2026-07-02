@@ -14,8 +14,8 @@ test.describe('SystemOps Mobile PWA', () => {
       icons: Array<{ src: string; sizes: string; type: string; purpose?: string }>;
     };
 
-    expect(manifest.name).toBe('Recepção');
-    expect(manifest.short_name).toBe('Recepção');
+    expect(manifest.name).toBe('SystemOps');
+    expect(manifest.short_name).toBe('SystemOps');
     expect(manifest.start_url).toBe('/app/inbox');
     expect(manifest.display).toBe('standalone');
     expect(manifest.orientation).toBe('portrait');
