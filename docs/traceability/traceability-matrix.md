@@ -79,3 +79,18 @@
 | SYS-PUSH-006 | Web | Push | DELETE remove subscrição existente | API | Alta | Sim | Automatizado |
 | SYS-PUSH-007 | Web | Push | DELETE endpoint inexistente retorna 200 | API | Media | Sim | Automatizado |
 | SYS-PUSH-008 | Web | Push | Push component renderiza sem erro de JavaScript no dashboard | Smoke | Alta | Sim | Automatizado |
+| SYS-INSIGHTS-001 | API | Insights operacionais | GET /api/clinic/operational-insights sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
+| SYS-INSIGHTS-002 | API | Insights operacionais | GET autenticado retorna contrato esperado (key/type/category/...) | API/Contrato | Alta | Sim | Automatizado |
+| SYS-INSIGHTS-003 | API | Insights operacionais | PATCH sem key retorna 400 | API | Media | Sim | Automatizado |
+| SYS-INSIGHTS-004 | API | Insights operacionais | PATCH com key inexistente é idempotente | API | Media | Sim | Automatizado |
+| SYS-INSIGHTS-005 | Web | Dashboard | Card de insights não quebra a página com ou sem dados presentes | Smoke | Alta | Sim | Automatizado |
+| SYS-GAPS-001 | API | Treatment gaps | GET /api/clinic/treatment-gaps sem sessão retorna 401 | Auth Guard | Alta | Sim | Automatizado |
+| SYS-GAPS-002 | API | Treatment gaps | GET autenticado retorna contrato esperado | API/Contrato | Alta | Sim | Automatizado |
+| SYS-GAPS-003 | API | Treatment gaps | PATCH sem mentionedText retorna 400 | API | Media | Sim | Automatizado |
+| SYS-GAPS-004 | API | Treatment gaps | PATCH com mentionedText inexistente é idempotente | API | Media | Sim | Automatizado |
+| SYS-PLAYBOOK-ADVISOR-001 | Web | Sugestões de Playbook | Tela carrega métricas resumo sem erro | Smoke | Alta | Sim | Automatizado |
+| SYS-PLAYBOOK-ADVISOR-002 | Web | Sugestões de Playbook | "Analisar e gerar sugestões" retorna gaps estruturados (LLM real) | LLM Sandbox | Media | Sim | Automatizado |
+| SYS-REPLAY-001 | API E2E | Melhoria contínua | Mensagens reais de leads de produção (Ximendes) recebem resposta da IA ao serem replayed contra a clínica QA isolada, com score de qualidade (LLM-judge) e findings de 4 personas especialistas (core/specialists: vendas, UX, negócio, IA) gravados em docs/ai-notes/specialist-findings-*.md | E2E Destrutivo/LLM | Alta | Sim | Automatizado |
+| SYS-VISUAL-001 | Web | Regressão visual | Tela de login mantém layout | Screenshot | Media | Sim | Automatizado |
+| SYS-VISUAL-002 | Web | Regressão visual | Menu lateral mantém estrutura e ordem dos itens | Screenshot | Media | Sim | Automatizado |
+| SYS-VISUAL-003 | Web | Regressão visual | Indicadores principais do dashboard mantêm layout (valores dinâmicos mascarados) | Screenshot | Media | Sim | Automatizado |

@@ -136,6 +136,18 @@ Estes testes usam as rotas E2E seguras do SystemOps e esperam suporte a `PATCH /
 
 Por padrão estes testes ficam skipped. Habilite somente em ambiente local/controlado com `SYSTEMOPS_RUN_LLM_SANDBOX=true`.
 
+**Conflito de configuração conhecido (achado da Fase 0f do plano de melhoria contínua):**
+os cenários `[LLM-only]` desta seção e toda a suíte `bw-concierge-conversation.spec.ts`
+chamam `/api/playbook/simulate`, que respeita `DISABLE_REAL_OPENAI` no servidor
+(`src/app/api/playbook/simulate/route.ts`, sales-engine) e retorna texto mockado
+(`"[MOCK] ..."`) quando essa flag está `true`. Só que `DISABLE_REAL_OPENAI=true` é
+**exigido** pela seção "Agenda E2E" logo abaixo, para os asserts determinísticos de
+slot não dependerem de variação de LLM. As duas suítes não podem rodar no mesmo dev
+server simultaneamente — para os cenários `[LLM-only]`/`bw-concierge-conversation.spec.ts`,
+rode o `systemops-core` local **sem** `DISABLE_REAL_OPENAI` (ou contra produção, onde
+essa flag não existe — ver `docs/operations/e2e-test-plan.md` no sales-engine, achado
+#1: produção não tem nenhuma flag de QA configurada na Vercel).
+
 | ID | Cenário |
 |---|---|
 | SYS-PLAYBOOK-001 | Objeção cadastrada influencia a resposta simulada |
@@ -268,8 +280,63 @@ Sem ambiente de staging dedicado, a estratégia é:
 SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:inbox
 ```
 
+## Melhoria contínua (Fases 2-4)
+
+Além da regressão sintética (payloads escritos à mão), o target tem uma camada de
+melhoria contínua que valida o produto com dados e avaliação reais:
+
+1. **Replay de conversas reais** (`production-replay.spec.ts`, SYS-REPLAY-001) — puxa
+   mensagens reais de leads de uma clínica de produção (`SYSTEMOPS_PRODUCTION_CLINIC_ID`,
+   via `GET /api/e2e/production-conversations` no sales-engine, só autor "lead") e
+   reenvia contra a clínica QA isolada (`E2E_CLINIC_ID`, Z-API fake). Falha dura só se
+   uma mensagem real ficar sem resposta (regressão de disponibilidade).
+2. **LLM-as-judge** (`core/llm-judge/`) — cada resposta replayada recebe um score
+   estruturado (aderência ao playbook, tom, alucinação, progresso da conversa). Score
+   baixo vira finding, não falha teste.
+3. **Camada de especialistas** (`core/specialists/`) — 4 personas (vendas/persuasão, UX,
+   negócio, qualidade de IA) avaliam os mesmos artefatos e geram
+   `docs/ai-notes/specialist-findings-<data>.md` automaticamente — documento de sugestão
+   para revisão humana, nunca teste/código gerado sozinho.
+4. **Regressão visual** (`visual-regression.spec.ts`, SYS-VISUAL-001~003) — screenshots
+   de telas/regiões com pouco conteúdo dinâmico, valores ao vivo mascarados.
+
+```bash
+SYSTEMOPS_RUN_DESTRUCTIVE=true SYSTEMOPS_RUN_LLM_SANDBOX=true \
+  SYSTEMOPS_PRODUCTION_CLINIC_ID=<clinicId real> npm run test:systemops:replay
+
+npm run test:systemops:visual
+```
+
+Rodar `npm run dev:workers` (script no sales-engine) em paralelo com `npm run dev`
+localmente — sem isso, mensagens de webhook enfileiradas nunca são processadas.
+
+## Checklist de go-live (clínica nova)
+
+Antes de liberar uma clínica nova (criada via `create-clinic.ts` no sales-engine) para
+um cliente pagante, rodar contra produção com credenciais Z-API falsas:
+
+```bash
+SYSTEMOPS_BASE_URL=https://app.systemops.com.br \
+  SYSTEMOPS_RUN_DESTRUCTIVE=true SYSTEMOPS_RUN_LLM_SANDBOX=true \
+  npm run test:systemops:smoke
+
+SYSTEMOPS_PRODUCTION_CLINIC_ID=<clinicId da clínica nova> npm run test:systemops:replay
+```
+
+Qualquer falha aqui **trava o go-live daquela clínica específica** — mesmo critério já
+usado em `docs/operations/e2e-test-plan.md` (sales-engine). O replay contra o
+`clinicId` da própria clínica nova valida o playbook recém-configurado com dados reais
+de teste do onboarding, antes do primeiro lead real chegar.
+
+## CI recorrente
+
+Workflow `.github/workflows/systemops-continuous-improvement.yml` roda a suíte smoke +
+replay + visual diariamente contra produção (mesmo padrão de segurança: `isTest=true` +
+Z-API fake) e publica o relatório + os findings dos especialistas como artifact. Ver o
+workflow para a lista de secrets necessários.
+
 ## Próximos passos (não implementar nesta entrega)
 
 - Smoke contra preview da Vercel
 - Performance em preview/staging
-- Integração com CI do systemops-core
+- Job de CI recorrente rodando de fato (workflow criado, precisa dos secrets configurados no repositório GitHub)

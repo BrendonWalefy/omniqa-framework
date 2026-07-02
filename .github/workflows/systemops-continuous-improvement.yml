@@ -1,0 +1,101 @@
+name: SystemOps — Melhoria Contínua
+
+# Roda diariamente contra produção (app.systemops.com.br) — seguro por desenho: a
+# clínica de teste é isTest=true com credenciais Z-API falsas (nenhum envio real de
+# WhatsApp é possível), e o replay de conversas reais só LÊ mensagens de leads
+# (GET /api/e2e/production-conversations), nunca escreve na clínica de origem.
+#
+# Secrets necessários no repositório GitHub:
+#   SYSTEMOPS_BASE_URL             — https://app.systemops.com.br
+#   SYSTEMOPS_E2E_SECRET           — mesmo valor de E2E_SECRET no sales-engine
+#   SYSTEMOPS_E2E_CLINIC_ID        — clinicId da clínica QA isolada (isTest=true)
+#   SYSTEMOPS_PRODUCTION_CLINIC_ID — clinicId de uma clínica real (isTest=false) para o replay
+#   SYSTEMOPS_ADMIN_EMAIL / SYSTEMOPS_ADMIN_PASSWORD — login web de teste
+#   SYSTEMOPS_SIMULATE_API_KEY     — chave do endpoint /api/playbook/simulate
+#   OPENAI_API_KEY                 — LLM-judge + camada de especialistas (core/llm-judge, core/specialists)
+#
+# Nunca rodar SYSTEMOPS_RUN_DESTRUCTIVE=true neste workflow contra a agenda de um
+# cliente real — só contra SYSTEMOPS_E2E_CLINIC_ID (clínica isolada).
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # 09:00 UTC = 06:00 BRT, diariamente
+  workflow_dispatch:
+
+jobs:
+  continuous-improvement:
+    name: Smoke + Replay + Visual (produção)
+    runs-on: ubuntu-latest
+    env:
+      SYSTEMOPS_BASE_URL: ${{ secrets.SYSTEMOPS_BASE_URL }}
+      SYSTEMOPS_E2E_SECRET: ${{ secrets.SYSTEMOPS_E2E_SECRET }}
+      SYSTEMOPS_E2E_CLINIC_ID: ${{ secrets.SYSTEMOPS_E2E_CLINIC_ID }}
+      SYSTEMOPS_PRODUCTION_CLINIC_ID: ${{ secrets.SYSTEMOPS_PRODUCTION_CLINIC_ID }}
+      SYSTEMOPS_ADMIN_EMAIL: ${{ secrets.SYSTEMOPS_ADMIN_EMAIL }}
+      SYSTEMOPS_ADMIN_PASSWORD: ${{ secrets.SYSTEMOPS_ADMIN_PASSWORD }}
+      SYSTEMOPS_SIMULATE_API_KEY: ${{ secrets.SYSTEMOPS_SIMULATE_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      SYSTEMOPS_RUN_DESTRUCTIVE: 'true'
+      SYSTEMOPS_RUN_LLM_SANDBOX: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar browsers Playwright
+        run: npx playwright install chromium --with-deps
+
+      - name: Smoke (API + Web, read-mostly)
+        run: npm run test:systemops:smoke
+
+      - name: Replay de conversas reais + LLM-judge + especialistas
+        run: npm run test:systemops:replay
+        continue-on-error: true # findings dos especialistas não devem travar o pipeline
+
+      - name: Regressão visual
+        run: npm run test:systemops:visual
+
+      - name: Gerar relatórios
+        if: always()
+        run: npm run report:junit
+
+      - name: Upload relatório JUnit
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-junit
+          path: reports/junit/
+          retention-days: 30
+
+      - name: Upload relatório Playwright
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-playwright
+          path: reports/playwright-report/
+          retention-days: 30
+
+      - name: Upload findings dos especialistas
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: specialist-findings
+          path: docs/ai-notes/specialist-findings-*.md
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: Publicar resultado JUnit no GitHub
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: reports/junit/*.xml
+          check_name: SystemOps — Melhoria Contínua
