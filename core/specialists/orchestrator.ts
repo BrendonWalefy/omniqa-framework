@@ -11,9 +11,9 @@ export type SpecialistReport = {
 };
 
 // Roda as 3 personas baseadas em LLM (sales-persuasion, ux, ai-quality) sobre um
-// artefato de conversa — reaproveitado pelo production-replay.spec.ts (Fase 2/3) sobre
-// as mesmas respostas já avaliadas pelo core/llm-judge. As 3 chamadas rodam em paralelo
-// pra não somar 3x o tempo de LLM sequencialmente.
+// artefato de conversa. A integração com o replay aprovado será retomada quando
+// o SystemOps fornecer histórico, configuração e trace pelo contrato versionado;
+// avaliar uma resposta isolada com playbook hardcoded produz confiança falsa.
 export async function runConversationSpecialists(artifact: ConversationArtifact): Promise<Finding[]> {
   const [sales, ux, aiQuality] = await Promise.all([
     evaluateSalesPersuasion(artifact),

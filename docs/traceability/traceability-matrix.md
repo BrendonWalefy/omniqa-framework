@@ -90,7 +90,7 @@
 | SYS-GAPS-004 | API | Treatment gaps | PATCH com mentionedText inexistente é idempotente | API | Media | Sim | Automatizado |
 | SYS-PLAYBOOK-ADVISOR-001 | Web | Sugestões de Playbook | Tela carrega métricas resumo sem erro | Smoke | Alta | Sim | Automatizado |
 | SYS-PLAYBOOK-ADVISOR-002 | Web | Sugestões de Playbook | "Analisar e gerar sugestões" retorna gaps estruturados (LLM real) | LLM Sandbox | Media | Sim | Automatizado |
-| SYS-REPLAY-001 | API E2E | Melhoria contínua | Mensagens reais de leads de produção (Ximendes) recebem resposta da IA ao serem replayed contra a clínica QA isolada, com score de qualidade (LLM-judge) e findings de 4 personas especialistas (core/specialists: vendas, UX, negócio, IA) gravados em docs/ai-notes/specialist-findings-*.md | E2E Destrutivo/LLM | Alta | Sim | Automatizado |
+| SYS-REPLAY-001 | API E2E | Melhoria contínua | Turnos de texto de dataset `replay-dataset.v1` sanitizado e aprovado recebem resposta em ambiente local/QA isolado; execução contra produção e leitura direta de conversas reais são recusadas | E2E destrutivo, opt-in | Alta | Não | Automatizado sob demanda |
 | SYS-VISUAL-001 | Web | Regressão visual | Tela de login mantém layout | Screenshot | Media | Sim | Automatizado |
 | SYS-VISUAL-002 | Web | Regressão visual | Menu lateral mantém estrutura e ordem dos itens | Screenshot | Media | Sim | Automatizado |
 | SYS-VISUAL-003 | Web | Regressão visual | Indicadores principais do dashboard mantêm layout (valores dinâmicos mascarados) | Screenshot | Media | Sim | Automatizado |

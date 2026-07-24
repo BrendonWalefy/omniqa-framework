@@ -11,10 +11,10 @@ export const systemopsConfig = {
   runDestructive: process.env.SYSTEMOPS_RUN_DESTRUCTIVE === 'true',
   runProductionSmoke: process.env.SYSTEMOPS_RUN_PRODUCTION_SMOKE === 'true',
   runLlmSandbox: process.env.SYSTEMOPS_RUN_LLM_SANDBOX === 'true',
+  runApprovedReplay: process.env.SYSTEMOPS_RUN_APPROVED_REPLAY === 'true',
+  replayDatasetPath: process.env.SYSTEMOPS_REPLAY_DATASET_PATH,
   simulateApiKey: process.env.SYSTEMOPS_SIMULATE_API_KEY,
-  // Clínica real (isTest=false) usada como fonte de mensagens reais de leads para o
-  // replay de melhoria contínua (production-replay.spec.ts). Nunca a mesma que
-  // e2eClinicId — o replay lê daqui e escreve/testa contra e2eClinicId.
+  // Compatibilidade temporária de specs antigos. Nunca usar como fonte de dados.
   productionClinicId: process.env.SYSTEMOPS_PRODUCTION_CLINIC_ID,
 };
 
@@ -85,5 +85,8 @@ export function createRunId(scenarioId: string): string {
 
 export function isProductionLikeUrl(url: string): boolean {
   const normalized = url.toLowerCase();
-  return normalized.includes('systemops-core-brendon-walefy-s-projects.vercel.app');
+  return (
+    normalized.includes('app.systemops.com.br') ||
+    normalized.includes('systemops-core-brendon-walefy-s-projects.vercel.app')
+  );
 }

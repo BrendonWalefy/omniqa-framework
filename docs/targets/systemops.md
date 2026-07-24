@@ -280,29 +280,31 @@ Sem ambiente de staging dedicado, a estratégia é:
 SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:inbox
 ```
 
-## Melhoria contínua (Fases 2-4)
+## Melhoria contínua (fundação segura)
 
-Além da regressão sintética (payloads escritos à mão), o target tem uma camada de
-melhoria contínua que valida o produto com dados e avaliação reais:
+Além da regressão sintética, o target possui um adapter inicial para datasets
+produzidos pelo SystemOps. A antiga leitura direta de mensagens reais pela rota
+`/api/e2e/production-conversations` foi removida.
 
-1. **Replay de conversas reais** (`production-replay.spec.ts`, SYS-REPLAY-001) — puxa
-   mensagens reais de leads de uma clínica de produção (`SYSTEMOPS_PRODUCTION_CLINIC_ID`,
-   via `GET /api/e2e/production-conversations` no sales-engine, só autor "lead") e
-   reenvia contra a clínica QA isolada (`E2E_CLINIC_ID`, Z-API fake). Falha dura só se
-   uma mensagem real ficar sem resposta (regressão de disponibilidade).
-2. **LLM-as-judge** (`core/llm-judge/`) — cada resposta replayada recebe um score
-   estruturado (aderência ao playbook, tom, alucinação, progresso da conversa). Score
-   baixo vira finding, não falha teste.
-3. **Camada de especialistas** (`core/specialists/`) — 4 personas (vendas/persuasão, UX,
-   negócio, qualidade de IA) avaliam os mesmos artefatos e geram
-   `docs/ai-notes/specialist-findings-<data>.md` automaticamente — documento de sugestão
-   para revisão humana, nunca teste/código gerado sozinho.
-4. **Regressão visual** (`visual-regression.spec.ts`, SYS-VISUAL-001~003) — screenshots
-   de telas/regiões com pouco conteúdo dinâmico, valores ao vivo mascarados.
+O replay `SYS-REPLAY-001` aceita somente:
+
+- arquivo em caminho absoluto fora de qualquer repositório Git;
+- contrato `replay-dataset.v1`;
+- `status=approved`;
+- aprovação humana registrada;
+- ambiente local/QA que não seja reconhecido como produção.
+
+Nesta fase o cenário executa apenas turnos `lead/text` e mede disponibilidade da
+resposta. Mídia, fidelidade de configuração por clínica, Decision Trace,
+LLM-as-judge e especialistas entram após o runner sandbox do SystemOps expor
+esses resultados pelo contrato versionado. Não use o judge atual com playbook
+hardcoded como gate de qualidade.
 
 ```bash
-SYSTEMOPS_RUN_DESTRUCTIVE=true SYSTEMOPS_RUN_LLM_SANDBOX=true \
-  SYSTEMOPS_PRODUCTION_CLINIC_ID=<clinicId real> npm run test:systemops:replay
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
+npm run test:systemops:replay
 
 npm run test:systemops:visual
 ```
@@ -312,28 +314,30 @@ localmente — sem isso, mensagens de webhook enfileiradas nunca são processada
 
 ## Checklist de go-live (clínica nova)
 
-Antes de liberar uma clínica nova (criada via `create-clinic.ts` no sales-engine) para
-um cliente pagante, rodar contra produção com credenciais Z-API falsas:
+Antes de liberar uma clínica nova, smoke read-only pode rodar contra produção.
+Replay destrutivo deve rodar localmente ou em QA, nunca contra produção:
 
 ```bash
 SYSTEMOPS_BASE_URL=https://app.systemops.com.br \
-  SYSTEMOPS_RUN_DESTRUCTIVE=true SYSTEMOPS_RUN_LLM_SANDBOX=true \
+  SYSTEMOPS_RUN_PRODUCTION_SMOKE=true \
   npm run test:systemops:smoke
 
-SYSTEMOPS_PRODUCTION_CLINIC_ID=<clinicId da clínica nova> npm run test:systemops:replay
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
+npm run test:systemops:replay
 ```
 
-Qualquer falha aqui **trava o go-live daquela clínica específica** — mesmo critério já
-usado em `docs/operations/e2e-test-plan.md` (sales-engine). O replay contra o
-`clinicId` da própria clínica nova valida o playbook recém-configurado com dados reais
-de teste do onboarding, antes do primeiro lead real chegar.
+Qualquer falha aqui **trava o go-live daquela clínica específica**. Até o
+sandbox clonar a configuração da clínica de origem, o replay aprovado comprova
+disponibilidade conversacional, não fidelidade total ao playbook da clínica.
 
 ## CI recorrente
 
-Workflow `.github/workflows/systemops-continuous-improvement.yml` roda a suíte smoke +
-replay + visual diariamente contra produção (mesmo padrão de segurança: `isTest=true` +
-Z-API fake) e publica o relatório + os findings dos especialistas como artifact. Ver o
-workflow para a lista de secrets necessários.
+Workflow `.github/workflows/systemops-continuous-improvement.yml` roda somente
+smoke read-only + visual diariamente contra produção. Replay voltará ao CI
+somente quando houver dataset aprovado disponibilizado por storage restrito e
+um ambiente sandbox não produtivo.
 
 ## Próximos passos (não implementar nesta entrega)
 
