@@ -24,7 +24,10 @@ test.describe('SystemOps - replay de dataset sanitizado e aprovado', () => {
   });
 
   test('SYS-REPLAY-001 - turnos de texto recebem resposta sem travar o pipeline', async ({ request }) => {
-    const dataset = await loadApprovedReplayDataset(systemopsConfig.replayDatasetPath);
+    const dataset = await loadApprovedReplayDataset(
+      systemopsConfig.replayDatasetPath,
+      systemopsConfig.replayApprovalPublicKeyPath,
+    );
     const sampleSize = parseSampleSize(process.env.SYSTEMOPS_REPLAY_SAMPLE_SIZE, dataset.scenarios.length);
     const scenarios = dataset.scenarios.slice(0, sampleSize);
     test.setTimeout(Math.max(180_000, countLeadTextTurns(scenarios) * 35_000));

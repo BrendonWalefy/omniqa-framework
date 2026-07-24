@@ -1,3 +1,4 @@
+import { createHash, createPublicKey, verify } from 'node:crypto';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -30,7 +31,7 @@ export type ApprovedReplayScenario = {
 };
 
 export type ApprovedReplayDataset = {
-  schemaVersion: 'replay-dataset.v1';
+  schemaVersion: 'replay-dataset.v2';
   datasetVersion: string;
   generatedAt: string;
   status: 'approved';
@@ -39,12 +40,28 @@ export type ApprovedReplayDataset = {
     humanReviewRequired: true;
     humanReviewApprovedAt: string;
   };
+  approval: {
+    algorithm: 'ed25519';
+    checklistVersion: 'replay-privacy-review.v1';
+    approvedAt: string;
+    approvedBy: string;
+    keyId: string;
+    sourceDigest: string;
+    signature: string;
+  };
+  clinic: {
+    clinicKey: string;
+    timezone: string;
+    configFingerprint: string;
+    playbookFingerprint: string | null;
+  };
   scenarioCount: number;
   scenarios: ApprovedReplayScenario[];
 };
 
 export async function loadApprovedReplayDataset(
   configuredPath: string | undefined,
+  configuredPublicKeyPath: string | undefined,
 ): Promise<ApprovedReplayDataset> {
   if (!configuredPath) {
     throw new Error('SYSTEMOPS_REPLAY_DATASET_PATH is required for approved replay.');
@@ -52,16 +69,33 @@ export async function loadApprovedReplayDataset(
   if (!path.isAbsolute(configuredPath)) {
     throw new Error('SYSTEMOPS_REPLAY_DATASET_PATH must be absolute.');
   }
+  if (!configuredPublicKeyPath) {
+    throw new Error('SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH is required.');
+  }
+  if (!path.isAbsolute(configuredPublicKeyPath)) {
+    throw new Error('SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH must be absolute.');
+  }
 
-  const datasetPath = await realpath(configuredPath);
-  await assertOutsideGitRepository(path.dirname(datasetPath));
-  const parsed = JSON.parse(await readFile(datasetPath, 'utf8')) as unknown;
+  const [datasetPath, publicKeyPath] = await Promise.all([
+    realpath(configuredPath),
+    realpath(configuredPublicKeyPath),
+  ]);
+  await Promise.all([
+    assertOutsideGitRepository(path.dirname(datasetPath)),
+    assertOutsideGitRepository(path.dirname(publicKeyPath)),
+  ]);
+  const [datasetContents, publicKeyPem] = await Promise.all([
+    readFile(datasetPath, 'utf8'),
+    readFile(publicKeyPath),
+  ]);
+  const parsed = JSON.parse(datasetContents) as unknown;
   assertApprovedReplayDataset(parsed);
+  verifyApprovalSignature(parsed, publicKeyPem);
   return parsed;
 }
 
 function assertApprovedReplayDataset(value: unknown): asserts value is ApprovedReplayDataset {
-  if (!isRecord(value) || value.schemaVersion !== 'replay-dataset.v1') {
+  if (!isRecord(value) || value.schemaVersion !== 'replay-dataset.v2') {
     throw new Error('Unsupported replay dataset schema.');
   }
   if (value.status !== 'approved') {
@@ -71,10 +105,26 @@ function assertApprovedReplayDataset(value: unknown): asserts value is ApprovedR
     !isRecord(value.sanitization) ||
     value.sanitization.automated !== true ||
     value.sanitization.humanReviewRequired !== true ||
-    typeof value.sanitization.humanReviewApprovedAt !== 'string' ||
-    !value.sanitization.humanReviewApprovedAt
+      typeof value.sanitization.humanReviewApprovedAt !== 'string' ||
+      !value.sanitization.humanReviewApprovedAt
   ) {
     throw new Error('Replay dataset has no valid human approval.');
+  }
+  if (
+    !isRecord(value.approval) ||
+    value.approval.algorithm !== 'ed25519' ||
+    value.approval.checklistVersion !== 'replay-privacy-review.v1' ||
+    typeof value.approval.approvedAt !== 'string' ||
+    value.approval.approvedAt !== value.sanitization.humanReviewApprovedAt ||
+    typeof value.approval.approvedBy !== 'string' ||
+    !/^[a-z0-9][a-z0-9._-]{1,63}$/.test(value.approval.approvedBy) ||
+    typeof value.approval.keyId !== 'string' ||
+    typeof value.approval.sourceDigest !== 'string' ||
+    !/^[a-f0-9]{64}$/.test(value.approval.sourceDigest) ||
+    typeof value.approval.signature !== 'string' ||
+    !value.approval.signature
+  ) {
+    throw new Error('Replay dataset has no valid cryptographic approval envelope.');
   }
   if (!Array.isArray(value.scenarios) || value.scenarios.length === 0) {
     throw new Error('Replay dataset must contain scenarios.');
@@ -108,6 +158,44 @@ function assertApprovedReplayDataset(value: unknown): asserts value is ApprovedR
       }
     }
   }
+}
+
+function verifyApprovalSignature(
+  dataset: ApprovedReplayDataset,
+  publicKeyPem: Buffer,
+): void {
+  const publicKey = createPublicKey(publicKeyPem);
+  if (publicKey.asymmetricKeyType !== 'ed25519') {
+    throw new Error('Replay approval public key must use Ed25519.');
+  }
+  const der = publicKey.export({ type: 'spki', format: 'der' });
+  const keyId = createHash('sha256').update(der).digest('hex').slice(0, 24);
+  if (dataset.approval.keyId !== keyId) {
+    throw new Error('Replay dataset approval key is not trusted.');
+  }
+  const { signature, ...approval } = dataset.approval;
+  const payload = stableSerialize({ ...dataset, approval });
+  const valid = verify(
+    null,
+    Buffer.from(payload, 'utf8'),
+    publicKey,
+    Buffer.from(signature, 'base64'),
+  );
+  if (!valid) {
+    throw new Error('Replay dataset signature is invalid; approved content was changed.');
+  }
+}
+
+function stableSerialize(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableSerialize(entry)).join(',')}]`;
+  }
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableSerialize(record[key])}`)
+    .join(',')}}`;
 }
 
 async function assertOutsideGitRepository(directory: string): Promise<void> {

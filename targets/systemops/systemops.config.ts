@@ -13,6 +13,7 @@ export const systemopsConfig = {
   runLlmSandbox: process.env.SYSTEMOPS_RUN_LLM_SANDBOX === 'true',
   runApprovedReplay: process.env.SYSTEMOPS_RUN_APPROVED_REPLAY === 'true',
   replayDatasetPath: process.env.SYSTEMOPS_REPLAY_DATASET_PATH,
+  replayApprovalPublicKeyPath: process.env.SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH,
   simulateApiKey: process.env.SYSTEMOPS_SIMULATE_API_KEY,
   // Compatibilidade temporária de specs antigos. Nunca usar como fonte de dados.
   productionClinicId: process.env.SYSTEMOPS_PRODUCTION_CLINIC_ID,

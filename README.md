@@ -359,6 +359,7 @@ SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:conversation
 SYSTEMOPS_BASE_URL=http://localhost:3000 \
 SYSTEMOPS_RUN_DESTRUCTIVE=true \
 SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
 npm run test:systemops:replay
 
 # SystemOps — Performance smoke de agendamento

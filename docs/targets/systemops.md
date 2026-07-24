@@ -289,9 +289,9 @@ produzidos pelo SystemOps. A antiga leitura direta de mensagens reais pela rota
 O replay `SYS-REPLAY-001` aceita somente:
 
 - arquivo em caminho absoluto fora de qualquer repositório Git;
-- contrato `replay-dataset.v1`;
+- contrato `replay-dataset.v2`;
 - `status=approved`;
-- aprovação humana registrada;
+- aprovação humana assinada com Ed25519 e chave pública confiável;
 - ambiente local/QA que não seja reconhecido como produção.
 
 Nesta fase o cenário executa apenas turnos `lead/text` e mede disponibilidade da
@@ -304,6 +304,7 @@ hardcoded como gate de qualidade.
 SYSTEMOPS_BASE_URL=http://localhost:3000 \
 SYSTEMOPS_RUN_DESTRUCTIVE=true \
 SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
 npm run test:systemops:replay
 
 npm run test:systemops:visual
@@ -325,6 +326,7 @@ SYSTEMOPS_BASE_URL=https://app.systemops.com.br \
 SYSTEMOPS_BASE_URL=http://localhost:3000 \
 SYSTEMOPS_RUN_DESTRUCTIVE=true \
 SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
 npm run test:systemops:replay
 ```
 
