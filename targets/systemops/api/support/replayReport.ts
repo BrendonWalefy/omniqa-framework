@@ -14,7 +14,7 @@ export type ReplayFinding = {
 };
 
 export type ReplayBaselineReport = {
-  schemaVersion: 'systemops-replay-baseline-report.v1';
+  schemaVersion: 'systemops-replay-baseline-report.v2';
   generatedAt: string;
   clinicKey: string;
   datasetVersion: string;
@@ -29,6 +29,7 @@ export type ReplayBaselineReport = {
     runsWithDelivery: number;
     meanIntentConfidence: number | null;
     repeatedScenarioIntentAgreement: number | null;
+    repeatedScenarioDecisionPathAgreement: number | null;
     operationalConfidence: number;
   };
   findings: ReplayFinding[];
@@ -48,7 +49,10 @@ export function buildReplayBaselineReport(
   generatedAt = new Date(),
   selection: ReplaySelectionSummary | null = null,
 ): ReplayBaselineReport {
-  const findings = runs.flatMap((run) => findRunIssues(dataset.clinic.clinicKey, run));
+  const findings = [
+    ...runs.flatMap((run) => findRunIssues(dataset.clinic.clinicKey, run)),
+    ...findRepeatedRunIssues(runs),
+  ];
   const checks = runs.flatMap((run) => run.checks);
   const checksPassed = checks.filter((check) => check.passed).length;
   const runsWithTrace = runs.filter((run) => run.trace.length > 0).length;
@@ -61,22 +65,24 @@ export function buildReplayBaselineReport(
     ? round(confidences.reduce((sum, value) => sum + value, 0) / confidences.length)
     : null;
   const repeatedScenarioIntentAgreement = intentAgreement(runs);
+  const repeatedScenarioDecisionPathAgreement = decisionPathAgreement(runs);
   const highSeverityPenalty =
     findings.filter((finding) => finding.severity === 'high').length * 0.1;
   const operationalConfidence = round(Math.max(
     0,
     Math.min(
       1,
-      passRate * 0.5 +
-        traceRate * 0.2 +
-        deliveryRate * 0.2 +
-        (repeatedScenarioIntentAgreement ?? 1) * 0.1 -
+      passRate * 0.45 +
+        traceRate * 0.15 +
+        deliveryRate * 0.15 +
+        (repeatedScenarioIntentAgreement ?? 1) * 0.1 +
+        (repeatedScenarioDecisionPathAgreement ?? 1) * 0.15 -
         highSeverityPenalty,
     ),
   ));
 
   return {
-    schemaVersion: 'systemops-replay-baseline-report.v1',
+    schemaVersion: 'systemops-replay-baseline-report.v2',
     generatedAt: generatedAt.toISOString(),
     clinicKey: dataset.clinic.clinicKey,
     datasetVersion: dataset.datasetVersion,
@@ -91,6 +97,7 @@ export function buildReplayBaselineReport(
       runsWithDelivery,
       meanIntentConfidence,
       repeatedScenarioIntentAgreement,
+      repeatedScenarioDecisionPathAgreement,
       operationalConfidence,
     },
     findings,
@@ -111,6 +118,9 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
           `- Elegíveis no orçamento: ${report.selection.eligibleWithinTurnBudget}`,
           `- Excluídos por excesso de turnos: ${report.selection.excludedOverTurnBudget}`,
           `- Limite de mensagens do lead por cenário: ${report.selection.maxLeadTurnsPerScenario}`,
+          ...(report.selection.targetedScenarioId
+            ? [`- Cenário direcionado: \`${escapeInline(report.selection.targetedScenarioId)}\``]
+            : []),
         ]
       : []),
     `- Confiança operacional: ${formatPercent(report.metrics.operationalConfidence)}`,
@@ -119,6 +129,7 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
     `- Runs com entrega capturada: ${report.metrics.runsWithDelivery}/${report.runCount}`,
     `- Confiança média de intenção: ${report.metrics.meanIntentConfidence === null ? 'indisponível' : formatPercent(report.metrics.meanIntentConfidence)}`,
     `- Concordância de intenção entre repetições: ${report.metrics.repeatedScenarioIntentAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioIntentAgreement)}`,
+    `- Concordância de caminho entre repetições: ${report.metrics.repeatedScenarioDecisionPathAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioDecisionPathAgreement)}`,
     '',
     'A confiança acima mede integridade operacional e repetibilidade. Ela não',
     'substitui a avaliação humana de correção comercial, tom ou qualidade clínica.',
@@ -250,6 +261,25 @@ function findRunIssues(clinicKey: string, run: ReplayScenarioRun): ReplayFinding
   return findings;
 }
 
+function findRepeatedRunIssues(runs: ReplayScenarioRun[]): ReplayFinding[] {
+  const findings: ReplayFinding[] = [];
+  for (const [scenarioId, entries] of groupRunsByScenario(runs)) {
+    if (entries.length < 2) continue;
+    const signatures = new Set(entries.map(decisionPathSignature));
+    if (signatures.size > 1) {
+      findings.push({
+        severity: 'high',
+        code: 'decision_path_divergence',
+        scenarioId,
+        runId: 'cross-run',
+        description:
+          `O mesmo cenário percorreu ${signatures.size} caminhos de estado/decisão em ${entries.length} repetições.`,
+      });
+    }
+  }
+  return findings;
+}
+
 function intentConfidences(run: ReplayScenarioRun): number[] {
   return run.trace.flatMap((event) => {
     if (event.stage !== 'intent.classified') return [];
@@ -259,18 +289,29 @@ function intentConfidences(run: ReplayScenarioRun): number[] {
 }
 
 function intentAgreement(runs: ReplayScenarioRun[]): number | null {
-  const byScenario = new Map<string, ReplayScenarioRun[]>();
-  for (const run of runs) {
-    const entries = byScenario.get(run.scenarioId) ?? [];
-    entries.push(run);
-    byScenario.set(run.scenarioId, entries);
-  }
-  const comparable = [...byScenario.values()].filter((entries) => entries.length > 1);
+  const comparable = [...groupRunsByScenario(runs).values()]
+    .filter((entries) => entries.length > 1);
   if (comparable.length === 0) return null;
   const agreements = comparable.map((entries) => {
     const signatures = entries.map(intentSignature);
     const counts = new Map<string, number>();
     signatures.forEach((signature) =>
+      counts.set(signature, (counts.get(signature) ?? 0) + 1),
+    );
+    return Math.max(...counts.values()) / entries.length;
+  });
+  return round(
+    agreements.reduce((sum, value) => sum + value, 0) / agreements.length,
+  );
+}
+
+function decisionPathAgreement(runs: ReplayScenarioRun[]): number | null {
+  const comparable = [...groupRunsByScenario(runs).values()]
+    .filter((entries) => entries.length > 1);
+  if (comparable.length === 0) return null;
+  const agreements = comparable.map((entries) => {
+    const counts = new Map<string, number>();
+    entries.map(decisionPathSignature).forEach((signature) =>
       counts.set(signature, (counts.get(signature) ?? 0) + 1),
     );
     return Math.max(...counts.values()) / entries.length;
@@ -290,6 +331,47 @@ function intentSignature(run: ReplayScenarioRun): string {
       'unknown',
     ))
     .join('|');
+}
+
+function decisionPathSignature(run: ReplayScenarioRun): string {
+  const turnIds = [...new Set(run.trace.map((event) => event.turnId))];
+  return JSON.stringify(turnIds.map((turnId) => {
+    const events = run.trace.filter((event) => event.turnId === turnId);
+    const metadata = (stage: string) =>
+      events.find((event) => event.stage === stage)?.metadata;
+    const loaded = metadata('state.loaded');
+    const classified = metadata('intent.classified');
+    const resolved = metadata('intent.resolved');
+    const beforeDelivery = metadata('state.before_delivery');
+    const outbound = metadata('outbound.planned');
+    return {
+      loadedState: loaded?.state ?? 'missing',
+      classifierSource: classified?.source ?? 'missing',
+      classifiedIntent: classified?.intent ?? 'missing',
+      finalIntent:
+        resolved?.finalIntent ??
+        resolved?.resolvedIntent ??
+        resolved?.intent ??
+        'missing',
+      deliveryState: beforeDelivery?.state ?? 'missing',
+      outboundIntent: outbound?.intent ?? 'missing',
+      pipelineAdvance: beforeDelivery?.pendingPipelineAdvance ?? 'missing',
+      interleavedPartCount: outbound?.interleavedPartCount ?? 'missing',
+      mediaPartCount: outbound?.mediaPartCount ?? 'missing',
+    };
+  }));
+}
+
+function groupRunsByScenario(
+  runs: ReplayScenarioRun[],
+): Map<string, ReplayScenarioRun[]> {
+  const grouped = new Map<string, ReplayScenarioRun[]>();
+  for (const run of runs) {
+    const entries = grouped.get(run.scenarioId) ?? [];
+    entries.push(run);
+    grouped.set(run.scenarioId, entries);
+  }
+  return grouped;
 }
 
 async function writePrivate(filePath: string, content: string): Promise<void> {

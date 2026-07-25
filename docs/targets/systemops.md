@@ -306,6 +306,10 @@ Defina `SYSTEMOPS_REPLAY_RESULTS_DIR` com um diretório absoluto fora de Git par
 persistir, com permissão privada, três artefatos por baseline: resultado JSON,
 relatório Markdown e transcrições Markdown. Sem essa variável, os mesmos
 artefatos ficam disponíveis somente como anexos do relatório Playwright.
+O relatório compara também o caminho de decisão entre repetições — estado
+carregado, origem da classificação, intenção final, estado antes da entrega e
+formato planejado. Assim, duas respostas com a mesma intenção mas que passaram
+por estados diferentes são registradas como `decision_path_divergence`.
 
 O runtime do SystemOps deve estar num banco isolado e configurar:
 
