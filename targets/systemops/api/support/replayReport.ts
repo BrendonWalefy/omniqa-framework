@@ -28,6 +28,7 @@ export type ReplayBaselineReport = {
     runsWithTrace: number;
     runsWithDelivery: number;
     suppressedDeliveryEffects: number;
+    ignoredTurnsByReason: Record<string, number>;
     meanIntentConfidence: number | null;
     repeatedScenarioIntentAgreement: number | null;
     repeatedScenarioDecisionPathAgreement: number | null;
@@ -62,6 +63,7 @@ export function buildReplayBaselineReport(
     .flatMap((run) => run.effects.outbound)
     .filter(isSuppressedDeliveryEffect)
     .length;
+  const ignoredTurnsByReason = countIgnoredTurnReasons(runs);
   const confidences = runs.flatMap(intentConfidences);
   const passRate = ratio(checksPassed, checks.length);
   const traceRate = ratio(runsWithTrace, runs.length);
@@ -101,6 +103,7 @@ export function buildReplayBaselineReport(
       runsWithTrace,
       runsWithDelivery,
       suppressedDeliveryEffects,
+      ignoredTurnsByReason,
       meanIntentConfidence,
       repeatedScenarioIntentAgreement,
       repeatedScenarioDecisionPathAgreement,
@@ -134,6 +137,7 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
     `- Runs com Decision Trace: ${report.metrics.runsWithTrace}/${report.runCount}`,
     `- Runs com entrega capturada: ${report.metrics.runsWithDelivery}/${report.runCount}`,
     `- Efeitos suprimidos por shadow mode: ${report.metrics.suppressedDeliveryEffects}`,
+    `- Turnos sem resposta: ${formatReasonCounts(report.metrics.ignoredTurnsByReason)}`,
     `- Confiança média de intenção: ${report.metrics.meanIntentConfidence === null ? 'indisponível' : formatPercent(report.metrics.meanIntentConfidence)}`,
     `- Concordância de intenção entre repetições: ${report.metrics.repeatedScenarioIntentAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioIntentAgreement)}`,
     `- Concordância de caminho entre repetições: ${report.metrics.repeatedScenarioDecisionPathAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioDecisionPathAgreement)}`,
@@ -265,6 +269,31 @@ function findRunIssues(clinicKey: string, run: ReplayScenarioRun): ReplayFinding
       description: `Resposta da IA com ${message.body.length} caracteres.`,
     });
   }
+  const ignoredReasons = new Set(run.trace.flatMap((event) =>
+    event.stage === 'turn.ignored' && typeof event.metadata?.reason === 'string'
+      ? [event.metadata.reason]
+      : [],
+  ));
+  if (ignoredReasons.has('automation_reply_disabled')) {
+    findings.push({
+      severity: 'high',
+      code: 'automation_disabled',
+      scenarioId: run.scenarioId,
+      runId: run.runId,
+      description:
+        'A política da clínica desativou toda resposta automática neste cenário.',
+    });
+  }
+  if (ignoredReasons.has('orchestrator_no_reply')) {
+    findings.push({
+      severity: 'high',
+      code: 'unexplained_silence',
+      scenarioId: run.scenarioId,
+      runId: run.runId,
+      description:
+        'O orquestrador encerrou ao menos um turno sem resposta e sem motivo específico.',
+    });
+  }
   return findings;
 }
 
@@ -378,6 +407,29 @@ function isSuppressedDeliveryEffect(effect: unknown): boolean {
     'kind' in effect &&
     effect.kind === 'suppressed'
   );
+}
+
+function countIgnoredTurnReasons(
+  runs: ReplayScenarioRun[],
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const event of runs.flatMap((run) => run.trace)) {
+    if (event.stage !== 'turn.ignored') continue;
+    const reason = typeof event.metadata?.reason === 'string'
+      ? event.metadata.reason
+      : 'unknown';
+    counts[reason] = (counts[reason] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function formatReasonCounts(counts: Record<string, number>): string {
+  const entries = Object.entries(counts).sort(([left], [right]) =>
+    left.localeCompare(right),
+  );
+  return entries.length
+    ? entries.map(([reason, count]) => `${reason}=${count}`).join(', ')
+    : '0';
 }
 
 function groupRunsByScenario(

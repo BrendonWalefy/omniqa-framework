@@ -313,6 +313,9 @@ por estados diferentes são registradas como `decision_path_divergence`.
 Quando a clínica está em shadow mode, a resposta persistida e intencionalmente
 não enviada aparece como efeito `suppressed`; ela não é confundida com falha de
 captura nem com aceitação do provedor.
+Turnos sem resposta são agrupados pelo motivo do `turn.ignored`. Automação
+desativada por política aparece como `automation_disabled`; silêncio sem motivo
+específico aparece como `unexplained_silence`.
 
 O runtime do SystemOps deve estar num banco isolado e configurar:
 

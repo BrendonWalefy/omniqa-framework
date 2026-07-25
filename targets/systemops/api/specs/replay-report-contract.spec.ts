@@ -197,3 +197,37 @@ test('SYS-REPLAY-REPORT-004 - contabiliza entrega suprimida por shadow mode', ()
     'Efeitos suprimidos por shadow mode: 1',
   );
 });
+
+test('SYS-REPLAY-REPORT-005 - explica silêncio por automação desativada', () => {
+  const report = buildReplayBaselineReport(dataset, [
+    run({
+      trace: [
+        {
+          turnId: 'turn-1',
+          stage: 'orchestrator.completed',
+          sequence: 1,
+          metadata: { replied: false },
+        },
+        {
+          turnId: 'turn-1',
+          stage: 'turn.ignored',
+          sequence: 2,
+          metadata: { reason: 'automation_reply_disabled' },
+        },
+      ],
+    }),
+  ]);
+
+  expect(report.metrics.ignoredTurnsByReason).toEqual({
+    automation_reply_disabled: 1,
+  });
+  expect(report.findings).toEqual(expect.arrayContaining([
+    expect.objectContaining({
+      severity: 'high',
+      code: 'automation_disabled',
+    }),
+  ]));
+  expect(renderReplayBaselineMarkdown(report)).toContain(
+    'Turnos sem resposta: automation_reply_disabled=1',
+  );
+});
