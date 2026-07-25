@@ -7,6 +7,9 @@ export type ReplayBehaviorContract = {
   }>;
   requireImmediateMediaPair: boolean;
   requireVariantSelectionTrace: boolean;
+  expectedSelectedTreatmentIncludes: string | null;
+  requireNoTreatmentSelection: boolean;
+  requireNoMedia: boolean;
 };
 
 type OutboundEffect = {
@@ -25,16 +28,29 @@ export function loadReplayBehaviorContract(
     env.SYSTEMOPS_REPLAY_EXPECT_IMMEDIATE_MEDIA_PAIR === 'true';
   const requireVariantSelectionTrace =
     env.SYSTEMOPS_REPLAY_EXPECT_VARIANT_SELECTION === 'true';
-  if (!sequence && !requireImmediateMediaPair && !requireVariantSelectionTrace) {
+  const expectedSelectedTreatmentIncludes =
+    env.SYSTEMOPS_REPLAY_EXPECT_SELECTED_TREATMENT?.trim() || null;
+  const requireNoTreatmentSelection =
+    env.SYSTEMOPS_REPLAY_EXPECT_NO_TREATMENT_SELECTION === 'true';
+  const requireNoMedia =
+    env.SYSTEMOPS_REPLAY_EXPECT_NO_MEDIA === 'true';
+  if (
+    !sequence &&
+    !requireImmediateMediaPair &&
+    !requireVariantSelectionTrace &&
+    !expectedSelectedTreatmentIncludes &&
+    !requireNoTreatmentSelection &&
+    !requireNoMedia
+  ) {
     return null;
   }
-  if (!sequence) {
+  if (!sequence && requireImmediateMediaPair) {
     throw new Error(
-      'SYSTEMOPS_REPLAY_EXPECT_MEDIA_SEQUENCE is required when a media behavior contract is enabled.',
+      'SYSTEMOPS_REPLAY_EXPECT_MEDIA_SEQUENCE is required for the immediate media-pair contract.',
     );
   }
 
-  const mediaSequence = sequence.split(',').map((rawEntry) => {
+  const mediaSequence = (sequence ?? '').split(',').filter(Boolean).map((rawEntry) => {
     const [mediaType, ...captionParts] = rawEntry.split(':');
     const captionIncludes = captionParts.join(':').trim();
     if (!mediaType?.trim() || !captionIncludes) {
@@ -52,6 +68,10 @@ export function loadReplayBehaviorContract(
     mediaSequence,
     requireImmediateMediaPair,
     requireVariantSelectionTrace,
+    expectedSelectedTreatmentIncludes:
+      expectedSelectedTreatmentIncludes?.toLocaleLowerCase('pt-BR') ?? null,
+    requireNoTreatmentSelection,
+    requireNoMedia,
   };
 }
 
@@ -64,15 +84,17 @@ export function applyReplayBehaviorContract(
   const media = outbound.filter(
     (effect) => effect.kind === 'media',
   );
+  const expectedMediaIndexes = contract.mediaSequence.map((expected) =>
+    outbound.flatMap((effect, index) =>
+      matchesExpectedMedia(effect, expected) ? [index] : [],
+    ),
+  );
   const mediaMatches =
-    media.length === contract.mediaSequence.length &&
-    media.every((effect, index) => {
-      const expected = contract.mediaSequence[index]!;
-      return (
-        normalized(effect.mediaType) === expected.mediaType &&
-        normalized(effect.caption).includes(expected.captionIncludes)
-      );
-    });
+    expectedMediaIndexes.every((indexes) => indexes.length === 1) &&
+    expectedMediaIndexes.every(
+      (indexes, index) =>
+        index === 0 || indexes[0]! > expectedMediaIndexes[index - 1]![0]!,
+    );
   const mediaRefs = media
     .map((effect) => normalized(effect.mediaRef))
     .filter(Boolean);
@@ -86,15 +108,18 @@ export function applyReplayBehaviorContract(
       index === 0 || sequence > sequences[index - 1]!,
     );
 
-  const firstTextIndex = outbound.findIndex((effect) => effect.kind === 'text');
-  const firstMediaIndex = outbound.findIndex((effect) => effect.kind === 'media');
+  const firstExpectedMediaIndex = expectedMediaIndexes[0]?.[0] ?? -1;
   const immediatePair =
     !contract.requireImmediateMediaPair ||
     (
-      firstTextIndex === 0 &&
-      firstMediaIndex === 1 &&
+      firstExpectedMediaIndex > 0 &&
+      outbound[firstExpectedMediaIndex - 1]?.kind === 'text' &&
       contract.mediaSequence.every(
-        (_, index) => outbound[firstMediaIndex + index]?.kind === 'media',
+        (expected, index) =>
+          matchesExpectedMedia(
+            outbound[firstExpectedMediaIndex + index],
+            expected,
+          ),
       )
     );
 
@@ -106,33 +131,78 @@ export function applyReplayBehaviorContract(
   );
   const selectedVariant =
     !contract.requireVariantSelectionTrace || Boolean(variantTrace);
+  const selectedTreatmentTrace = contract.expectedSelectedTreatmentIncludes
+    ? run.trace.find((event) =>
+        event.stage === 'treatment.resolved' &&
+        normalized(event.metadata?.selectedTreatmentName).includes(
+          contract.expectedSelectedTreatmentIncludes!,
+        ),
+      )
+    : null;
 
   return {
     ...run,
     checks: [
       ...run.checks,
-      {
-        code: 'expected_media_sequence_exactly_once',
-        passed: mediaMatches,
-      },
-      {
-        code: 'expected_media_unique_and_ordered',
-        passed: uniqueMedia && orderedMedia,
-      },
-      {
-        code: 'expected_immediate_media_pair',
-        passed: immediatePair,
-      },
-      {
-        code: 'expected_variant_selection_trace',
-        passed: selectedVariant,
-      },
+      ...(contract.mediaSequence.length > 0
+        ? [
+            {
+              code: 'expected_media_sequence_exactly_once',
+              passed: mediaMatches,
+            },
+            {
+              code: 'expected_media_unique_and_ordered',
+              passed: uniqueMedia && orderedMedia,
+            },
+            {
+              code: 'expected_immediate_media_pair',
+              passed: immediatePair,
+            },
+          ]
+        : []),
+      ...(contract.requireVariantSelectionTrace
+        ? [{
+            code: 'expected_variant_selection_trace',
+            passed: selectedVariant,
+          }]
+        : []),
+      ...(contract.expectedSelectedTreatmentIncludes
+        ? [{
+            code: 'expected_selected_treatment_trace',
+            passed: Boolean(selectedTreatmentTrace),
+          }]
+        : []),
+      ...(contract.requireNoTreatmentSelection
+        ? [{
+            code: 'expected_no_treatment_selection',
+            passed: !run.trace.some(
+              (event) => event.stage === 'treatment.resolved',
+            ),
+          }]
+        : []),
+      ...(contract.requireNoMedia
+        ? [{
+            code: 'expected_no_media',
+            passed: media.length === 0,
+          }]
+        : []),
     ],
   };
 }
 
 function isOutboundEffect(value: unknown): value is OutboundEffect {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function matchesExpectedMedia(
+  effect: OutboundEffect | undefined,
+  expected: ReplayBehaviorContract['mediaSequence'][number],
+): boolean {
+  return Boolean(
+    effect?.kind === 'media' &&
+    normalized(effect.mediaType) === expected.mediaType &&
+    normalized(effect.caption).includes(expected.captionIncludes),
+  );
 }
 
 function normalized(value: unknown): string {

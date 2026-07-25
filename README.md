@@ -377,6 +377,26 @@ SYSTEMOPS_REPLAY_EXPECT_IMMEDIATE_MEDIA_PAIR=true \
 SYSTEMOPS_REPLAY_EXPECT_VARIANT_SELECTION=true \
 npm run test:systemops:replay
 
+# Clínica sem pipeline/mídia: valida a variação selecionada pelo Decision Trace.
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_EXPECT_SELECTED_TREATMENT='Técnicas Gringas' \
+npm run test:systemops:replay
+
+# Janela contrafactual: usa somente mensagens reais já aprovadas, começando
+# pela segunda mensagem do lead, sem carregar respostas históricas do operador.
+SYSTEMOPS_REPLAY_LEAD_TURN_START=2 \
+SYSTEMOPS_REPLAY_LEAD_TURN_LIMIT=1 \
+npm run test:systemops:replay
+
+# Guard institucional: uma pergunta de endereço não pode selecionar tratamento
+# nem disparar mídia comercial.
+SYSTEMOPS_REPLAY_EXPECT_NO_TREATMENT_SELECTION=true \
+SYSTEMOPS_REPLAY_EXPECT_NO_MEDIA=true \
+npm run test:systemops:replay
+
 # SystemOps — Performance smoke de agendamento
 npm run test:systemops:performance:scheduling
 ```

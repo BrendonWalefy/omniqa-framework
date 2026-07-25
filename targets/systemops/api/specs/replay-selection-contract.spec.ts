@@ -3,7 +3,10 @@ import type {
   ApprovedReplayDataset,
   ApprovedReplayScenario,
 } from '../support/approvedReplayDataset';
-import { selectReplayScenarios } from '../support/selectReplayScenarios';
+import {
+  selectLeadTurnWindow,
+  selectReplayScenarios,
+} from '../support/selectReplayScenarios';
 
 function scenario(id: string, leadTurns: number): ApprovedReplayScenario {
   return {
@@ -70,4 +73,29 @@ test('SYS-REPLAY-SELECTION-004 - recusa id ausente ou fora do orçamento', () =>
   expect(() =>
     selectReplayScenarios(dataset, '5', '12', 'oversized'),
   ).toThrow('80 lead turns exceed the 12-turn budget');
+});
+
+test('SYS-REPLAY-SELECTION-005 - recorta janela de mensagens reais e rebasa o relógio', () => {
+  const source = scenario('windowed', 4);
+  source.turns.splice(1, 0, {
+    id: 'operator-between',
+    author: 'operator',
+    offsetMs: 500,
+    content: { type: 'text', text: 'resposta histórica' },
+  });
+
+  const selected = selectLeadTurnWindow(source, 2, 2);
+
+  expect(selected.turns.map((turn) => turn.id)).toEqual([
+    'windowed-1',
+    'windowed-2',
+  ]);
+  expect(selected.turns.map((turn) => turn.offsetMs)).toEqual([0, 1_000]);
+  expect(selected.tags).toContain('runtime-lead-window:2-3');
+});
+
+test('SYS-REPLAY-SELECTION-006 - exige início explícito quando há limite', () => {
+  expect(() =>
+    selectReplayScenarios(dataset, '1', '12', 'b', undefined, '1'),
+  ).toThrow('SYSTEMOPS_REPLAY_LEAD_TURN_START is required');
 });

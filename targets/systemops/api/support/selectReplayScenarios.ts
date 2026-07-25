@@ -11,6 +11,8 @@ export type ReplaySelectionSummary = {
   selected: number;
   maxLeadTurnsPerScenario: number;
   targetedScenarioId: string | null;
+  leadTurnWindowStart: number | null;
+  leadTurnWindowLimit: number | null;
 };
 
 export function selectReplayScenarios(
@@ -18,6 +20,8 @@ export function selectReplayScenarios(
   rawSampleSize: string | undefined,
   rawMaxLeadTurns: string | undefined,
   rawScenarioId?: string,
+  rawLeadTurnWindowStart?: string,
+  rawLeadTurnWindowLimit?: string,
 ): {
   scenarios: ApprovedReplayScenario[];
   summary: ReplaySelectionSummary;
@@ -61,9 +65,35 @@ export function selectReplayScenarios(
     );
   }
   const selectedCount = Math.min(sampleSize, eligible.length);
-  const scenarios = targetedScenario
+  const selectedScenarios = targetedScenario
     ? [targetedScenario]
     : evenlyDistributedSample(eligible, selectedCount);
+  const leadTurnWindowStart = rawLeadTurnWindowStart
+    ? parsePositiveInteger(
+        rawLeadTurnWindowStart,
+        'SYSTEMOPS_REPLAY_LEAD_TURN_START',
+      )
+    : null;
+  const leadTurnWindowLimit = rawLeadTurnWindowLimit
+    ? parsePositiveInteger(
+        rawLeadTurnWindowLimit,
+        'SYSTEMOPS_REPLAY_LEAD_TURN_LIMIT',
+      )
+    : null;
+  if (leadTurnWindowLimit !== null && leadTurnWindowStart === null) {
+    throw new Error(
+      'SYSTEMOPS_REPLAY_LEAD_TURN_START is required when SYSTEMOPS_REPLAY_LEAD_TURN_LIMIT is set.',
+    );
+  }
+  const scenarios = leadTurnWindowStart === null
+    ? selectedScenarios
+    : selectedScenarios.map((scenario) =>
+        selectLeadTurnWindow(
+          scenario,
+          leadTurnWindowStart,
+          leadTurnWindowLimit ?? 1,
+        ),
+      );
   return {
     scenarios,
     summary: {
@@ -74,7 +104,35 @@ export function selectReplayScenarios(
       selected: scenarios.length,
       maxLeadTurnsPerScenario,
       targetedScenarioId,
+      leadTurnWindowStart,
+      leadTurnWindowLimit,
     },
+  };
+}
+
+export function selectLeadTurnWindow(
+  scenario: ApprovedReplayScenario,
+  oneBasedStart: number,
+  limit: number,
+): ApprovedReplayScenario {
+  const leadTurns = scenario.turns.filter((turn) => turn.author === 'lead');
+  const selected = leadTurns.slice(oneBasedStart - 1, oneBasedStart - 1 + limit);
+  if (selected.length === 0) {
+    throw new Error(
+      `Scenario "${scenario.id}" has no lead turn at position ${oneBasedStart}.`,
+    );
+  }
+  const firstOffset = selected[0]!.offsetMs;
+  return {
+    ...scenario,
+    tags: [
+      ...scenario.tags,
+      `runtime-lead-window:${oneBasedStart}-${oneBasedStart + selected.length - 1}`,
+    ],
+    turns: selected.map((turn) => ({
+      ...turn,
+      offsetMs: turn.offsetMs - firstOffset,
+    })),
   };
 }
 

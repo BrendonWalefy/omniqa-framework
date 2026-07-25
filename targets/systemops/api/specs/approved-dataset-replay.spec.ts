@@ -39,6 +39,8 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
       process.env.SYSTEMOPS_REPLAY_SAMPLE_SIZE,
       process.env.SYSTEMOPS_REPLAY_MAX_LEAD_TURNS_PER_SCENARIO,
       process.env.SYSTEMOPS_REPLAY_SCENARIO_ID,
+      process.env.SYSTEMOPS_REPLAY_LEAD_TURN_START,
+      process.env.SYSTEMOPS_REPLAY_LEAD_TURN_LIMIT,
     );
     const repetitions = parseRepetitions(
       process.env.SYSTEMOPS_REPLAY_REPETITIONS,
