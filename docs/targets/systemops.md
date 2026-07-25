@@ -88,18 +88,11 @@ npm run test:systemops:performance:scheduling
 | SYS-NAV-001 | Menu lateral começa por Dashboard, depois Inbox; links principais abrem suas páginas | Admin |
 | SYS-DASH-001 | Dashboard exibe métricas sem `NaN` ou `undefined` | Admin |
 | SYS-DASH-002 | Dashboard sai do loading e entrega conteúdo principal | Admin |
-| SYS-IA-001 | Menu de opções: rótulo/toggle atualizam prévia e persistem após reload | Admin + destrutivo |
-| SYS-IA-002 | Menu de opções em 375px não corta layout e oculta label de intent | Admin |
-| SYS-IA-003 | Texto de boas-vindas vazio/customizado atualiza prévia e persiste | Admin + destrutivo |
-| SYS-IA-004 | Horário, pausa automática e buffer autosalvam e persistem | Admin + destrutivo |
-| SYS-IA-005 | Toggle de autoatendimento altera status visual e pode ser restaurado | Admin + destrutivo |
 | SYS-AGENDA-UI-001 | Bloqueio com fim antes do início exibe validação | Admin |
 | SYS-AGENDA-UI-002 | Cria e remove bloqueio de horário pela UI | Admin + destrutivo |
 | SYS-AGENDA-UI-003 | Agenda em 375px renderiza formulário/lista sem overflow horizontal | Admin |
 | SYS-PLAYBOOK-UI-001 | Editor exibe seção de objeções e sandbox lateral | Admin |
 | SYS-PLAYBOOK-UI-002 | Cria nova versão com estrutura completa e remove draft no fim | Admin + destrutivo |
-| SYS-TREAT-001 | Cria, edita e remove procedimento usado pela IA | Admin + destrutivo |
-| SYS-TREAT-002 | Procedimentos em 375px renderizam sem overflow horizontal | Admin |
 | SYS-PWA-001 | Manifest PWA expõe standalone, start_url e ícones instaláveis | Nenhuma |
 | SYS-PWA-002 | `/login` publica manifest/theme-color e `/sw.js` responde | Nenhuma |
 
@@ -250,7 +243,7 @@ DISABLE_REAL_OPENAI=true
 - Qualquer cenário com `SYSTEMOPS_RUN_DESTRUCTIVE=true`
 - Testes de reset ou seed de dados
 - Qualquer agenda E2E usando calendário real do cliente
-- Testes `SYS-IA-*`, `SYS-AGENDA-UI-002`, `SYS-PLAYBOOK-UI-002`, `SYS-TREAT-001` e `SYS-MENU-*` sem clínica/calendário de QA
+- Testes `SYS-AGENDA-UI-002`, `SYS-PLAYBOOK-UI-002` e `SYS-MENU-*` sem clínica/calendário de QA
 - Testes `SYS-PLAYBOOK-*` com LLM real sem intenção explícita (`SYSTEMOPS_RUN_LLM_SANDBOX=true`)
 
 ---
