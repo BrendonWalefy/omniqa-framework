@@ -10,12 +10,14 @@ export type ReplaySelectionSummary = {
   excludedOverTurnBudget: number;
   selected: number;
   maxLeadTurnsPerScenario: number;
+  targetedScenarioId: string | null;
 };
 
 export function selectReplayScenarios(
   dataset: ApprovedReplayDataset,
   rawSampleSize: string | undefined,
   rawMaxLeadTurns: string | undefined,
+  rawScenarioId?: string,
 ): {
   scenarios: ApprovedReplayScenario[];
   summary: ReplaySelectionSummary;
@@ -41,8 +43,27 @@ export function selectReplayScenarios(
       `No closed-loop scenario fits the ${maxLeadTurnsPerScenario}-lead-turn budget.`,
     );
   }
+  const targetedScenarioId = rawScenarioId?.trim() || null;
+  const targetedScenario = targetedScenarioId
+    ? eligible.find((scenario) => scenario.id === targetedScenarioId)
+    : null;
+  if (targetedScenarioId && !targetedScenario) {
+    const datasetScenario = dataset.scenarios.find(
+      (scenario) => scenario.id === targetedScenarioId,
+    );
+    const reason = !datasetScenario
+      ? 'does not exist in the approved dataset'
+      : !datasetScenario.compatibleModes.includes('closed_loop')
+        ? 'is not compatible with closed_loop'
+        : `${leadTurnCount(datasetScenario)} lead turns exceed the ${maxLeadTurnsPerScenario}-turn budget`;
+    throw new Error(
+      `SYSTEMOPS_REPLAY_SCENARIO_ID "${targetedScenarioId}" ${reason}.`,
+    );
+  }
   const selectedCount = Math.min(sampleSize, eligible.length);
-  const scenarios = evenlyDistributedSample(eligible, selectedCount);
+  const scenarios = targetedScenario
+    ? [targetedScenario]
+    : evenlyDistributedSample(eligible, selectedCount);
   return {
     scenarios,
     summary: {
@@ -52,6 +73,7 @@ export function selectReplayScenarios(
       excludedOverTurnBudget: compatible.length - eligible.length,
       selected: scenarios.length,
       maxLeadTurnsPerScenario,
+      targetedScenarioId,
     },
   };
 }

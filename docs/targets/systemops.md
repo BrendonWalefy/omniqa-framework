@@ -298,6 +298,9 @@ O closed-loop usa por padrão no máximo 12 mensagens de lead por cenário
 no dataset, mas são reservadas para replay fatiado/histórico; isso impede que
 uma única conversa longa distorça custo, duração e representatividade da
 amostra. A seleção é determinística e distribuída pelo corpus elegível.
+Para reproduzir diretamente um achado, defina
+`SYSTEMOPS_REPLAY_SCENARIO_ID=<id-exato>`; o runner executará somente esse
+cenário aprovado e recusará ids ausentes, incompatíveis ou acima do orçamento.
 
 Defina `SYSTEMOPS_REPLAY_RESULTS_DIR` com um diretório absoluto fora de Git para
 persistir, com permissão privada, três artefatos por baseline: resultado JSON,

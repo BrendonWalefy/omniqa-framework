@@ -54,3 +54,20 @@ test('SYS-REPLAY-SELECTION-002 - amostra se distribui pelo corpus elegível', ()
 
   expect(selection.scenarios.map((entry) => entry.id)).toEqual(['a', 'c']);
 });
+
+test('SYS-REPLAY-SELECTION-003 - seleciona um cenário aprovado pelo id exato', () => {
+  const selection = selectReplayScenarios(dataset, '5', '12', 'b');
+
+  expect(selection.scenarios.map((entry) => entry.id)).toEqual(['b']);
+  expect(selection.summary.targetedScenarioId).toBe('b');
+  expect(selection.summary.selected).toBe(1);
+});
+
+test('SYS-REPLAY-SELECTION-004 - recusa id ausente ou fora do orçamento', () => {
+  expect(() =>
+    selectReplayScenarios(dataset, '5', '12', 'missing'),
+  ).toThrow('does not exist in the approved dataset');
+  expect(() =>
+    selectReplayScenarios(dataset, '5', '12', 'oversized'),
+  ).toThrow('80 lead turns exceed the 12-turn budget');
+});
