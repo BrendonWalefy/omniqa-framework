@@ -5,6 +5,12 @@ import {
   type ReplayScenarioRun,
 } from '../support/e2eClient';
 import { loadApprovedReplayDataset } from '../support/approvedReplayDataset';
+import {
+  buildReplayBaselineReport,
+  persistReplayBaselineReport,
+  renderReplayBaselineMarkdown,
+  renderReplayConversationsMarkdown,
+} from '../support/replayReport';
 
 test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => {
   test.beforeEach(async () => {
@@ -53,6 +59,27 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
       }, null, 2)),
       contentType: 'application/json',
     });
+    const report = buildReplayBaselineReport(dataset, runs);
+    await Promise.all([
+      test.info().attach('approved-replay-report.md', {
+        body: Buffer.from(renderReplayBaselineMarkdown(report)),
+        contentType: 'text/markdown',
+      }),
+      test.info().attach('approved-replay-conversations.md', {
+        body: Buffer.from(renderReplayConversationsMarkdown(report)),
+        contentType: 'text/markdown',
+      }),
+    ]);
+    if (systemopsConfig.replayResultsDirectory) {
+      const persisted = await persistReplayBaselineReport(
+        systemopsConfig.replayResultsDirectory,
+        report,
+      );
+      await test.info().attach('approved-replay-artifact-paths.json', {
+        body: Buffer.from(JSON.stringify(persisted, null, 2)),
+        contentType: 'application/json',
+      });
+    }
 
     expect(runs.length, 'Nenhum cenário foi executado.').toBeGreaterThan(0);
     const failedChecks = runs.flatMap((run) =>

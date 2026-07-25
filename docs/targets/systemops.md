@@ -293,6 +293,11 @@ e `message.send`. Texto e mídia usam o payload do canal. WhatsApp, TTS, storage
 escritas de agenda são capturados; o `DecisionTrace` e os efeitos acompanham o
 artefato. Cenários são repetidos três vezes por padrão.
 
+Defina `SYSTEMOPS_REPLAY_RESULTS_DIR` com um diretório absoluto fora de Git para
+persistir, com permissão privada, três artefatos por baseline: resultado JSON,
+relatório Markdown e transcrições Markdown. Sem essa variável, os mesmos
+artefatos ficam disponíveis somente como anexos do relatório Playwright.
+
 O runtime do SystemOps deve estar num banco isolado e configurar:
 
 ```bash
@@ -316,6 +321,7 @@ SYSTEMOPS_BASE_URL=http://localhost:3000 \
 SYSTEMOPS_RUN_DESTRUCTIVE=true \
 SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
 SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_RESULTS_DIR=/caminho/fora/do/git/resultados \
 SYSTEMOPS_REPLAY_REPETITIONS=3 \
 npm run test:systemops:replay
 
