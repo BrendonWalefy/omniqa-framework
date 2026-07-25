@@ -11,6 +11,10 @@ import {
   renderReplayBaselineMarkdown,
   renderReplayConversationsMarkdown,
 } from '../support/replayReport';
+import {
+  leadTurnCount,
+  selectReplayScenarios,
+} from '../support/selectReplayScenarios';
 
 test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => {
   test.beforeEach(async () => {
@@ -26,14 +30,15 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
       systemopsConfig.replayDatasetPath,
       systemopsConfig.replayApprovalPublicKeyPath,
     );
-    const sampleSize = parseSampleSize(
+    const selection = selectReplayScenarios(
+      dataset,
       process.env.SYSTEMOPS_REPLAY_SAMPLE_SIZE,
-      dataset.scenarios.length,
+      process.env.SYSTEMOPS_REPLAY_MAX_LEAD_TURNS_PER_SCENARIO,
     );
     const repetitions = parseRepetitions(
       process.env.SYSTEMOPS_REPLAY_REPETITIONS,
     );
-    const scenarios = dataset.scenarios.slice(0, sampleSize);
+    const scenarios = selection.scenarios;
     test.setTimeout(
       Math.max(
         300_000,
@@ -55,11 +60,17 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
         datasetVersion: dataset.datasetVersion,
         scenarioCount: scenarios.length,
         repetitions,
+        selection: selection.summary,
         runs,
       }, null, 2)),
       contentType: 'application/json',
     });
-    const report = buildReplayBaselineReport(dataset, runs);
+    const report = buildReplayBaselineReport(
+      dataset,
+      runs,
+      new Date(),
+      selection.summary,
+    );
     await Promise.all([
       test.info().attach('approved-replay-report.md', {
         body: Buffer.from(renderReplayBaselineMarkdown(report)),
@@ -104,14 +115,6 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
   });
 });
 
-function parseSampleSize(raw: string | undefined, available: number): number {
-  const parsed = Number(raw ?? '5');
-  if (!Number.isInteger(parsed) || parsed < 1) {
-    throw new Error('SYSTEMOPS_REPLAY_SAMPLE_SIZE must be a positive integer.');
-  }
-  return Math.min(parsed, available);
-}
-
 function parseRepetitions(raw: string | undefined): number {
   const parsed = Number(raw ?? '3');
   if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10) {
@@ -121,11 +124,10 @@ function parseRepetitions(raw: string | undefined): number {
 }
 
 function countLeadTurns(
-  scenarios: Array<{ turns: Array<{ author: string }> }>,
+  scenarios: Parameters<typeof leadTurnCount>[0][],
 ): number {
   return scenarios.reduce(
-    (total, scenario) =>
-      total + scenario.turns.filter((turn) => turn.author === 'lead').length,
+    (total, scenario) => total + leadTurnCount(scenario),
     0,
   );
 }

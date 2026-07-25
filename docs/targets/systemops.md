@@ -293,6 +293,12 @@ e `message.send`. Texto e mídia usam o payload do canal. WhatsApp, TTS, storage
 escritas de agenda são capturados; o `DecisionTrace` e os efeitos acompanham o
 artefato. Cenários são repetidos três vezes por padrão.
 
+O closed-loop usa por padrão no máximo 12 mensagens de lead por cenário
+(`SYSTEMOPS_REPLAY_MAX_LEAD_TURNS_PER_SCENARIO`). Conversas maiores permanecem
+no dataset, mas são reservadas para replay fatiado/histórico; isso impede que
+uma única conversa longa distorça custo, duração e representatividade da
+amostra. A seleção é determinística e distribuída pelo corpus elegível.
+
 Defina `SYSTEMOPS_REPLAY_RESULTS_DIR` com um diretório absoluto fora de Git para
 persistir, com permissão privada, três artefatos por baseline: resultado JSON,
 relatório Markdown e transcrições Markdown. Sem essa variável, os mesmos

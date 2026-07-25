@@ -3,6 +3,7 @@ import { mkdir, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ApprovedReplayDataset } from './approvedReplayDataset';
 import type { ReplayScenarioRun } from './e2eClient';
+import type { ReplaySelectionSummary } from './selectReplayScenarios';
 
 export type ReplayFinding = {
   severity: 'high' | 'medium' | 'low';
@@ -19,6 +20,7 @@ export type ReplayBaselineReport = {
   datasetVersion: string;
   scenarioCount: number;
   runCount: number;
+  selection: ReplaySelectionSummary | null;
   metrics: {
     deterministicChecksPassed: number;
     deterministicChecksTotal: number;
@@ -44,6 +46,7 @@ export function buildReplayBaselineReport(
   dataset: ApprovedReplayDataset,
   runs: ReplayScenarioRun[],
   generatedAt = new Date(),
+  selection: ReplaySelectionSummary | null = null,
 ): ReplayBaselineReport {
   const findings = runs.flatMap((run) => findRunIssues(dataset.clinic.clinicKey, run));
   const checks = runs.flatMap((run) => run.checks);
@@ -79,6 +82,7 @@ export function buildReplayBaselineReport(
     datasetVersion: dataset.datasetVersion,
     scenarioCount: new Set(runs.map((run) => run.scenarioId)).size,
     runCount: runs.length,
+    selection,
     metrics: {
       deterministicChecksPassed: checksPassed,
       deterministicChecksTotal: checks.length,
@@ -101,6 +105,14 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
     `- Dataset: \`${escapeInline(report.datasetVersion)}\``,
     `- Cenários executados: ${report.scenarioCount}`,
     `- Execuções: ${report.runCount}`,
+    ...(report.selection
+      ? [
+          `- Cenários no dataset: ${report.selection.datasetScenarios}`,
+          `- Elegíveis no orçamento: ${report.selection.eligibleWithinTurnBudget}`,
+          `- Excluídos por excesso de turnos: ${report.selection.excludedOverTurnBudget}`,
+          `- Limite de mensagens do lead por cenário: ${report.selection.maxLeadTurnsPerScenario}`,
+        ]
+      : []),
     `- Confiança operacional: ${formatPercent(report.metrics.operationalConfidence)}`,
     `- Checks determinísticos: ${report.metrics.deterministicChecksPassed}/${report.metrics.deterministicChecksTotal} (${formatPercent(report.metrics.deterministicPassRate)})`,
     `- Runs com Decision Trace: ${report.metrics.runsWithTrace}/${report.runCount}`,
