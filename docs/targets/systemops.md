@@ -294,24 +294,44 @@ O replay `SYS-REPLAY-001` aceita somente:
 - aprovação humana assinada com Ed25519 e chave pública confiável;
 - ambiente local/QA que não seja reconhecido como produção.
 
-Nesta fase o cenário executa apenas turnos `lead/text` e mede disponibilidade da
-resposta. Mídia, fidelidade de configuração por clínica, Decision Trace,
-LLM-as-judge e especialistas entram após o runner sandbox do SystemOps expor
-esses resultados pelo contrato versionado. Não use o judge atual com playbook
-hardcoded como gate de qualidade.
+O runner executa cada cenário pela rota E2E dedicada do SystemOps, atravessando
+webhook, `inbound_events`, `message.process`, `ConversationOrchestrator`, outbox
+e `message.send`. Texto e mídia usam o payload do canal. WhatsApp, TTS, storage e
+escritas de agenda são capturados; o `DecisionTrace` e os efeitos acompanham o
+artefato. Cenários são repetidos três vezes por padrão.
+
+O runtime do SystemOps deve estar num banco isolado e configurar:
+
+```bash
+E2E_MODE=true
+E2E_REPLAY_MODE=true
+REPLAY_SANDBOX_DATABASE_HOST=<host-exato-do-branch-isolado>
+REPLAY_PRODUCTION_DATABASE_HOST=<host-exato-de-producao>
+```
+
+O endpoint recusa Vercel Production, host divergente, host igual ao de produção,
+fila preexistente, clínica diferente ou fingerprint de config/playbook
+divergente. Para clínicas em `google_calendar`, qualquer tentativa de leitura da
+agenda falha até existir uma fotografia assinada de disponibilidade; o replay
+jamais consulta ou escreve no Google Calendar real.
+
+LLM-as-judge e especialistas ainda não são gate. Não use o judge antigo com
+playbook hardcoded como aprovação de qualidade.
 
 ```bash
 SYSTEMOPS_BASE_URL=http://localhost:3000 \
 SYSTEMOPS_RUN_DESTRUCTIVE=true \
 SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
 SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_REPETITIONS=3 \
 npm run test:systemops:replay
 
 npm run test:systemops:visual
 ```
 
-Rodar `npm run dev:workers` (script no sales-engine) em paralelo com `npm run dev`
-localmente — sem isso, mensagens de webhook enfileiradas nunca são processadas.
+O replay aprovado drena as filas dentro da própria rota e não depende de
+`npm run dev:workers`. Os demais testes conversacionais E2E continuam dependendo
+dos workers locais.
 
 ## Checklist de go-live (clínica nova)
 
@@ -327,12 +347,12 @@ SYSTEMOPS_BASE_URL=http://localhost:3000 \
 SYSTEMOPS_RUN_DESTRUCTIVE=true \
 SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
 SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_REPETITIONS=3 \
 npm run test:systemops:replay
 ```
 
-Qualquer falha aqui **trava o go-live daquela clínica específica**. Até o
-sandbox clonar a configuração da clínica de origem, o replay aprovado comprova
-disponibilidade conversacional, não fidelidade total ao playbook da clínica.
+Qualquer falha aqui **trava o go-live daquela clínica específica**. O fingerprint
+garante que a configuração e o playbook do sandbox correspondem ao dataset.
 
 ## CI recorrente
 

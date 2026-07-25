@@ -27,6 +27,11 @@ export type ApprovedReplayScenario = {
     playbookFingerprint: string | null;
   };
   compatibleModes: Array<'historical_turn' | 'closed_loop' | 'counterfactual' | 'concurrency'>;
+  clock: {
+    startedAt: string;
+    timezone: string;
+  };
+  tags: string[];
   turns: ApprovedReplayTurn[];
 };
 

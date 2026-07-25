@@ -1,20 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { createRunId, e2eSkipReason, systemopsConfig } from '../../systemops.config';
-import { agentMessageCount, latestAgentMessage, SystemOpsE2eClient } from '../support/e2eClient';
 import {
-  loadApprovedReplayDataset,
-  type ApprovedReplayScenario,
-} from '../support/approvedReplayDataset';
+  SystemOpsE2eClient,
+  type ReplayScenarioRun,
+} from '../support/e2eClient';
+import { loadApprovedReplayDataset } from '../support/approvedReplayDataset';
 
-type ReplayTurnResult = {
-  scenarioId: string;
-  turnId: string;
-  inputType: string;
-  agentReplied: boolean;
-  reply: string;
-};
-
-test.describe('SystemOps - replay de dataset sanitizado e aprovado', () => {
+test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => {
   test.beforeEach(async () => {
     if (!systemopsConfig.runApprovedReplay) {
       test.skip(true, 'Replay aprovado não solicitado.');
@@ -23,54 +15,32 @@ test.describe('SystemOps - replay de dataset sanitizado e aprovado', () => {
     if (skipReason) test.skip(true, skipReason);
   });
 
-  test('SYS-REPLAY-001 - turnos de texto recebem resposta sem travar o pipeline', async ({ request }) => {
+  test('SYS-REPLAY-001 - cenários atravessam webhook, filas, motor e sender capturado', async ({ request }) => {
     const dataset = await loadApprovedReplayDataset(
       systemopsConfig.replayDatasetPath,
       systemopsConfig.replayApprovalPublicKeyPath,
     );
-    const sampleSize = parseSampleSize(process.env.SYSTEMOPS_REPLAY_SAMPLE_SIZE, dataset.scenarios.length);
+    const sampleSize = parseSampleSize(
+      process.env.SYSTEMOPS_REPLAY_SAMPLE_SIZE,
+      dataset.scenarios.length,
+    );
+    const repetitions = parseRepetitions(
+      process.env.SYSTEMOPS_REPLAY_REPETITIONS,
+    );
     const scenarios = dataset.scenarios.slice(0, sampleSize);
-    test.setTimeout(Math.max(180_000, countLeadTextTurns(scenarios) * 35_000));
+    test.setTimeout(
+      Math.max(
+        300_000,
+        countLeadTurns(scenarios) * repetitions * 45_000,
+      ),
+    );
 
     const client = new SystemOpsE2eClient(request);
-    await client.seed();
-    const results: ReplayTurnResult[] = [];
-
+    const runs: ReplayScenarioRun[] = [];
     for (const scenario of scenarios) {
-      const runId = createRunId(`replay-${scenario.id}`);
-      let expectedAgentCount = 0;
-      await client.reset(runId);
-
-      try {
-        for (const turn of scenario.turns) {
-          if (turn.author !== 'lead' || turn.content.type !== 'text') continue;
-          expectedAgentCount++;
-          await client.sendLeadMessage(runId, turn.content.text, turn.id);
-          try {
-            const state = await client.waitForAgentMessage(
-              runId,
-              expectedAgentCount,
-              30_000,
-            );
-            results.push({
-              scenarioId: scenario.id,
-              turnId: turn.id,
-              inputType: turn.content.type,
-              agentReplied: agentMessageCount(state) >= expectedAgentCount,
-              reply: latestAgentMessage(state),
-            });
-          } catch {
-            results.push({
-              scenarioId: scenario.id,
-              turnId: turn.id,
-              inputType: turn.content.type,
-              agentReplied: false,
-              reply: '',
-            });
-          }
-        }
-      } finally {
-        await client.reset(runId);
+      for (let repetition = 1; repetition <= repetitions; repetition++) {
+        const runId = createRunId(`${scenario.id}-r${repetition}`);
+        runs.push(await client.runReplayScenario(runId, scenario));
       }
     }
 
@@ -78,18 +48,32 @@ test.describe('SystemOps - replay de dataset sanitizado e aprovado', () => {
       body: Buffer.from(JSON.stringify({
         datasetVersion: dataset.datasetVersion,
         scenarioCount: scenarios.length,
-        results,
+        repetitions,
+        runs,
       }, null, 2)),
       contentType: 'application/json',
     });
 
-    const unanswered = results.filter((result) => !result.agentReplied);
-    expect(results.length, 'O dataset aprovado não contém turnos lead/text executáveis.')
-      .toBeGreaterThan(0);
+    expect(runs.length, 'Nenhum cenário foi executado.').toBeGreaterThan(0);
+    const failedChecks = runs.flatMap((run) =>
+      run.checks
+        .filter((check) => !check.passed)
+        .map((check) => ({
+          scenarioId: run.scenarioId,
+          runId: run.runId,
+          check: check.code,
+        })),
+    );
+    expect(failedChecks, 'Checks determinísticos do replay falharam.')
+      .toHaveLength(0);
     expect(
-      unanswered.map(({ scenarioId, turnId }) => ({ scenarioId, turnId })),
-      'Turnos aprovados sem resposta da IA.',
-    ).toHaveLength(0);
+      runs.every((run) => run.trace.length > 0),
+      'Todo cenário deve produzir Decision Trace.',
+    ).toBe(true);
+    expect(
+      runs.every((run) => run.effects.outbound.length > 0),
+      'Toda conversa respondida deve capturar a tentativa de entrega.',
+    ).toBe(true);
   });
 });
 
@@ -101,12 +85,20 @@ function parseSampleSize(raw: string | undefined, available: number): number {
   return Math.min(parsed, available);
 }
 
-function countLeadTextTurns(scenarios: ApprovedReplayScenario[]): number {
+function parseRepetitions(raw: string | undefined): number {
+  const parsed = Number(raw ?? '3');
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10) {
+    throw new Error('SYSTEMOPS_REPLAY_REPETITIONS must be an integer from 1 to 10.');
+  }
+  return parsed;
+}
+
+function countLeadTurns(
+  scenarios: Array<{ turns: Array<{ author: string }> }>,
+): number {
   return scenarios.reduce(
     (total, scenario) =>
-      total + scenario.turns.filter(
-        (turn) => turn.author === 'lead' && turn.content.type === 'text',
-      ).length,
+      total + scenario.turns.filter((turn) => turn.author === 'lead').length,
     0,
   );
 }

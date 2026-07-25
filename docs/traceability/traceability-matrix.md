@@ -90,7 +90,7 @@
 | SYS-GAPS-004 | API | Treatment gaps | PATCH com mentionedText inexistente é idempotente | API | Media | Sim | Automatizado |
 | SYS-PLAYBOOK-ADVISOR-001 | Web | Sugestões de Playbook | Tela carrega métricas resumo sem erro | Smoke | Alta | Sim | Automatizado |
 | SYS-PLAYBOOK-ADVISOR-002 | Web | Sugestões de Playbook | "Analisar e gerar sugestões" retorna gaps estruturados (LLM real) | LLM Sandbox | Media | Sim | Automatizado |
-| SYS-REPLAY-001 | API E2E | Melhoria contínua | Turnos de texto de dataset `replay-dataset.v2` sanitizado, revisado e assinado recebem resposta em ambiente local/QA isolado; conteúdo adulterado, chave não confiável, execução contra produção e leitura direta de conversas reais são recusados | E2E destrutivo, opt-in | Alta | Não | Automatizado sob demanda |
+| SYS-REPLAY-001 | API E2E | Melhoria contínua | Cenários `closed_loop` de dataset `replay-dataset.v2` sanitizado, revisado e assinado atravessam webhook, filas, orquestrador, outbox e sender capturado com Decision Trace; conteúdo adulterado, chave não confiável, fingerprint divergente, fila suja, host de produção e leitura direta de conversas reais são recusados | E2E destrutivo isolado, opt-in, 3 repetições padrão | Alta | Não | Automatizado sob demanda |
 | SYS-VISUAL-001 | Web | Regressão visual | Tela de login mantém layout | Screenshot | Media | Sim | Automatizado |
 | SYS-VISUAL-002 | Web | Regressão visual | Menu lateral mantém estrutura e ordem dos itens | Screenshot | Media | Sim | Automatizado |
 | SYS-VISUAL-003 | Web | Regressão visual | Indicadores principais do dashboard mantêm layout (valores dinâmicos mascarados) | Screenshot | Media | Sim | Automatizado |
