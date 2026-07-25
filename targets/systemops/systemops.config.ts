@@ -15,8 +15,6 @@ export const systemopsConfig = {
   replayDatasetPath: process.env.SYSTEMOPS_REPLAY_DATASET_PATH,
   replayApprovalPublicKeyPath: process.env.SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH,
   simulateApiKey: process.env.SYSTEMOPS_SIMULATE_API_KEY,
-  // Compatibilidade temporária de specs antigos. Nunca usar como fonte de dados.
-  productionClinicId: process.env.SYSTEMOPS_PRODUCTION_CLINIC_ID,
 };
 
 export function requireBaseUrl(): string {

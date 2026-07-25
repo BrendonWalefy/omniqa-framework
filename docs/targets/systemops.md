@@ -137,13 +137,13 @@ Estes testes usam as rotas E2E seguras do SystemOps e esperam suporte a `PATCH /
 Por padrão estes testes ficam skipped. Habilite somente em ambiente local/controlado com `SYSTEMOPS_RUN_LLM_SANDBOX=true`.
 
 **Conflito de configuração conhecido (achado da Fase 0f do plano de melhoria contínua):**
-os cenários `[LLM-only]` desta seção e toda a suíte `bw-concierge-conversation.spec.ts`
+os cenários `[LLM-only]` desta seção
 chamam `/api/playbook/simulate`, que respeita `DISABLE_REAL_OPENAI` no servidor
 (`src/app/api/playbook/simulate/route.ts`, sales-engine) e retorna texto mockado
 (`"[MOCK] ..."`) quando essa flag está `true`. Só que `DISABLE_REAL_OPENAI=true` é
 **exigido** pela seção "Agenda E2E" logo abaixo, para os asserts determinísticos de
 slot não dependerem de variação de LLM. As duas suítes não podem rodar no mesmo dev
-server simultaneamente — para os cenários `[LLM-only]`/`bw-concierge-conversation.spec.ts`,
+server simultaneamente — para os cenários `[LLM-only]`,
 rode o `systemops-core` local **sem** `DISABLE_REAL_OPENAI` (ou contra produção, onde
 essa flag não existe — ver `docs/operations/e2e-test-plan.md` no sales-engine, achado
 #1: produção não tem nenhuma flag de QA configurada na Vercel).
