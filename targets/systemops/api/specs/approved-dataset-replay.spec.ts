@@ -15,6 +15,10 @@ import {
   leadTurnCount,
   selectReplayScenarios,
 } from '../support/selectReplayScenarios';
+import {
+  applyReplayBehaviorContract,
+  loadReplayBehaviorContract,
+} from '../support/replayBehaviorContract';
 
 test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => {
   test.beforeEach(async () => {
@@ -40,6 +44,7 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
       process.env.SYSTEMOPS_REPLAY_REPETITIONS,
     );
     const scenarios = selection.scenarios;
+    const behaviorContract = loadReplayBehaviorContract(process.env);
     test.setTimeout(
       Math.max(
         300_000,
@@ -52,7 +57,10 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
     for (const scenario of scenarios) {
       for (let repetition = 1; repetition <= repetitions; repetition++) {
         const runId = createRunId(`${scenario.id}-r${repetition}`);
-        runs.push(await client.runReplayScenario(runId, scenario));
+        runs.push(applyReplayBehaviorContract(
+          await client.runReplayScenario(runId, scenario),
+          behaviorContract,
+        ));
       }
     }
 

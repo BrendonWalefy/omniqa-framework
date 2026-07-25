@@ -363,6 +363,20 @@ SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
 SYSTEMOPS_REPLAY_REPETITIONS=3 \
 npm run test:systemops:replay
 
+# Contrato opcional para uma jornada família/variante:
+# exige exatamente dois vídeos, nessa ordem, imediatamente após o opener,
+# sem mídia duplicada, e comprova no Decision Trace que a variante foi
+# preservada enquanto o pipeline veio do tratamento canônico.
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_SCENARIO_ID=historical-c1a82b19bb65aecbf0e2728b \
+SYSTEMOPS_REPLAY_EXPECT_MEDIA_SEQUENCE='video:simplificada,video:estratificada' \
+SYSTEMOPS_REPLAY_EXPECT_IMMEDIATE_MEDIA_PAIR=true \
+SYSTEMOPS_REPLAY_EXPECT_VARIANT_SELECTION=true \
+npm run test:systemops:replay
+
 # SystemOps — Performance smoke de agendamento
 npm run test:systemops:performance:scheduling
 ```
