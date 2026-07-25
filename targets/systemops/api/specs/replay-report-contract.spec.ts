@@ -177,3 +177,23 @@ test('SYS-REPLAY-REPORT-003 - detecta divergência de caminho com intenção igu
     'Concordância de caminho entre repetições: 50.0%',
   );
 });
+
+test('SYS-REPLAY-REPORT-004 - contabiliza entrega suprimida por shadow mode', () => {
+  const report = buildReplayBaselineReport(dataset, [
+    run({
+      effects: {
+        outbound: [{
+          kind: 'suppressed',
+          reason: 'shadow_mode',
+        }],
+        calendar: [],
+      },
+    }),
+  ]);
+
+  expect(report.metrics.runsWithDelivery).toBe(1);
+  expect(report.metrics.suppressedDeliveryEffects).toBe(1);
+  expect(renderReplayBaselineMarkdown(report)).toContain(
+    'Efeitos suprimidos por shadow mode: 1',
+  );
+});

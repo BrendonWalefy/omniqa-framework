@@ -310,6 +310,9 @@ O relatório compara também o caminho de decisão entre repetições — estado
 carregado, origem da classificação, intenção final, estado antes da entrega e
 formato planejado. Assim, duas respostas com a mesma intenção mas que passaram
 por estados diferentes são registradas como `decision_path_divergence`.
+Quando a clínica está em shadow mode, a resposta persistida e intencionalmente
+não enviada aparece como efeito `suppressed`; ela não é confundida com falha de
+captura nem com aceitação do provedor.
 
 O runtime do SystemOps deve estar num banco isolado e configurar:
 

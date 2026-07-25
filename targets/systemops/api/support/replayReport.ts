@@ -27,6 +27,7 @@ export type ReplayBaselineReport = {
     deterministicPassRate: number;
     runsWithTrace: number;
     runsWithDelivery: number;
+    suppressedDeliveryEffects: number;
     meanIntentConfidence: number | null;
     repeatedScenarioIntentAgreement: number | null;
     repeatedScenarioDecisionPathAgreement: number | null;
@@ -57,6 +58,10 @@ export function buildReplayBaselineReport(
   const checksPassed = checks.filter((check) => check.passed).length;
   const runsWithTrace = runs.filter((run) => run.trace.length > 0).length;
   const runsWithDelivery = runs.filter((run) => run.effects.outbound.length > 0).length;
+  const suppressedDeliveryEffects = runs
+    .flatMap((run) => run.effects.outbound)
+    .filter(isSuppressedDeliveryEffect)
+    .length;
   const confidences = runs.flatMap(intentConfidences);
   const passRate = ratio(checksPassed, checks.length);
   const traceRate = ratio(runsWithTrace, runs.length);
@@ -95,6 +100,7 @@ export function buildReplayBaselineReport(
       deterministicPassRate: passRate,
       runsWithTrace,
       runsWithDelivery,
+      suppressedDeliveryEffects,
       meanIntentConfidence,
       repeatedScenarioIntentAgreement,
       repeatedScenarioDecisionPathAgreement,
@@ -127,6 +133,7 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
     `- Checks determinísticos: ${report.metrics.deterministicChecksPassed}/${report.metrics.deterministicChecksTotal} (${formatPercent(report.metrics.deterministicPassRate)})`,
     `- Runs com Decision Trace: ${report.metrics.runsWithTrace}/${report.runCount}`,
     `- Runs com entrega capturada: ${report.metrics.runsWithDelivery}/${report.runCount}`,
+    `- Efeitos suprimidos por shadow mode: ${report.metrics.suppressedDeliveryEffects}`,
     `- Confiança média de intenção: ${report.metrics.meanIntentConfidence === null ? 'indisponível' : formatPercent(report.metrics.meanIntentConfidence)}`,
     `- Concordância de intenção entre repetições: ${report.metrics.repeatedScenarioIntentAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioIntentAgreement)}`,
     `- Concordância de caminho entre repetições: ${report.metrics.repeatedScenarioDecisionPathAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioDecisionPathAgreement)}`,
@@ -344,6 +351,7 @@ function decisionPathSignature(run: ReplayScenarioRun): string {
     const resolved = metadata('intent.resolved');
     const beforeDelivery = metadata('state.before_delivery');
     const outbound = metadata('outbound.planned');
+    const ignored = metadata('turn.ignored');
     return {
       loadedState: loaded?.state ?? 'missing',
       classifierSource: classified?.source ?? 'missing',
@@ -358,8 +366,18 @@ function decisionPathSignature(run: ReplayScenarioRun): string {
       pipelineAdvance: beforeDelivery?.pendingPipelineAdvance ?? 'missing',
       interleavedPartCount: outbound?.interleavedPartCount ?? 'missing',
       mediaPartCount: outbound?.mediaPartCount ?? 'missing',
+      ignoredReason: ignored?.reason ?? 'none',
     };
   }));
+}
+
+function isSuppressedDeliveryEffect(effect: unknown): boolean {
+  return (
+    typeof effect === 'object' &&
+    effect !== null &&
+    'kind' in effect &&
+    effect.kind === 'suppressed'
+  );
 }
 
 function groupRunsByScenario(
