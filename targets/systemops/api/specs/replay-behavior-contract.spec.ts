@@ -187,3 +187,59 @@ test('SYS-REPLAY-BEHAVIOR-006 - valida pedido institucional sem tratamento nem m
     { code: 'expected_no_media', passed: true },
   ]);
 });
+
+test('SYS-REPLAY-BEHAVIOR-007 - exige preços imediatamente depois dos vídeos', () => {
+  const contract = loadReplayBehaviorContract({
+    SYSTEMOPS_REPLAY_EXPECT_MEDIA_SEQUENCE:
+      'video:simplificada,video:estratificada',
+    SYSTEMOPS_REPLAY_EXPECT_TEXT_AFTER_MEDIA: 'R$ 2.000|R$ 4.000',
+  });
+  const base = run();
+  const evaluated = applyReplayBehaviorContract(run({
+    effects: {
+      outbound: [
+        ...base.effects.outbound,
+        {
+          kind: 'text',
+          content: 'Simplificada: R$ 2.000. Estratificada: R$ 4.000.',
+          sequence: 4,
+        },
+      ],
+      calendar: [],
+    },
+  }), contract);
+
+  expect(evaluated.checks).toEqual(expect.arrayContaining([
+    {
+      code: 'expected_text_immediately_after_media_exactly_once',
+      passed: true,
+    },
+  ]));
+});
+
+test('SYS-REPLAY-BEHAVIOR-008 - falha se os preços vierem antes dos vídeos', () => {
+  const contract = loadReplayBehaviorContract({
+    SYSTEMOPS_REPLAY_EXPECT_MEDIA_SEQUENCE:
+      'video:simplificada,video:estratificada',
+    SYSTEMOPS_REPLAY_EXPECT_TEXT_AFTER_MEDIA: 'R$ 2.000|R$ 4.000',
+  });
+  const base = run();
+  const evaluated = applyReplayBehaviorContract(run({
+    effects: {
+      outbound: [
+        {
+          kind: 'text',
+          content: 'Simplificada: R$ 2.000. Estratificada: R$ 4.000.',
+          sequence: 1,
+        },
+        ...base.effects.outbound.slice(1),
+      ],
+      calendar: [],
+    },
+  }), contract);
+
+  expect(evaluated.checks).toContainEqual({
+    code: 'expected_text_immediately_after_media_exactly_once',
+    passed: false,
+  });
+});

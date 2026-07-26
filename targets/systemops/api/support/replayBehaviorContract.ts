@@ -8,12 +8,14 @@ export type ReplayBehaviorContract = {
   requireImmediateMediaPair: boolean;
   requireVariantSelectionTrace: boolean;
   expectedSelectedTreatmentIncludes: string | null;
+  expectedTextAfterMediaIncludes: string[];
   requireNoTreatmentSelection: boolean;
   requireNoMedia: boolean;
 };
 
 type OutboundEffect = {
   kind?: unknown;
+  content?: unknown;
   mediaType?: unknown;
   mediaRef?: unknown;
   caption?: unknown;
@@ -30,6 +32,11 @@ export function loadReplayBehaviorContract(
     env.SYSTEMOPS_REPLAY_EXPECT_VARIANT_SELECTION === 'true';
   const expectedSelectedTreatmentIncludes =
     env.SYSTEMOPS_REPLAY_EXPECT_SELECTED_TREATMENT?.trim() || null;
+  const expectedTextAfterMediaIncludes =
+    env.SYSTEMOPS_REPLAY_EXPECT_TEXT_AFTER_MEDIA
+      ?.split('|')
+      .map((value) => value.trim().toLocaleLowerCase('pt-BR'))
+      .filter(Boolean) ?? [];
   const requireNoTreatmentSelection =
     env.SYSTEMOPS_REPLAY_EXPECT_NO_TREATMENT_SELECTION === 'true';
   const requireNoMedia =
@@ -39,6 +46,7 @@ export function loadReplayBehaviorContract(
     !requireImmediateMediaPair &&
     !requireVariantSelectionTrace &&
     !expectedSelectedTreatmentIncludes &&
+    expectedTextAfterMediaIncludes.length === 0 &&
     !requireNoTreatmentSelection &&
     !requireNoMedia
   ) {
@@ -70,6 +78,7 @@ export function loadReplayBehaviorContract(
     requireVariantSelectionTrace,
     expectedSelectedTreatmentIncludes:
       expectedSelectedTreatmentIncludes?.toLocaleLowerCase('pt-BR') ?? null,
+    expectedTextAfterMediaIncludes,
     requireNoTreatmentSelection,
     requireNoMedia,
   };
@@ -139,6 +148,26 @@ export function applyReplayBehaviorContract(
         ),
       )
     : null;
+  const lastExpectedMediaIndex =
+    expectedMediaIndexes.at(-1)?.[0] ?? -1;
+  const expectedTextIndexes = contract.expectedTextAfterMediaIncludes.length > 0
+    ? outbound.flatMap((effect, index) => {
+        const content = normalized(effect.content);
+        return effect.kind === 'text' &&
+          contract.expectedTextAfterMediaIncludes.every((fragment) =>
+            content.includes(fragment)
+          )
+          ? [index]
+          : [];
+      })
+    : [];
+  const expectedTextAfterMedia =
+    contract.expectedTextAfterMediaIncludes.length === 0 ||
+    (
+      expectedTextIndexes.length === 1 &&
+      lastExpectedMediaIndex >= 0 &&
+      expectedTextIndexes[0] === lastExpectedMediaIndex + 1
+    );
 
   return {
     ...run,
@@ -170,6 +199,12 @@ export function applyReplayBehaviorContract(
         ? [{
             code: 'expected_selected_treatment_trace',
             passed: Boolean(selectedTreatmentTrace),
+          }]
+        : []),
+      ...(contract.expectedTextAfterMediaIncludes.length > 0
+        ? [{
+            code: 'expected_text_immediately_after_media_exactly_once',
+            passed: expectedTextAfterMedia,
           }]
         : []),
       ...(contract.requireNoTreatmentSelection
