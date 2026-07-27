@@ -20,6 +20,7 @@ O OmniQA atua como plataforma de QA independente. O systemops-core **não recebe
 | `SYSTEMOPS_TEST_PHONE` | Não | Telefone usado em testes de webhook (padrão: 5511999999999) |
 | `SYSTEMOPS_E2E_SECRET` | Sim para agenda E2E | Secret enviada no header `x-e2e-secret` |
 | `SYSTEMOPS_E2E_RUN_PREFIX` | Não | Prefixo dos `runId` gerados (padrão: local) |
+| `SYSTEMOPS_REPLAY_MODES` | Não | Modos separados por vírgula; padrão seguro completo: `closed_loop,concurrency` |
 | `SYSTEMOPS_RUN_DESTRUCTIVE` | Não | `true` para habilitar testes destrutivos (padrão: false) |
 | `SYSTEMOPS_RUN_PRODUCTION_SMOKE` | Não | `true` para smoke read-only contra produção (padrão: false) |
 | `SYSTEMOPS_RUN_LLM_SANDBOX` | Não | `true` para habilitar testes do sandbox que chamam `/api/playbook/simulate` e podem acionar LLM |
@@ -88,18 +89,11 @@ npm run test:systemops:performance:scheduling
 | SYS-NAV-001 | Menu lateral começa por Dashboard, depois Inbox; links principais abrem suas páginas | Admin |
 | SYS-DASH-001 | Dashboard exibe métricas sem `NaN` ou `undefined` | Admin |
 | SYS-DASH-002 | Dashboard sai do loading e entrega conteúdo principal | Admin |
-| SYS-IA-001 | Menu de opções: rótulo/toggle atualizam prévia e persistem após reload | Admin + destrutivo |
-| SYS-IA-002 | Menu de opções em 375px não corta layout e oculta label de intent | Admin |
-| SYS-IA-003 | Texto de boas-vindas vazio/customizado atualiza prévia e persiste | Admin + destrutivo |
-| SYS-IA-004 | Horário, pausa automática e buffer autosalvam e persistem | Admin + destrutivo |
-| SYS-IA-005 | Toggle de autoatendimento altera status visual e pode ser restaurado | Admin + destrutivo |
 | SYS-AGENDA-UI-001 | Bloqueio com fim antes do início exibe validação | Admin |
 | SYS-AGENDA-UI-002 | Cria e remove bloqueio de horário pela UI | Admin + destrutivo |
 | SYS-AGENDA-UI-003 | Agenda em 375px renderiza formulário/lista sem overflow horizontal | Admin |
 | SYS-PLAYBOOK-UI-001 | Editor exibe seção de objeções e sandbox lateral | Admin |
 | SYS-PLAYBOOK-UI-002 | Cria nova versão com estrutura completa e remove draft no fim | Admin + destrutivo |
-| SYS-TREAT-001 | Cria, edita e remove procedimento usado pela IA | Admin + destrutivo |
-| SYS-TREAT-002 | Procedimentos em 375px renderizam sem overflow horizontal | Admin |
 | SYS-PWA-001 | Manifest PWA expõe standalone, start_url e ícones instaláveis | Nenhuma |
 | SYS-PWA-002 | `/login` publica manifest/theme-color e `/sw.js` responde | Nenhuma |
 
@@ -135,6 +129,18 @@ Estes testes usam as rotas E2E seguras do SystemOps e esperam suporte a `PATCH /
 ### Sandbox De Playbook
 
 Por padrão estes testes ficam skipped. Habilite somente em ambiente local/controlado com `SYSTEMOPS_RUN_LLM_SANDBOX=true`.
+
+**Conflito de configuração conhecido (achado da Fase 0f do plano de melhoria contínua):**
+os cenários `[LLM-only]` desta seção
+chamam `/api/playbook/simulate`, que respeita `DISABLE_REAL_OPENAI` no servidor
+(`src/app/api/playbook/simulate/route.ts`, sales-engine) e retorna texto mockado
+(`"[MOCK] ..."`) quando essa flag está `true`. Só que `DISABLE_REAL_OPENAI=true` é
+**exigido** pela seção "Agenda E2E" logo abaixo, para os asserts determinísticos de
+slot não dependerem de variação de LLM. As duas suítes não podem rodar no mesmo dev
+server simultaneamente — para os cenários `[LLM-only]`,
+rode o `systemops-core` local **sem** `DISABLE_REAL_OPENAI` (ou contra produção, onde
+essa flag não existe — ver `docs/operations/e2e-test-plan.md` no sales-engine, achado
+#1: produção não tem nenhuma flag de QA configurada na Vercel).
 
 | ID | Cenário |
 |---|---|
@@ -238,7 +244,7 @@ DISABLE_REAL_OPENAI=true
 - Qualquer cenário com `SYSTEMOPS_RUN_DESTRUCTIVE=true`
 - Testes de reset ou seed de dados
 - Qualquer agenda E2E usando calendário real do cliente
-- Testes `SYS-IA-*`, `SYS-AGENDA-UI-002`, `SYS-PLAYBOOK-UI-002`, `SYS-TREAT-001` e `SYS-MENU-*` sem clínica/calendário de QA
+- Testes `SYS-AGENDA-UI-002`, `SYS-PLAYBOOK-UI-002` e `SYS-MENU-*` sem clínica/calendário de QA
 - Testes `SYS-PLAYBOOK-*` com LLM real sem intenção explícita (`SYSTEMOPS_RUN_LLM_SANDBOX=true`)
 
 ---
@@ -268,8 +274,125 @@ Sem ambiente de staging dedicado, a estratégia é:
 SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:inbox
 ```
 
+## Melhoria contínua (fundação segura)
+
+Além da regressão sintética, o target possui um adapter inicial para datasets
+produzidos pelo SystemOps. A antiga leitura direta de mensagens reais pela rota
+`/api/e2e/production-conversations` foi removida.
+
+O replay `SYS-REPLAY-001` aceita somente:
+
+- arquivo em caminho absoluto fora de qualquer repositório Git;
+- contrato `replay-dataset.v2`;
+- `status=approved`;
+- aprovação humana assinada com Ed25519 e chave pública confiável;
+- ambiente local/QA que não seja reconhecido como produção.
+
+O runner executa cada cenário nos modos `closed_loop` e `concurrency` pela rota
+E2E dedicada do SystemOps, atravessando
+webhook, `inbound_events`, `message.process`, `ConversationOrchestrator`, outbox
+e `message.send`. Texto e mídia usam o payload do canal. WhatsApp, notificações
+auxiliares de operador, consulta de foto, TTS, storage e escritas de agenda são
+capturados; o `DecisionTrace` e os efeitos acompanham o artefato. Nenhuma dessas
+fronteiras acessa o provedor real durante o replay. Cenários são repetidos três
+vezes por padrão. O modo concorrente só é
+executado quando o conteúdo assinado contém duas mensagens consecutivas do lead
+em até cinco segundos; marcações antigas de rajada entre lead e agente são
+ignoradas sem alterar o dataset aprovado.
+
+Cada modo usa por padrão no máximo 12 mensagens de lead por cenário
+(`SYSTEMOPS_REPLAY_MAX_LEAD_TURNS_PER_SCENARIO`). Conversas maiores permanecem
+no dataset, mas são reservadas para replay fatiado/histórico; isso impede que
+uma única conversa longa distorça custo, duração e representatividade da
+amostra. A seleção é determinística e distribuída pelo corpus elegível.
+Para reproduzir diretamente um achado, defina
+`SYSTEMOPS_REPLAY_SCENARIO_ID=<id-exato>`; o runner executará somente esse
+cenário aprovado e recusará ids ausentes, incompatíveis ou acima do orçamento.
+
+Defina `SYSTEMOPS_REPLAY_RESULTS_DIR` com um diretório absoluto fora de Git para
+persistir, com permissão privada, três artefatos por baseline: resultado JSON,
+relatório Markdown e transcrições Markdown. Sem essa variável, os mesmos
+artefatos ficam disponíveis somente como anexos do relatório Playwright.
+O relatório compara também o caminho de decisão entre repetições — estado
+carregado, origem da classificação, intenção final, estado antes da entrega e
+formato planejado. Assim, duas respostas com a mesma intenção mas que passaram
+por estados diferentes são registradas como `decision_path_divergence`.
+O sandbox força a política de automação para `live` sem mudar o snapshot da
+clínica, inclusive quando ela está pausada ou em shadow. A boundary de captura
+continua impedindo WhatsApp, TTS, storage e escritas externas reais. Shadow no
+runtime online permanece apenas observacional e não é usado como simulador.
+Turnos sem resposta são agrupados pelo motivo do `turn.ignored`. Automação
+desativada por política aparece como `automation_disabled`; silêncio sem motivo
+específico aparece como `unexplained_silence`.
+
+O runtime do SystemOps deve estar num banco isolado e configurar:
+
+```bash
+E2E_MODE=true
+E2E_REPLAY_MODE=true
+REPLAY_SANDBOX_DATABASE_HOST=<host-exato-do-branch-isolado>
+REPLAY_PRODUCTION_DATABASE_HOST=<host-exato-de-producao>
+```
+
+O endpoint recusa Vercel Production, host divergente, host igual ao de produção,
+fila preexistente, clínica diferente ou fingerprint de config/playbook
+divergente. Para clínicas em `google_calendar`, qualquer tentativa de leitura da
+agenda falha até existir uma fotografia assinada de disponibilidade; o replay
+jamais consulta ou escreve no Google Calendar real.
+
+LLM-as-judge e especialistas ainda não são gate. Não use o judge antigo com
+playbook hardcoded como aprovação de qualidade.
+
+```bash
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_RESULTS_DIR=/caminho/fora/do/git/resultados \
+SYSTEMOPS_REPLAY_REPETITIONS=3 \
+SYSTEMOPS_REPLAY_MODES=closed_loop,concurrency \
+npm run test:systemops:replay
+
+npm run test:systemops:visual
+```
+
+O replay aprovado drena as filas dentro da própria rota e não depende de
+`npm run dev:workers`. Os demais testes conversacionais E2E continuam dependendo
+dos workers locais.
+
+## Checklist de go-live (clínica nova)
+
+Antes de liberar uma clínica nova, smoke read-only pode rodar contra produção.
+Replay destrutivo deve rodar localmente ou em QA, nunca contra produção:
+
+```bash
+SYSTEMOPS_BASE_URL=https://app.systemops.com.br \
+  SYSTEMOPS_RUN_PRODUCTION_SMOKE=true \
+  npm run test:systemops:smoke
+
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_REPETITIONS=3 \
+npm run test:systemops:replay
+```
+
+Qualquer falha aqui **trava o go-live daquela clínica específica**. O fingerprint
+garante que a configuração e o playbook do sandbox correspondem ao dataset.
+Achados automáticos de severidade `high` ou `medium` também falham o gate; um
+replay com filas íntegras, mas resposta duplicada, mistura de tenant ou silêncio
+inexplicado, não pode aprovar a ativação.
+
+## CI recorrente
+
+Workflow `.github/workflows/systemops-continuous-improvement.yml` roda somente
+smoke read-only + visual diariamente contra produção. Replay voltará ao CI
+somente quando houver dataset aprovado disponibilizado por storage restrito e
+um ambiente sandbox não produtivo.
+
 ## Próximos passos (não implementar nesta entrega)
 
 - Smoke contra preview da Vercel
 - Performance em preview/staging
-- Integração com CI do systemops-core
+- Job de CI recorrente rodando de fato (workflow criado, precisa dos secrets configurados no repositório GitHub)

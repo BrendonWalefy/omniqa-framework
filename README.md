@@ -355,6 +355,52 @@ SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:scheduling
 # SystemOps — Experiência de conversa E2E
 SYSTEMOPS_RUN_DESTRUCTIVE=true npm run test:systemops:conversation
 
+# SystemOps — Replay aprovado (somente local/QA; arquivo absoluto fora de Git)
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_REPETITIONS=3 \
+npm run test:systemops:replay
+
+# O gate falha em qualquer check determinístico e também em achados HIGH/MEDIUM.
+# Achados LOW permanecem no relatório para revisão humana, sem bloquear sozinhos.
+
+# Contrato opcional para uma jornada família/variante:
+# exige exatamente dois vídeos, nessa ordem, imediatamente após o opener,
+# sem mídia duplicada, e comprova no Decision Trace que a variante foi
+# preservada enquanto o pipeline veio do tratamento canônico.
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_SCENARIO_ID=historical-c1a82b19bb65aecbf0e2728b \
+SYSTEMOPS_REPLAY_EXPECT_MEDIA_SEQUENCE='video:simplificada,video:estratificada' \
+SYSTEMOPS_REPLAY_EXPECT_IMMEDIATE_MEDIA_PAIR=true \
+SYSTEMOPS_REPLAY_EXPECT_TEXT_AFTER_MEDIA='R$ 2.000|R$ 4.000' \
+SYSTEMOPS_REPLAY_EXPECT_VARIANT_SELECTION=true \
+npm run test:systemops:replay
+
+# Clínica sem pipeline/mídia: valida a variação selecionada pelo Decision Trace.
+SYSTEMOPS_BASE_URL=http://localhost:3000 \
+SYSTEMOPS_RUN_DESTRUCTIVE=true \
+SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/dataset.approved.json \
+SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
+SYSTEMOPS_REPLAY_EXPECT_SELECTED_TREATMENT='Técnicas Gringas' \
+npm run test:systemops:replay
+
+# Janela contrafactual: usa somente mensagens reais já aprovadas, começando
+# pela segunda mensagem do lead, sem carregar respostas históricas do operador.
+SYSTEMOPS_REPLAY_LEAD_TURN_START=2 \
+SYSTEMOPS_REPLAY_LEAD_TURN_LIMIT=1 \
+npm run test:systemops:replay
+
+# Guard institucional: uma pergunta de endereço não pode selecionar tratamento
+# nem disparar mídia comercial.
+SYSTEMOPS_REPLAY_EXPECT_NO_TREATMENT_SELECTION=true \
+SYSTEMOPS_REPLAY_EXPECT_NO_MEDIA=true \
+npm run test:systemops:replay
+
 # SystemOps — Performance smoke de agendamento
 npm run test:systemops:performance:scheduling
 ```

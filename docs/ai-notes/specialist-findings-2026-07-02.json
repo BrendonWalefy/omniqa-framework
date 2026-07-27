@@ -1,0 +1,82 @@
+[
+  {
+    "persona": "sales-persuasion",
+    "severity": "medium",
+    "category": "objection_handling",
+    "summary": "IA não contornou objeção insinuada pelo lead",
+    "evidence": "lead: \"Combinado\" → IA: \"Boa noite, [E2E:local-replay-8f9ccfeb-1782973108386-353933]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\"",
+    "suggestion": "Adicionar ao playbook uma resposta padrão para essa objeção, com contorno explícito."
+  },
+  {
+    "persona": "sales-persuasion",
+    "severity": "low",
+    "category": "missed_opportunity",
+    "summary": "Oportunidade de qualificação/diferencial não aproveitada",
+    "evidence": "lead: \"Combinado\" → IA: \"Boa noite, [E2E:local-replay-8f9ccfeb-1782973108386-353933]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\" — A resposta da IA não endereça potenciais objeções sobre preços e não destaca a oferta da consulta gratuita. Além disso, falta um senso de urgência que poderia incentivar o lead a agir mais rapidamente.",
+    "suggestion": "Revisar se o playbook orienta a IA a mencionar diferenciais/qualificar nesse tipo de mensagem."
+  },
+  {
+    "persona": "ux",
+    "severity": "low",
+    "category": "cognitive_load",
+    "summary": "Resposta pede múltiplas decisões de uma vez",
+    "evidence": "IA: \"Boa noite, [E2E:local-replay-8f9ccfeb-1782973108386-353933]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\" — A resposta da IA inclui múltiplas opções (valores, agendamento ou serviço específico), o que pode sobrecarregar o lead ao exigir uma decisão imediata. A clareza geral é boa, mas a demanda de escolha múltipla pode ser confusa.",
+    "suggestion": "Quebrar em perguntas sequenciais em vez de uma única mensagem com várias opções."
+  },
+  {
+    "persona": "ai-quality",
+    "severity": "high",
+    "category": "nlu_miss",
+    "summary": "IA parece não ter entendido a mensagem do lead",
+    "evidence": "lead: \"Combinado\" → IA: \"Boa noite, [E2E:local-replay-8f9ccfeb-1782973108386-353933]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\" — A resposta da IA soa muito genérica e repetitiva, o que pode afastar a naturalidade do atendimento. Além disso, a mensagem do lead, que é breve e sem contexto, não foi considerada, resultando em uma abordagem que não se alinha ao que o lead provavelmente esperava.",
+    "suggestion": "Revisar classificação de intent para esse padrão de mensagem (IntentClassifier)."
+  },
+  {
+    "persona": "ai-quality",
+    "severity": "low",
+    "category": "unnatural_language",
+    "summary": "Resposta soa robótica/genérica em PT-BR",
+    "evidence": "IA: \"Boa noite, [E2E:local-replay-8f9ccfeb-1782973108386-353933]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\"",
+    "suggestion": "Ajustar o tom de voz do playbook ou variar templates de resposta."
+  },
+  {
+    "persona": "sales-persuasion",
+    "severity": "low",
+    "category": "missed_opportunity",
+    "summary": "Oportunidade de qualificação/diferencial não aproveitada",
+    "evidence": "lead: \"Boa tarde\" → IA: \"Boa noite, [E2E:local-replay-44e2d49d-1782973116568-72ab0a]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\" — A resposta da IA é amigável e aberta ao diálogo, mas não aborda diretamente a possibilidade de uma consulta gratuita, o que poderia instigar interesse imediato. Além disso, não menciona os diferenciais ou os serviços específicos, perdendo uma oportunidade de qualificação do lead.",
+    "suggestion": "Revisar se o playbook orienta a IA a mencionar diferenciais/qualificar nesse tipo de mensagem."
+  },
+  {
+    "persona": "ai-quality",
+    "severity": "low",
+    "category": "unnatural_language",
+    "summary": "Resposta soa robótica/genérica em PT-BR",
+    "evidence": "IA: \"Boa noite, [E2E:local-replay-44e2d49d-1782973116568-72ab0a]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\"",
+    "suggestion": "Ajustar o tom de voz do playbook ou variar templates de resposta."
+  },
+  {
+    "persona": "sales-persuasion",
+    "severity": "low",
+    "category": "missed_opportunity",
+    "summary": "Oportunidade de qualificação/diferencial não aproveitada",
+    "evidence": "lead: \"Olá! Tenho interesse e queria mais informações, por favor.\" → IA: \"Boa noite, [E2E:local-replay-a95f45fa-1782973126221-efd9df]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\" — Embora a IA pergunte sobre o que o lead deseja, não aborda a consulta de avaliação gratuita como um diferencial. Além disso, não cria um senso de urgência ou próximo passo claro, o que poderia melhorar o fechamento da conversa.",
+    "suggestion": "Revisar se o playbook orienta a IA a mencionar diferenciais/qualificar nesse tipo de mensagem."
+  },
+  {
+    "persona": "ux",
+    "severity": "low",
+    "category": "cognitive_load",
+    "summary": "Resposta pede múltiplas decisões de uma vez",
+    "evidence": "IA: \"Boa noite, [E2E:local-replay-a95f45fa-1782973126221-efd9df]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\" — A resposta é clara, mas pede que o lead decida entre três opções diferentes (valores, agendamento ou serviço específico) de uma só vez, o que pode criar uma sobrecarga cognitiva.",
+    "suggestion": "Quebrar em perguntas sequenciais em vez de uma única mensagem com várias opções."
+  },
+  {
+    "persona": "ai-quality",
+    "severity": "low",
+    "category": "unnatural_language",
+    "summary": "Resposta soa robótica/genérica em PT-BR",
+    "evidence": "IA: \"Boa noite, [E2E:local-replay-a95f45fa-1782973126221-efd9df]. Tudo bem?\n\nSou a assistente virtual da QA E2E Clinic. Me conta o que você gostaria de ver hoje: valores, agendamento ou algum serviço específico?\"",
+    "suggestion": "Ajustar o tom de voz do playbook ou variar templates de resposta."
+  }
+]

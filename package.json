@@ -44,18 +44,23 @@
     "test:systemops:scheduling:raw": "playwright test --project=systemops-api targets/systemops/api/specs/scheduling.spec.ts",
     "test:systemops:conversation": "node core/runners/run-with-report.mjs test:systemops:conversation:raw junit",
     "test:systemops:conversation:raw": "playwright test --project=systemops-api targets/systemops/api/specs/conversation-experience.spec.ts",
+    "test:systemops:replay": "SYSTEMOPS_RUN_APPROVED_REPLAY=true node core/runners/run-with-report.mjs test:systemops:replay:raw junit",
+    "test:systemops:replay:raw": "playwright test --project=systemops-api targets/systemops/api/specs/approved-dataset-replay.spec.ts",
     "test:systemops:menu": "node core/runners/run-with-report.mjs test:systemops:menu:raw junit",
     "test:systemops:menu:raw": "playwright test --project=systemops-api targets/systemops/api/specs/menu.spec.ts",
     "test:systemops:playbook-sandbox": "node core/runners/run-with-report.mjs test:systemops:playbook-sandbox:raw junit",
     "test:systemops:playbook-sandbox:raw": "playwright test --project=systemops-api targets/systemops/api/specs/playbook-sandbox.spec.ts",
     "test:systemops:ui-daily": "node core/runners/run-with-report.mjs test:systemops:ui-daily:raw junit",
-    "test:systemops:ui-daily:raw": "playwright test --project=systemops-web-chromium targets/systemops/web/specs/dashboard.spec.ts targets/systemops/web/specs/navigation.spec.ts targets/systemops/web/specs/ia-settings.spec.ts targets/systemops/web/specs/agenda.spec.ts targets/systemops/web/specs/playbook-editor.spec.ts targets/systemops/web/specs/treatments.spec.ts targets/systemops/web/specs/pwa.spec.ts",
+    "test:systemops:ui-daily:raw": "playwright test --project=systemops-web-chromium targets/systemops/web/specs/dashboard.spec.ts targets/systemops/web/specs/navigation.spec.ts targets/systemops/web/specs/agenda.spec.ts targets/systemops/web/specs/playbook-editor.spec.ts targets/systemops/web/specs/pwa.spec.ts",
     "test:systemops:daily": "node core/runners/run-with-report.mjs test:systemops:daily:raw junit",
-    "test:systemops:daily:raw": "playwright test --project=systemops-api targets/systemops/api/specs/menu.spec.ts targets/systemops/api/specs/playbook-sandbox.spec.ts && playwright test --project=systemops-web-chromium targets/systemops/web/specs/dashboard.spec.ts targets/systemops/web/specs/navigation.spec.ts targets/systemops/web/specs/ia-settings.spec.ts targets/systemops/web/specs/agenda.spec.ts targets/systemops/web/specs/playbook-editor.spec.ts targets/systemops/web/specs/treatments.spec.ts targets/systemops/web/specs/pwa.spec.ts",
+    "test:systemops:daily:raw": "playwright test --project=systemops-api targets/systemops/api/specs/menu.spec.ts targets/systemops/api/specs/playbook-sandbox.spec.ts && playwright test --project=systemops-web-chromium targets/systemops/web/specs/dashboard.spec.ts targets/systemops/web/specs/navigation.spec.ts targets/systemops/web/specs/agenda.spec.ts targets/systemops/web/specs/playbook-editor.spec.ts targets/systemops/web/specs/pwa.spec.ts",
     "test:systemops:performance": "k6 run --summary-export=reports/performance/summary.json targets/systemops/performance/webhook-smoke-load.js",
     "test:systemops:performance:scheduling": "k6 run --summary-export=reports/performance/summary.json targets/systemops/performance/scheduling-smoke-load.js",
     "test:systemops:inbox": "node core/runners/run-with-report.mjs test:systemops:inbox:raw junit",
     "test:systemops:inbox:raw": "playwright test --project=systemops-api targets/systemops/api/specs/inbox.spec.ts",
+    "test:systemops:visual": "node core/runners/run-with-report.mjs test:systemops:visual:raw junit",
+    "test:systemops:visual:raw": "playwright test --project=systemops-web-chromium targets/systemops/web/specs/visual-regression.spec.ts",
+    "test:systemops:visual:update": "playwright test --project=systemops-web-chromium targets/systemops/web/specs/visual-regression.spec.ts --update-snapshots",
     "test:systemops:push": "node core/runners/run-with-report.mjs test:systemops:push:raw junit",
     "test:systemops:push:raw": "playwright test --project=systemops-api targets/systemops/api/specs/push-notifications.spec.ts && playwright test --project=systemops-web-chromium targets/systemops/web/specs/push-notifications.spec.ts",
     "test:systemops:arrival": "node core/runners/run-with-report.mjs test:systemops:arrival:raw junit",
@@ -91,5 +96,9 @@
     "appium-xcuitest-driver": "^11.2.3",
     "tsx": "^4.21.0",
     "typescript": "^5.8.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.109.1",
+    "openai": "^6.45.0"
   }
 }

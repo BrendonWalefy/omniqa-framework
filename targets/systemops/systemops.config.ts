@@ -11,6 +11,11 @@ export const systemopsConfig = {
   runDestructive: process.env.SYSTEMOPS_RUN_DESTRUCTIVE === 'true',
   runProductionSmoke: process.env.SYSTEMOPS_RUN_PRODUCTION_SMOKE === 'true',
   runLlmSandbox: process.env.SYSTEMOPS_RUN_LLM_SANDBOX === 'true',
+  runApprovedReplay: process.env.SYSTEMOPS_RUN_APPROVED_REPLAY === 'true',
+  replayDatasetPath: process.env.SYSTEMOPS_REPLAY_DATASET_PATH,
+  replayApprovalPublicKeyPath: process.env.SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH,
+  replayResultsDirectory: process.env.SYSTEMOPS_REPLAY_RESULTS_DIR,
+  replayModes: process.env.SYSTEMOPS_REPLAY_MODES,
   simulateApiKey: process.env.SYSTEMOPS_SIMULATE_API_KEY,
 };
 
@@ -81,5 +86,8 @@ export function createRunId(scenarioId: string): string {
 
 export function isProductionLikeUrl(url: string): boolean {
   const normalized = url.toLowerCase();
-  return normalized.includes('systemops-core-brendon-walefy-s-projects.vercel.app');
+  return (
+    normalized.includes('app.systemops.com.br') ||
+    normalized.includes('systemops-core-brendon-walefy-s-projects.vercel.app')
+  );
 }

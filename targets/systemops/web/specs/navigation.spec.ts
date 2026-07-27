@@ -21,15 +21,22 @@ test.describe('SystemOps - Navegação autenticada', () => {
     await loginAdmin(page);
   });
 
-  test('SYS-NAV-001 - menu lateral começa por Dashboard, depois Inbox, e links principais funcionam', async ({ page }) => {
+  test('SYS-NAV-001 - menu lateral começa por Início, depois Inbox, e links principais funcionam', async ({ page }, testInfo) => {
+    // Mobile usa nav bottom bar com item set diferente (Início/Inbox/Novo/Agenda, sem
+    // Configurações/Profissionais/Recuperação/Pipeline) — TODO: escrever
+    // SYS-NAV-MOBILE-001 dedicado em vez de reaproveitar este teste.
+    if (testInfo.project.name === 'systemops-web-mobile') {
+      testInfo.skip(true, 'Nav mobile tem estrutura/itens diferentes do menu lateral desktop — precisa de teste dedicado.');
+    }
+
     await page.goto('/app/dashboard');
 
     const links = page.locator('nav.side-nav a.side-nav-item');
-    await expect(links.nth(0)).toContainText('Dashboard');
+    await expect(links.nth(0)).toContainText('Início');
     await expect(links.nth(1)).toContainText('Inbox');
 
     const destinations = [
-      { name: 'Dashboard', url: /\/app\/dashboard/, readyText: 'Dashboard' },
+      { name: 'Início', url: /\/app\/dashboard/, readyText: 'Receita em Pipeline' },
       { name: 'Inbox', url: /\/app\/inbox/, readyText: /Inbox|Nenhuma conversa ainda/i },
       { name: 'Agenda', url: /\/app\/agenda/, readyText: 'Agenda da clínica' },
       { name: 'Configurações', url: /\/app\/settings\/playbook/, readyText: 'Configurações da IA' },
@@ -37,7 +44,8 @@ test.describe('SystemOps - Navegação autenticada', () => {
     ];
 
     for (const destination of destinations) {
-      await page.getByRole('link', { name: destination.name }).click();
+      // Não usar exact:true — "Inbox" tem contador anexado (ex.: "Inbox 1").
+      await page.locator('nav.side-nav').getByRole('link', { name: destination.name }).first().click();
       await expect(page).toHaveURL(destination.url);
       await expect(page.getByText(destination.readyText).first()).toBeVisible();
     }

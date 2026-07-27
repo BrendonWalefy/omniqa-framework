@@ -1,6 +1,8 @@
 import { APIRequestContext, expect } from '@playwright/test';
 import { requireE2eConfig } from '../../systemops.config';
 import { zapiTextPayload } from './zapiPayloadFactory';
+import type { ApprovedReplayScenario } from './approvedReplayDataset';
+import type { ExecutableReplayMode } from './replayModes';
 
 export type E2eSlot = {
   index: number;
@@ -142,6 +144,31 @@ export class SystemOpsE2eClient {
     expect([200, 400]).toContain(response.status());
   }
 
+  async runReplayScenario(
+    runId: string,
+    scenario: ApprovedReplayScenario,
+    mode: ExecutableReplayMode = 'closed_loop',
+  ): Promise<ReplayScenarioRun> {
+    const response = await this.request.post('/api/e2e/replay/scenario', {
+      headers: this.headers(),
+      data: {
+        runId,
+        mode,
+        scenario,
+      },
+    });
+    const body = await response.json() as ReplayScenarioRun | {
+      error: string;
+      message?: string;
+    };
+    if (![200, 422].includes(response.status())) {
+      throw new Error(
+        `Replay endpoint failed (${response.status()}): ${JSON.stringify(body)}`,
+      );
+    }
+    return body as ReplayScenarioRun;
+  }
+
   async markAppointmentStatus(appointmentId: string, status: 'scheduled' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'): Promise<void> {
     const response = await this.request.patch('/api/e2e/appointments', {
       headers: this.headers(),
@@ -217,6 +244,61 @@ export class SystemOpsE2eClient {
     throw new Error(`Timeout: esperado ${minCount} mensagem(ns) do agente após ${timeoutMs}ms`);
   }
 }
+
+export type ReplayScenarioRun = {
+  schemaVersion: 'replay-scenario-run.v1';
+  runId: string;
+  scenarioId: string;
+  mode: ExecutableReplayMode;
+  clockMode: string;
+  transcript: Array<{
+    author: string;
+    body: string;
+    mediaType: string | null;
+    intent: string | null;
+    sentAt: string;
+  }>;
+  trace: Array<{
+    turnId: string;
+    stage: string;
+    sequence: number;
+    metadata?: Record<string, string | number | boolean | null>;
+  }>;
+  effects: {
+    outbound: unknown[];
+    calendar: unknown[];
+    auxiliary?: Array<{
+      sequence: number;
+      kind: string;
+      mediaType?: string;
+    }>;
+  };
+  checks: Array<{
+    code: string;
+    passed: boolean;
+  }>;
+  executionRuns?: Array<{
+    scenarioTurnIds: string[];
+    turnIds: string[];
+    process: {
+      claimed: number;
+      processed: number;
+      ignored: number;
+      retried: number;
+      dead: number;
+      recovered: number;
+    };
+    send: {
+      claimed: number;
+      sent: number;
+      ignored: number;
+      deferred: number;
+      retried: number;
+      dead: number;
+      recovered: number;
+    };
+  }>;
+};
 
 function isAgentMessage(m: E2eState['messages'][number]): boolean {
   return m.author === 'agent' || m.role === 'agent';
