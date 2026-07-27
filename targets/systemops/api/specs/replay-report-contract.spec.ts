@@ -178,27 +178,7 @@ test('SYS-REPLAY-REPORT-003 - detecta divergência de caminho com intenção igu
   );
 });
 
-test('SYS-REPLAY-REPORT-004 - contabiliza entrega suprimida por shadow mode', () => {
-  const report = buildReplayBaselineReport(dataset, [
-    run({
-      effects: {
-        outbound: [{
-          kind: 'suppressed',
-          reason: 'shadow_mode',
-        }],
-        calendar: [],
-      },
-    }),
-  ]);
-
-  expect(report.metrics.runsWithDelivery).toBe(1);
-  expect(report.metrics.suppressedDeliveryEffects).toBe(1);
-  expect(renderReplayBaselineMarkdown(report)).toContain(
-    'Efeitos suprimidos por shadow mode: 1',
-  );
-});
-
-test('SYS-REPLAY-REPORT-005 - explica silêncio por automação desativada', () => {
+test('SYS-REPLAY-REPORT-004 - explica silêncio por automação desativada', () => {
   const report = buildReplayBaselineReport(dataset, [
     run({
       trace: [
@@ -230,4 +210,28 @@ test('SYS-REPLAY-REPORT-005 - explica silêncio por automação desativada', () 
   expect(renderReplayBaselineMarkdown(report)).toContain(
     'Turnos sem resposta: automation_reply_disabled=1',
   );
+});
+
+test('SYS-REPLAY-REPORT-005 - não compara caminhos de modos diferentes como repetição', () => {
+  const report = buildReplayBaselineReport(dataset, [
+    run({ runId: 'closed', mode: 'closed_loop' }),
+    run({
+      runId: 'concurrent',
+      mode: 'concurrency',
+      trace: [{
+        turnId: 'turn-2',
+        stage: 'turn.ignored',
+        sequence: 1,
+        metadata: { reason: 'superseded_by_newer_lead_message' },
+      }],
+    }),
+  ]);
+
+  expect(report.findings).not.toEqual(expect.arrayContaining([
+    expect.objectContaining({ code: 'decision_path_divergence' }),
+  ]));
+  expect(report.metrics.runsByMode).toEqual({
+    closed_loop: 1,
+    concurrency: 1,
+  });
 });

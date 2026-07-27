@@ -27,12 +27,12 @@ export type ReplayBaselineReport = {
     deterministicPassRate: number;
     runsWithTrace: number;
     runsWithDelivery: number;
-    suppressedDeliveryEffects: number;
     ignoredTurnsByReason: Record<string, number>;
     meanIntentConfidence: number | null;
     repeatedScenarioIntentAgreement: number | null;
     repeatedScenarioDecisionPathAgreement: number | null;
     operationalConfidence: number;
+    runsByMode: Record<string, number>;
   };
   findings: ReplayFinding[];
   runs: ReplayScenarioRun[];
@@ -59,10 +59,6 @@ export function buildReplayBaselineReport(
   const checksPassed = checks.filter((check) => check.passed).length;
   const runsWithTrace = runs.filter((run) => run.trace.length > 0).length;
   const runsWithDelivery = runs.filter((run) => run.effects.outbound.length > 0).length;
-  const suppressedDeliveryEffects = runs
-    .flatMap((run) => run.effects.outbound)
-    .filter(isSuppressedDeliveryEffect)
-    .length;
   const ignoredTurnsByReason = countIgnoredTurnReasons(runs);
   const confidences = runs.flatMap(intentConfidences);
   const passRate = ratio(checksPassed, checks.length);
@@ -102,12 +98,12 @@ export function buildReplayBaselineReport(
       deterministicPassRate: passRate,
       runsWithTrace,
       runsWithDelivery,
-      suppressedDeliveryEffects,
       ignoredTurnsByReason,
       meanIntentConfidence,
       repeatedScenarioIntentAgreement,
       repeatedScenarioDecisionPathAgreement,
       operationalConfidence,
+      runsByMode: countRunsByMode(runs),
     },
     findings,
     runs,
@@ -121,6 +117,7 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
     `- Dataset: \`${escapeInline(report.datasetVersion)}\``,
     `- Cenários executados: ${report.scenarioCount}`,
     `- Execuções: ${report.runCount}`,
+    `- Modos executados: ${formatReasonCounts(report.metrics.runsByMode)}`,
     ...(report.selection
       ? [
           `- Cenários no dataset: ${report.selection.datasetScenarios}`,
@@ -136,7 +133,6 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
     `- Checks determinísticos: ${report.metrics.deterministicChecksPassed}/${report.metrics.deterministicChecksTotal} (${formatPercent(report.metrics.deterministicPassRate)})`,
     `- Runs com Decision Trace: ${report.metrics.runsWithTrace}/${report.runCount}`,
     `- Runs com entrega capturada: ${report.metrics.runsWithDelivery}/${report.runCount}`,
-    `- Efeitos suprimidos por shadow mode: ${report.metrics.suppressedDeliveryEffects}`,
     `- Turnos sem resposta: ${formatReasonCounts(report.metrics.ignoredTurnsByReason)}`,
     `- Confiança média de intenção: ${report.metrics.meanIntentConfidence === null ? 'indisponível' : formatPercent(report.metrics.meanIntentConfidence)}`,
     `- Concordância de intenção entre repetições: ${report.metrics.repeatedScenarioIntentAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioIntentAgreement)}`,
@@ -299,8 +295,10 @@ function findRunIssues(clinicKey: string, run: ReplayScenarioRun): ReplayFinding
 
 function findRepeatedRunIssues(runs: ReplayScenarioRun[]): ReplayFinding[] {
   const findings: ReplayFinding[] = [];
-  for (const [scenarioId, entries] of groupRunsByScenario(runs)) {
+  for (const entries of groupRunsByScenarioAndMode(runs).values()) {
     if (entries.length < 2) continue;
+    const scenarioId = entries[0]!.scenarioId;
+    const mode = entries[0]!.mode;
     const signatures = new Set(entries.map(decisionPathSignature));
     if (signatures.size > 1) {
       findings.push({
@@ -309,7 +307,7 @@ function findRepeatedRunIssues(runs: ReplayScenarioRun[]): ReplayFinding[] {
         scenarioId,
         runId: 'cross-run',
         description:
-          `O mesmo cenário percorreu ${signatures.size} caminhos de estado/decisão em ${entries.length} repetições.`,
+          `O mesmo cenário em ${mode} percorreu ${signatures.size} caminhos de estado/decisão em ${entries.length} repetições.`,
       });
     }
   }
@@ -325,7 +323,7 @@ function intentConfidences(run: ReplayScenarioRun): number[] {
 }
 
 function intentAgreement(runs: ReplayScenarioRun[]): number | null {
-  const comparable = [...groupRunsByScenario(runs).values()]
+  const comparable = [...groupRunsByScenarioAndMode(runs).values()]
     .filter((entries) => entries.length > 1);
   if (comparable.length === 0) return null;
   const agreements = comparable.map((entries) => {
@@ -342,7 +340,7 @@ function intentAgreement(runs: ReplayScenarioRun[]): number | null {
 }
 
 function decisionPathAgreement(runs: ReplayScenarioRun[]): number | null {
-  const comparable = [...groupRunsByScenario(runs).values()]
+  const comparable = [...groupRunsByScenarioAndMode(runs).values()]
     .filter((entries) => entries.length > 1);
   if (comparable.length === 0) return null;
   const agreements = comparable.map((entries) => {
@@ -400,15 +398,6 @@ function decisionPathSignature(run: ReplayScenarioRun): string {
   }));
 }
 
-function isSuppressedDeliveryEffect(effect: unknown): boolean {
-  return (
-    typeof effect === 'object' &&
-    effect !== null &&
-    'kind' in effect &&
-    effect.kind === 'suppressed'
-  );
-}
-
 function countIgnoredTurnReasons(
   runs: ReplayScenarioRun[],
 ): Record<string, number> {
@@ -432,16 +421,25 @@ function formatReasonCounts(counts: Record<string, number>): string {
     : '0';
 }
 
-function groupRunsByScenario(
+function groupRunsByScenarioAndMode(
   runs: ReplayScenarioRun[],
 ): Map<string, ReplayScenarioRun[]> {
   const grouped = new Map<string, ReplayScenarioRun[]>();
   for (const run of runs) {
-    const entries = grouped.get(run.scenarioId) ?? [];
+    const key = `${run.scenarioId}\u0000${run.mode}`;
+    const entries = grouped.get(key) ?? [];
     entries.push(run);
-    grouped.set(run.scenarioId, entries);
+    grouped.set(key, entries);
   }
   return grouped;
+}
+
+function countRunsByMode(runs: ReplayScenarioRun[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const run of runs) {
+    counts[run.mode] = (counts[run.mode] ?? 0) + 1;
+  }
+  return counts;
 }
 
 async function writePrivate(filePath: string, content: string): Promise<void> {

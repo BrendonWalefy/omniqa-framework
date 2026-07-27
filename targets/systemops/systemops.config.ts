@@ -15,6 +15,7 @@ export const systemopsConfig = {
   replayDatasetPath: process.env.SYSTEMOPS_REPLAY_DATASET_PATH,
   replayApprovalPublicKeyPath: process.env.SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH,
   replayResultsDirectory: process.env.SYSTEMOPS_REPLAY_RESULTS_DIR,
+  replayModes: process.env.SYSTEMOPS_REPLAY_MODES,
   simulateApiKey: process.env.SYSTEMOPS_SIMULATE_API_KEY,
 };
 

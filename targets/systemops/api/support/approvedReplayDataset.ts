@@ -137,30 +137,66 @@ function assertApprovedReplayDataset(value: unknown): asserts value is ApprovedR
   if (value.scenarioCount !== value.scenarios.length) {
     throw new Error('Replay dataset scenarioCount does not match scenarios.');
   }
+  if (
+    !isRecord(value.clinic) ||
+    typeof value.clinic.clinicKey !== 'string' ||
+    typeof value.clinic.configFingerprint !== 'string' ||
+    !(
+      typeof value.clinic.playbookFingerprint === 'string' ||
+      value.clinic.playbookFingerprint === null
+    )
+  ) {
+    throw new Error('Replay dataset has invalid clinic fingerprints.');
+  }
 
   for (const scenario of value.scenarios) {
     if (
       !isRecord(scenario) ||
       scenario.schemaVersion !== 'replay-scenario.v1' ||
       typeof scenario.id !== 'string' ||
+      scenario.datasetVersion !== value.datasetVersion ||
       !isRecord(scenario.source) ||
       scenario.source.sanitized !== true ||
+      !isRecord(scenario.clinic) ||
+      scenario.clinic.clinicKey !== value.clinic.clinicKey ||
+      scenario.clinic.configFingerprint !== value.clinic.configFingerprint ||
+      scenario.clinic.playbookFingerprint !== value.clinic.playbookFingerprint ||
+      !Array.isArray(scenario.compatibleModes) ||
+      !scenario.compatibleModes.includes('closed_loop') ||
+      scenario.compatibleModes.some((mode) =>
+        !['historical_turn', 'closed_loop', 'counterfactual', 'concurrency']
+          .includes(String(mode))),
       !Array.isArray(scenario.turns) ||
       scenario.turns.length === 0
     ) {
       throw new Error('Replay dataset contains an invalid scenario.');
     }
+    const turnIds = new Set<string>();
+    let previousOffset = -1;
+    let leadTurnCount = 0;
     for (const turn of scenario.turns) {
       if (
         !isRecord(turn) ||
         typeof turn.id !== 'string' ||
+        !turn.id ||
+        turnIds.has(turn.id) ||
         !['lead', 'agent', 'operator', 'system'].includes(String(turn.author)) ||
+        typeof turn.offsetMs !== 'number' ||
+        !Number.isInteger(turn.offsetMs) ||
+        turn.offsetMs < 0 ||
+        turn.offsetMs < previousOffset ||
         !isRecord(turn.content) ||
         !['text', 'audio', 'image', 'video', 'document'].includes(String(turn.content.type)) ||
         typeof turn.content.text !== 'string'
       ) {
         throw new Error('Replay dataset contains an invalid turn.');
       }
+      turnIds.add(turn.id);
+      previousOffset = turn.offsetMs;
+      if (turn.author === 'lead') leadTurnCount++;
+    }
+    if (leadTurnCount === 0) {
+      throw new Error('Replay scenario must contain at least one lead turn.');
     }
   }
 }

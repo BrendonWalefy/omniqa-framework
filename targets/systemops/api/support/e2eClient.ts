@@ -2,6 +2,7 @@ import { APIRequestContext, expect } from '@playwright/test';
 import { requireE2eConfig } from '../../systemops.config';
 import { zapiTextPayload } from './zapiPayloadFactory';
 import type { ApprovedReplayScenario } from './approvedReplayDataset';
+import type { ExecutableReplayMode } from './replayModes';
 
 export type E2eSlot = {
   index: number;
@@ -146,12 +147,13 @@ export class SystemOpsE2eClient {
   async runReplayScenario(
     runId: string,
     scenario: ApprovedReplayScenario,
+    mode: ExecutableReplayMode = 'closed_loop',
   ): Promise<ReplayScenarioRun> {
     const response = await this.request.post('/api/e2e/replay/scenario', {
       headers: this.headers(),
       data: {
         runId,
-        mode: 'closed_loop',
+        mode,
         scenario,
       },
     });
@@ -247,7 +249,7 @@ export type ReplayScenarioRun = {
   schemaVersion: 'replay-scenario-run.v1';
   runId: string;
   scenarioId: string;
-  mode: 'closed_loop';
+  mode: ExecutableReplayMode;
   clockMode: string;
   transcript: Array<{
     author: string;
@@ -269,6 +271,27 @@ export type ReplayScenarioRun = {
   checks: Array<{
     code: string;
     passed: boolean;
+  }>;
+  executionRuns?: Array<{
+    scenarioTurnIds: string[];
+    turnIds: string[];
+    process: {
+      claimed: number;
+      processed: number;
+      ignored: number;
+      retried: number;
+      dead: number;
+      recovered: number;
+    };
+    send: {
+      claimed: number;
+      sent: number;
+      ignored: number;
+      deferred: number;
+      retried: number;
+      dead: number;
+      recovered: number;
+    };
   }>;
 };
 

@@ -20,6 +20,7 @@ O OmniQA atua como plataforma de QA independente. O systemops-core **não recebe
 | `SYSTEMOPS_TEST_PHONE` | Não | Telefone usado em testes de webhook (padrão: 5511999999999) |
 | `SYSTEMOPS_E2E_SECRET` | Sim para agenda E2E | Secret enviada no header `x-e2e-secret` |
 | `SYSTEMOPS_E2E_RUN_PREFIX` | Não | Prefixo dos `runId` gerados (padrão: local) |
+| `SYSTEMOPS_REPLAY_MODES` | Não | Modos separados por vírgula; padrão seguro completo: `closed_loop,concurrency` |
 | `SYSTEMOPS_RUN_DESTRUCTIVE` | Não | `true` para habilitar testes destrutivos (padrão: false) |
 | `SYSTEMOPS_RUN_PRODUCTION_SMOKE` | Não | `true` para smoke read-only contra produção (padrão: false) |
 | `SYSTEMOPS_RUN_LLM_SANDBOX` | Não | `true` para habilitar testes do sandbox que chamam `/api/playbook/simulate` e podem acionar LLM |
@@ -287,13 +288,17 @@ O replay `SYS-REPLAY-001` aceita somente:
 - aprovação humana assinada com Ed25519 e chave pública confiável;
 - ambiente local/QA que não seja reconhecido como produção.
 
-O runner executa cada cenário pela rota E2E dedicada do SystemOps, atravessando
+O runner executa cada cenário nos modos `closed_loop` e `concurrency` pela rota
+E2E dedicada do SystemOps, atravessando
 webhook, `inbound_events`, `message.process`, `ConversationOrchestrator`, outbox
 e `message.send`. Texto e mídia usam o payload do canal. WhatsApp, TTS, storage e
 escritas de agenda são capturados; o `DecisionTrace` e os efeitos acompanham o
-artefato. Cenários são repetidos três vezes por padrão.
+artefato. Cenários são repetidos três vezes por padrão. O modo concorrente só é
+executado quando o conteúdo assinado contém duas mensagens consecutivas do lead
+em até cinco segundos; marcações antigas de rajada entre lead e agente são
+ignoradas sem alterar o dataset aprovado.
 
-O closed-loop usa por padrão no máximo 12 mensagens de lead por cenário
+Cada modo usa por padrão no máximo 12 mensagens de lead por cenário
 (`SYSTEMOPS_REPLAY_MAX_LEAD_TURNS_PER_SCENARIO`). Conversas maiores permanecem
 no dataset, mas são reservadas para replay fatiado/histórico; isso impede que
 uma única conversa longa distorça custo, duração e representatividade da
@@ -310,9 +315,10 @@ O relatório compara também o caminho de decisão entre repetições — estado
 carregado, origem da classificação, intenção final, estado antes da entrega e
 formato planejado. Assim, duas respostas com a mesma intenção mas que passaram
 por estados diferentes são registradas como `decision_path_divergence`.
-Quando a clínica está em shadow mode, a resposta persistida e intencionalmente
-não enviada aparece como efeito `suppressed`; ela não é confundida com falha de
-captura nem com aceitação do provedor.
+O sandbox força a política de automação para `live` sem mudar o snapshot da
+clínica, inclusive quando ela está pausada ou em shadow. A boundary de captura
+continua impedindo WhatsApp, TTS, storage e escritas externas reais. Shadow no
+runtime online permanece apenas observacional e não é usado como simulador.
 Turnos sem resposta são agrupados pelo motivo do `turn.ignored`. Automação
 desativada por política aparece como `automation_disabled`; silêncio sem motivo
 específico aparece como `unexplained_silence`.
@@ -342,6 +348,7 @@ SYSTEMOPS_REPLAY_DATASET_PATH=/caminho/fora/do/git/dataset.approved.json \
 SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/fora/do/git/replay-approval-public.pem \
 SYSTEMOPS_REPLAY_RESULTS_DIR=/caminho/fora/do/git/resultados \
 SYSTEMOPS_REPLAY_REPETITIONS=3 \
+SYSTEMOPS_REPLAY_MODES=closed_loop,concurrency \
 npm run test:systemops:replay
 
 npm run test:systemops:visual

@@ -19,6 +19,10 @@ import {
   applyReplayBehaviorContract,
   loadReplayBehaviorContract,
 } from '../support/replayBehaviorContract';
+import {
+  executableModesForScenario,
+  parseReplayModes,
+} from '../support/replayModes';
 
 test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => {
   test.beforeEach(async () => {
@@ -46,21 +50,34 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
       process.env.SYSTEMOPS_REPLAY_REPETITIONS,
     );
     const scenarios = selection.scenarios;
+    const requestedModes = parseReplayModes(systemopsConfig.replayModes);
+    const executions = scenarios.flatMap((scenario) =>
+      executableModesForScenario(scenario, requestedModes).map((mode) => ({
+        scenario,
+        mode,
+      })),
+    );
+    if (executions.length === 0) {
+      throw new Error('No selected replay scenario supports the requested modes.');
+    }
     const behaviorContract = loadReplayBehaviorContract(process.env);
     test.setTimeout(
       Math.max(
         300_000,
-        countLeadTurns(scenarios) * repetitions * 45_000,
+        executions.reduce(
+          (total, execution) => total + leadTurnCount(execution.scenario),
+          0,
+        ) * repetitions * 45_000,
       ),
     );
 
     const client = new SystemOpsE2eClient(request);
     const runs: ReplayScenarioRun[] = [];
-    for (const scenario of scenarios) {
+    for (const { scenario, mode } of executions) {
       for (let repetition = 1; repetition <= repetitions; repetition++) {
-        const runId = createRunId(`${scenario.id}-r${repetition}`);
+        const runId = createRunId(`${scenario.id}-${mode}-r${repetition}`);
         runs.push(applyReplayBehaviorContract(
-          await client.runReplayScenario(runId, scenario),
+          await client.runReplayScenario(runId, scenario, mode),
           behaviorContract,
         ));
       }
@@ -70,6 +87,8 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
       body: Buffer.from(JSON.stringify({
         datasetVersion: dataset.datasetVersion,
         scenarioCount: scenarios.length,
+        requestedModes,
+        executionCount: executions.length,
         repetitions,
         selection: selection.summary,
         runs,
