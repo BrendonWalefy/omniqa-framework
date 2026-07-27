@@ -27,6 +27,7 @@ export type ReplayBaselineReport = {
     deterministicPassRate: number;
     runsWithTrace: number;
     runsWithDelivery: number;
+    auxiliaryEffectsCaptured: number;
     ignoredTurnsByReason: Record<string, number>;
     meanIntentConfidence: number | null;
     repeatedScenarioIntentAgreement: number | null;
@@ -59,6 +60,10 @@ export function buildReplayBaselineReport(
   const checksPassed = checks.filter((check) => check.passed).length;
   const runsWithTrace = runs.filter((run) => run.trace.length > 0).length;
   const runsWithDelivery = runs.filter((run) => run.effects.outbound.length > 0).length;
+  const auxiliaryEffectsCaptured = runs.reduce(
+    (total, run) => total + (run.effects.auxiliary?.length ?? 0),
+    0,
+  );
   const ignoredTurnsByReason = countIgnoredTurnReasons(runs);
   const confidences = runs.flatMap(intentConfidences);
   const passRate = ratio(checksPassed, checks.length);
@@ -98,6 +103,7 @@ export function buildReplayBaselineReport(
       deterministicPassRate: passRate,
       runsWithTrace,
       runsWithDelivery,
+      auxiliaryEffectsCaptured,
       ignoredTurnsByReason,
       meanIntentConfidence,
       repeatedScenarioIntentAgreement,
@@ -133,6 +139,7 @@ export function renderReplayBaselineMarkdown(report: ReplayBaselineReport): stri
     `- Checks determinísticos: ${report.metrics.deterministicChecksPassed}/${report.metrics.deterministicChecksTotal} (${formatPercent(report.metrics.deterministicPassRate)})`,
     `- Runs com Decision Trace: ${report.metrics.runsWithTrace}/${report.runCount}`,
     `- Runs com entrega capturada: ${report.metrics.runsWithDelivery}/${report.runCount}`,
+    `- Efeitos auxiliares capturados: ${report.metrics.auxiliaryEffectsCaptured}`,
     `- Turnos sem resposta: ${formatReasonCounts(report.metrics.ignoredTurnsByReason)}`,
     `- Confiança média de intenção: ${report.metrics.meanIntentConfidence === null ? 'indisponível' : formatPercent(report.metrics.meanIntentConfidence)}`,
     `- Concordância de intenção entre repetições: ${report.metrics.repeatedScenarioIntentAgreement === null ? 'sem repetições comparáveis' : formatPercent(report.metrics.repeatedScenarioIntentAgreement)}`,

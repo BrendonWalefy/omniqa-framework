@@ -267,6 +267,11 @@ export type ReplayScenarioRun = {
   effects: {
     outbound: unknown[];
     calendar: unknown[];
+    auxiliary?: Array<{
+      sequence: number;
+      kind: string;
+      mediaType?: string;
+    }>;
   };
   checks: Array<{
     code: string;

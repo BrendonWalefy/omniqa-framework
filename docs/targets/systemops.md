@@ -291,9 +291,11 @@ O replay `SYS-REPLAY-001` aceita somente:
 O runner executa cada cenário nos modos `closed_loop` e `concurrency` pela rota
 E2E dedicada do SystemOps, atravessando
 webhook, `inbound_events`, `message.process`, `ConversationOrchestrator`, outbox
-e `message.send`. Texto e mídia usam o payload do canal. WhatsApp, TTS, storage e
-escritas de agenda são capturados; o `DecisionTrace` e os efeitos acompanham o
-artefato. Cenários são repetidos três vezes por padrão. O modo concorrente só é
+e `message.send`. Texto e mídia usam o payload do canal. WhatsApp, notificações
+auxiliares de operador, consulta de foto, TTS, storage e escritas de agenda são
+capturados; o `DecisionTrace` e os efeitos acompanham o artefato. Nenhuma dessas
+fronteiras acessa o provedor real durante o replay. Cenários são repetidos três
+vezes por padrão. O modo concorrente só é
 executado quando o conteúdo assinado contém duas mensagens consecutivas do lead
 em até cinco segundos; marcações antigas de rajada entre lead e agente são
 ignoradas sem alterar o dataset aprovado.
