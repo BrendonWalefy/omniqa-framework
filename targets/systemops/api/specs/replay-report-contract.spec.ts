@@ -235,3 +235,49 @@ test('SYS-REPLAY-REPORT-005 - não compara caminhos de modos diferentes como rep
     concurrency: 1,
   });
 });
+
+test('SYS-REPLAY-REPORT-006 - ignora somente a ordem de persistência concorrente dos traces', () => {
+  const turnOne: ReplayScenarioRun['trace'] = [
+    {
+      turnId: 'turn-1',
+      stage: 'intent.classified',
+      sequence: 1,
+      metadata: { intent: 'greeting', source: 'llm' },
+    },
+    {
+      turnId: 'turn-1',
+      stage: 'intent.resolved',
+      sequence: 2,
+      metadata: { finalIntent: 'greeting' },
+    },
+  ];
+  const turnTwo: ReplayScenarioRun['trace'] = [
+    {
+      turnId: 'turn-2',
+      stage: 'intent.classified',
+      sequence: 3,
+      metadata: { intent: 'treatment_interest', source: 'llm' },
+    },
+    {
+      turnId: 'turn-2',
+      stage: 'intent.resolved',
+      sequence: 4,
+      metadata: { finalIntent: 'treatment_interest' },
+    },
+  ];
+  const executionRuns = [{
+    scenarioTurnIds: ['scenario-turn-1', 'scenario-turn-2'],
+    turnIds: ['turn-1', 'turn-2'],
+    process: { claimed: 2, processed: 2, ignored: 0, retried: 0, dead: 0, recovered: 0 },
+    send: { claimed: 1, sent: 1, ignored: 0, deferred: 0, retried: 0, dead: 0, recovered: 0 },
+  }];
+  const report = buildReplayBaselineReport(dataset, [
+    run({ runId: 'ordered', mode: 'concurrency', trace: [...turnOne, ...turnTwo], executionRuns }),
+    run({ runId: 'interleaved', mode: 'concurrency', trace: [...turnTwo, ...turnOne], executionRuns }),
+  ]);
+
+  expect(report.metrics.repeatedScenarioDecisionPathAgreement).toBe(1);
+  expect(report.findings).not.toEqual(expect.arrayContaining([
+    expect.objectContaining({ code: 'decision_path_divergence' }),
+  ]));
+});

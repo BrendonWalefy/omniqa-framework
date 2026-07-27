@@ -375,7 +375,14 @@ function intentSignature(run: ReplayScenarioRun): string {
 }
 
 function decisionPathSignature(run: ReplayScenarioRun): string {
-  const turnIds = [...new Set(run.trace.map((event) => event.turnId))];
+  // Concurrent workers may persist trace rows in a different order without
+  // changing any per-turn decision. Use the scenario execution order as the
+  // canonical order and retain trace-only turns as a defensive fallback.
+  const executionTurnIds = run.executionRuns?.flatMap((entry) => entry.turnIds) ?? [];
+  const turnIds = [...new Set([
+    ...executionTurnIds,
+    ...run.trace.map((event) => event.turnId),
+  ])];
   return JSON.stringify(turnIds.map((turnId) => {
     const events = run.trace.filter((event) => event.turnId === turnId);
     const metadata = (stage: string) =>
