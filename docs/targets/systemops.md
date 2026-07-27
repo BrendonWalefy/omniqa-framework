@@ -380,6 +380,9 @@ npm run test:systemops:replay
 
 Qualquer falha aqui **trava o go-live daquela clínica específica**. O fingerprint
 garante que a configuração e o playbook do sandbox correspondem ao dataset.
+Achados automáticos de severidade `high` ou `medium` também falham o gate; um
+replay com filas íntegras, mas resposta duplicada, mistura de tenant ou silêncio
+inexplicado, não pode aprovar a ativação.
 
 ## CI recorrente
 

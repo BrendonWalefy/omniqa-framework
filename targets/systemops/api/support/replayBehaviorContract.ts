@@ -150,23 +150,15 @@ export function applyReplayBehaviorContract(
     : null;
   const lastExpectedMediaIndex =
     expectedMediaIndexes.at(-1)?.[0] ?? -1;
-  const expectedTextIndexes = contract.expectedTextAfterMediaIncludes.length > 0
-    ? outbound.flatMap((effect, index) => {
-        const content = normalized(effect.content);
-        return effect.kind === 'text' &&
-          contract.expectedTextAfterMediaIncludes.every((fragment) =>
-            content.includes(fragment)
-          )
-          ? [index]
-          : [];
-      })
-    : [];
+  const textImmediatelyAfterMedia = outbound[lastExpectedMediaIndex + 1];
   const expectedTextAfterMedia =
     contract.expectedTextAfterMediaIncludes.length === 0 ||
     (
-      expectedTextIndexes.length === 1 &&
       lastExpectedMediaIndex >= 0 &&
-      expectedTextIndexes[0] === lastExpectedMediaIndex + 1
+      textImmediatelyAfterMedia?.kind === 'text' &&
+      contract.expectedTextAfterMediaIncludes.every((fragment) =>
+        normalized(textImmediatelyAfterMedia.content).includes(fragment)
+      )
     );
 
   return {
@@ -203,7 +195,7 @@ export function applyReplayBehaviorContract(
         : []),
       ...(contract.expectedTextAfterMediaIncludes.length > 0
         ? [{
-            code: 'expected_text_immediately_after_media_exactly_once',
+            code: 'expected_text_immediately_after_media',
             passed: expectedTextAfterMedia,
           }]
         : []),

@@ -142,6 +142,13 @@ test.describe('SystemOps - replay fiel de dataset sanitizado e aprovado', () => 
       runs.every((run) => run.effects.outbound.length > 0),
       'Toda conversa respondida deve capturar a tentativa de entrega.',
     ).toBe(true);
+    const blockingFindings = report.findings.filter(
+      (finding) => finding.severity === 'high' || finding.severity === 'medium',
+    );
+    expect(
+      blockingFindings,
+      'Achados conversacionais HIGH/MEDIUM bloqueiam o gate de ativação.',
+    ).toHaveLength(0);
   });
 });
 

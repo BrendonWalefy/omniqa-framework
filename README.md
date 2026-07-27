@@ -363,6 +363,9 @@ SYSTEMOPS_REPLAY_APPROVAL_PUBLIC_KEY_PATH=/caminho/replay-approval-public.pem \
 SYSTEMOPS_REPLAY_REPETITIONS=3 \
 npm run test:systemops:replay
 
+# O gate falha em qualquer check determinístico e também em achados HIGH/MEDIUM.
+# Achados LOW permanecem no relatório para revisão humana, sem bloquear sozinhos.
+
 # Contrato opcional para uma jornada família/variante:
 # exige exatamente dois vídeos, nessa ordem, imediatamente após o opener,
 # sem mídia duplicada, e comprova no Decision Trace que a variante foi

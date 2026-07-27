@@ -211,7 +211,7 @@ test('SYS-REPLAY-BEHAVIOR-007 - exige preços imediatamente depois dos vídeos',
 
   expect(evaluated.checks).toEqual(expect.arrayContaining([
     {
-      code: 'expected_text_immediately_after_media_exactly_once',
+      code: 'expected_text_immediately_after_media',
       passed: true,
     },
   ]));
@@ -239,7 +239,33 @@ test('SYS-REPLAY-BEHAVIOR-008 - falha se os preços vierem antes dos vídeos', (
   }), contract);
 
   expect(evaluated.checks).toContainEqual({
-    code: 'expected_text_immediately_after_media_exactly_once',
+    code: 'expected_text_immediately_after_media',
     passed: false,
+  });
+});
+
+test('SYS-REPLAY-BEHAVIOR-009 - permite repetir o preço quando o lead perguntar depois', () => {
+  const contract = loadReplayBehaviorContract({
+    SYSTEMOPS_REPLAY_EXPECT_MEDIA_SEQUENCE:
+      'video:simplificada,video:estratificada',
+    SYSTEMOPS_REPLAY_EXPECT_TEXT_AFTER_MEDIA: 'R$ 2.000|R$ 4.000',
+  });
+  const base = run();
+  const priceText = 'Simplificada: R$ 2.000. Estratificada: R$ 4.000.';
+  const evaluated = applyReplayBehaviorContract(run({
+    effects: {
+      outbound: [
+        ...base.effects.outbound,
+        { kind: 'text', content: priceText, sequence: 4 },
+        { kind: 'text', content: 'Nova pergunta do lead respondida.', sequence: 5 },
+        { kind: 'text', content: priceText, sequence: 6 },
+      ],
+      calendar: [],
+    },
+  }), contract);
+
+  expect(evaluated.checks).toContainEqual({
+    code: 'expected_text_immediately_after_media',
+    passed: true,
   });
 });
